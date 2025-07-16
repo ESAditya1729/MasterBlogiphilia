@@ -1,5 +1,4 @@
 # Node modules (both client and server)
-**/build/
 **/dist/
 
 # Environment files
