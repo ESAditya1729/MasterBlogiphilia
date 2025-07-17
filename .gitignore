@@ -11,10 +11,14 @@ out/
 # ========== Environment files ==========
 .env
 .env.local
-.env.*.local
-**/.env
-**/.env.local
-**/.env.*.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Don't overmatch every .env in every folder unless necessary
+# If you store envs inside client/ or server/, uncomment this:
+# client/.env*
+# server/.env*
 
 # ========== Logs ==========
 npm-debug.log*

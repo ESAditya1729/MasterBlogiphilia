@@ -35,7 +35,7 @@ export const getUserProfile = async (req, res, next) => {
 // @access  Private
 export const updateUserBio = async (req, res, next) => {
   try {
-    if (req.params.userId !== req.user.userId) {
+    if (req.params.userId.toString() !== req.user.userId.toString()) {
       return next(
         new ErrorResponse("Not authorized to update this profile", 401)
       );
