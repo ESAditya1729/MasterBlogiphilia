@@ -1,27 +1,23 @@
 import React from "react";
 import { motion } from "framer-motion";
 import UserStats from "./UserStats";
+import ProfilePicture from "./ProfilePicture";
 
-const CollapsedHeader = ({ user, colors, renderStats }) => {
+const CollapsedHeader = ({ user, colors }) => {
   return (
     <motion.div
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      className="flex items-center justify-between mb-2"
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.3, ease: "easeInOut" }}
+      className="flex items-center justify-between mb-2 will-change-transform"
     >
       <div className="flex items-center gap-3">
-        <div className="relative">
-          <img
-            src={
-              user.profilePicture
-                ? `${process.env.REACT_APP_API_BASE_URL}${user.profilePicture}`
-                : "https://i.pravatar.cc/100"
-            }
-            alt="Profile"
-            className="rounded-full border-2 border-white dark:border-gray-800 w-10 h-10 shadow-md"
-          />
-        </div>
+        <ProfilePicture 
+          user={user} 
+          size="small" 
+          handleProfilePicClick={() => {}} 
+        />
         <h3 className={`font-bold ${colors.text} text-md`}>{user.username}</h3>
       </div>
       <div className="flex items-center gap-4">
