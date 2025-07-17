@@ -1,4 +1,5 @@
 # Node modules (both client and server)
+**node_modules/
 **/dist/
 
 # Environment files
