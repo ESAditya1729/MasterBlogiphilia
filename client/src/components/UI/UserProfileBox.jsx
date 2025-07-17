@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { motion } from "framer-motion";
 import SearchBar from "./SearchBar";
 import UserListModal from "../Modals/UserListModals";
-import { UsersIcon, UserPlusIcon } from "@heroicons/react/24/solid";
+import { UsersIcon, UserPlusIcon, SparklesIcon } from "@heroicons/react/24/solid";
 
 const UserProfileBox = ({ userId, activeTab, setActiveTab }) => {
   const [user, setUser] = useState(null);
