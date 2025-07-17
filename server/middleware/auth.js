@@ -5,40 +5,47 @@ import User from '../models/User.js';
 export const protect = async (req, res, next) => {
   let token;
 
-  // Get token from Authorization header
+  // ✅ 1. Extract token from Authorization header
   if (
     req.headers.authorization &&
-    req.headers.authorization.startsWith('Bearer')
+    req.headers.authorization.startsWith('Bearer ')
   ) {
     token = req.headers.authorization.split(' ')[1];
   }
 
+  // ❌ No token provided
   if (!token) {
-    return next(new ErrorResponse('Not authorized to access this route (No token)', 401));
+    return next(
+      new ErrorResponse('Not authorized to access this route (No token)', 401)
+    );
   }
 
   try {
-    // Decode token
+    // ✅ 2. Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // Support both { userId } or { id } payloads
     const userId = decoded.userId || decoded.id;
 
     if (!userId) {
       return next(new ErrorResponse('Invalid token payload (no userId)', 403));
     }
 
-    // Fetch user from DB and attach to req
+    // ✅ 3. Attach user to request
     const user = await User.findById(userId).select('-password');
 
     if (!user) {
       return next(new ErrorResponse('User not found', 404));
     }
 
-    req.user = user;
+    req.user = {
+      _id: user._id.toString(), 
+      username: user.username,
+      email: user.email,
+    };
+
     next();
   } catch (err) {
-    console.error("JWT verification failed:", err.message);
+    console.error('JWT verification failed:', err.message);
     return next(new ErrorResponse('Not authorized or token expired', 401));
   }
 };
