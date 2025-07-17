@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { motion } from "framer-motion";
 import SearchBar from "./SearchBar";
 import UserListModal from "../Modals/UserListModals";
-import { UsersIcon, UserPlusIcon, SparklesIcon } from "@heroicons/react/24/solid";
+import { UsersIcon, UserPlusIcon } from "@heroicons/react/24/solid";
 
 const UserProfileBox = ({ userId, activeTab, setActiveTab }) => {
   const [user, setUser] = useState(null);
@@ -15,31 +15,15 @@ const UserProfileBox = ({ userId, activeTab, setActiveTab }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const fileInputRef = useRef();
 
-  const bioBoxVariants = {
-    hidden: { opacity: 0, y: 10 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        type: "spring",
-        stiffness: 100,
-        damping: 10,
-        when: "beforeChildren",
-        staggerChildren: 0.1,
-      },
-    },
-  };
   const colors = darkMode
     ? {
         bg: "bg-gradient-to-br from-gray-800 to-gray-900",
         text: "text-gray-100",
         border: "border-gray-700",
         shadow: "shadow-lg shadow-black/30",
-        stats:
-          "bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent",
+        stats: "bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent",
         card: "bg-gray-800",
-        button:
-          "bg-gradient-to-r from-indigo-700 to-purple-700 hover:from-indigo-600 hover:to-purple-600 text-white",
+        button: "bg-gradient-to-r from-indigo-700 to-purple-700 hover:from-indigo-600 hover:to-purple-600 text-white",
         tabBg: "bg-gray-800/50",
         tabText: "text-gray-300",
         tabHover: "hover:text-white",
@@ -49,11 +33,9 @@ const UserProfileBox = ({ userId, activeTab, setActiveTab }) => {
         text: "text-gray-800",
         border: "border-gray-200",
         shadow: "shadow-lg shadow-gray-300/30",
-        stats:
-          "bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent",
+        stats: "bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent",
         card: "bg-white",
-        button:
-          "bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white",
+        button: "bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white",
         tabBg: "bg-gray-100/50",
         tabText: "text-gray-600",
         tabHover: "hover:text-gray-900",
@@ -117,17 +99,14 @@ const UserProfileBox = ({ userId, activeTab, setActiveTab }) => {
   const handleSave = async () => {
     try {
       const token = localStorage.getItem("authToken");
-      const res = await fetch(
-        `${process.env.REACT_APP_API_BASE_URL}/api/users/${userId}/bio`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ bio }),
-        }
-      );
+      const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/users/${userId}/bio`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ bio }),
+      });
 
       if (res.ok) {
         const updatedUser = await res.json();
@@ -187,31 +166,15 @@ const UserProfileBox = ({ userId, activeTab, setActiveTab }) => {
     : "Date Unknown";
 
   const renderLevelBar = () => (
-    <div className="flex items-center gap-1 mb-1">
+    <div className="flex items-center gap-1 mb-1 animate-pulse">
       {[...Array(10)].map((_, i) => (
-        <motion.div
+        <div
           key={i}
-          className={`h-2 w-2 rounded-full ${
+          className={`h-2 w-2 rounded-full transition-all duration-300 ${
             i < userLevel
               ? "bg-gradient-to-b from-indigo-500 to-purple-500"
               : "bg-gray-300 dark:bg-gray-600"
           }`}
-          initial={{ scale: 0.5 }}
-          animate={{
-            scale: 1,
-            opacity: i < userLevel ? [0.7, 1, 0.7] : 0.7,
-          }}
-          transition={{
-            scale: { type: "spring", stiffness: 500, damping: 15 },
-            opacity:
-              i < userLevel
-                ? {
-                    repeat: Infinity,
-                    duration: 1.5,
-                    delay: i * 0.1,
-                  }
-                : {},
-          }}
         />
       ))}
     </div>
@@ -249,134 +212,10 @@ const UserProfileBox = ({ userId, activeTab, setActiveTab }) => {
     </div>
   );
 
-  const renderBioSection = () => (
-    <motion.div
-      className={`mt-4 p-4 rounded-xl border ${colors.border} ${colors.card} shadow-inner`}
-      initial="hidden"
-      animate="visible"
-      variants={bioBoxVariants}
-    >
-      <motion.div
-        className="flex items-center gap-2 mb-2"
-        variants={bioBoxVariants}
-      >
-        <SparklesIcon className="w-4 h-4 text-yellow-500" />
-        <h4 className={`text-sm font-semibold ${colors.text}`}>ABOUT ME</h4>
-      </motion.div>
-
-      {editing ? (
-        <>
-          <motion.textarea
-            value={bio}
-            onChange={(e) => setBio(e.target.value)}
-            rows="3"
-            className={`w-full px-3 py-2 rounded-lg border ${colors.border} dark:bg-gray-700 ${colors.text} text-sm resize-none font-sans focus:ring-2 focus:ring-indigo-400 outline-none transition-all`}
-            placeholder="Write something about yourself..."
-            maxLength="500"
-            initial={{ scale: 0.95 }}
-            animate={{ scale: 1 }}
-            transition={{ type: "spring", stiffness: 300 }}
-          />
-          <motion.div className="flex gap-2 mt-3" variants={bioBoxVariants}>
-            <motion.button
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={handleSave}
-              className={`px-4 py-1.5 text-sm rounded-lg ${colors.button} transition shadow-md flex-1`}
-            >
-              Save
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => setEditing(false)}
-              className={`px-4 py-1.5 text-sm rounded-lg border ${colors.border} ${colors.text} hover:bg-gray-100 dark:hover:bg-gray-700 transition flex-1`}
-            >
-              Cancel
-            </motion.button>
-          </motion.div>
-        </>
-      ) : (
-        <>
-          <motion.p
-            className={`text-sm font-sans leading-relaxed ${
-              bio ? colors.text : "text-gray-400 italic"
-            }`}
-            variants={bioBoxVariants}
-          >
-            {bio ||
-              "No bio added yet. Click edit to add something about yourself."}
-          </motion.p>
-          <motion.div
-            className="flex justify-end mt-3"
-            variants={bioBoxVariants}
-          >
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setEditing(true)}
-              className="px-3 py-1 text-xs rounded-lg bg-indigo-100 dark:bg-gray-700 text-indigo-700 dark:text-white hover:bg-indigo-200 dark:hover:bg-gray-600 transition shadow-sm flex items-center gap-1"
-            >
-              <SparklesIcon className="w-3 h-3" />
-              Edit Bio
-            </motion.button>
-          </motion.div>
-        </>
-      )}
-    </motion.div>
-  );
-
-  const renderProfilePicture = () => (
-    <motion.div
-      className="relative cursor-pointer"
-      onClick={handleProfilePicClick}
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
-    >
-      <motion.div
-        className="absolute inset-0 rounded-full bg-gradient-to-br from-indigo-400/30 to-purple-400/30 blur-md scale-110"
-        animate={{
-          rotate: [0, 360],
-          opacity: [0.3, 0.5, 0.3],
-        }}
-        transition={{
-          rotate: {
-            repeat: Infinity,
-            duration: 15,
-            ease: "linear",
-          },
-          opacity: {
-            repeat: Infinity,
-            duration: 3,
-            ease: "easeInOut",
-          },
-        }}
-      />
-      <img
-        src={
-          user.profilePicture
-            ? `${process.env.REACT_APP_API_BASE_URL}${user.profilePicture}`
-            : "https://i.pravatar.cc/100"
-        }
-        alt="Profile"
-        className="relative rounded-full border-2 border-white dark:border-gray-800 w-16 h-16 shadow-md"
-      />
-      <input
-        type="file"
-        accept="image/*"
-        ref={fileInputRef}
-        className="hidden"
-        onChange={handleProfilePicChange}
-      />
-    </motion.div>
-  );
-
   return (
     <div className="sticky top-0 z-20">
       <motion.div
-        className={`border ${colors.border} ${colors.shadow} ${
-          colors.card
-        } backdrop-blur-sm bg-opacity-90 transition-all duration-300 ${
+        className={`border ${colors.border} ${colors.shadow} ${colors.card} backdrop-blur-sm bg-opacity-90 transition-all duration-300 ${
           isScrolled ? "rounded-b-2xl py-2 px-4" : "rounded-2xl py-4 px-4"
         }`}
         animate={{
@@ -423,7 +262,28 @@ const UserProfileBox = ({ userId, activeTab, setActiveTab }) => {
             {/* Header and Profile */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                {renderProfilePicture()}
+                <div
+                  className="relative cursor-pointer"
+                  onClick={handleProfilePicClick}
+                >
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-br from-indigo-400/30 to-purple-400/30 blur-md scale-110 transition-all duration-300"></div>
+                  <img
+                    src={
+                      user.profilePicture
+                        ? `process.env.REACT_APP_API_BASE_URL${user.profilePicture}`
+                        : "https://i.pravatar.cc/100"
+                    }
+                    alt="Profile"
+                    className="relative rounded-full border-2 border-white dark:border-gray-800 w-16 h-16 shadow-md"
+                  />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    ref={fileInputRef}
+                    className="hidden"
+                    onChange={handleProfilePicChange}
+                  />
+                </div>
                 <div>
                   <h3 className={`font-bold ${colors.text} text-lg`}>
                     {user.username}
@@ -439,7 +299,50 @@ const UserProfileBox = ({ userId, activeTab, setActiveTab }) => {
             <div className="mt-2 flex justify-center">{renderStats()}</div>
 
             {/* Bio Section */}
-            {renderBioSection()}
+            <div className="mt-4">
+              {editing ? (
+                <>
+                  <textarea
+                    value={bio}
+                    onChange={(e) => setBio(e.target.value)}
+                    rows="3"
+                    className={`w-full px-3 py-2 rounded-xl border ${colors.border} dark:bg-gray-700 ${colors.text} text-sm resize-none font-sans`}
+                    placeholder="Write something about yourself..."
+                    maxLength="500"
+                  />
+                  <div className="flex gap-2 mt-2">
+                    <button
+                      onClick={handleSave}
+                      className={`px-4 py-1.5 text-sm rounded-xl ${colors.button} transition shadow-md`}
+                    >
+                      Save
+                    </button>
+                    <button
+                      onClick={() => setEditing(false)}
+                      className={`px-4 py-1.5 text-sm rounded-xl border ${colors.border} ${colors.text} hover:bg-gray-100 dark:hover:bg-gray-700 transition`}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <p
+                    className={`text-sm font-sans leading-relaxed ${
+                      bio ? colors.text : "text-gray-400 italic"
+                    }`}
+                  >
+                    {bio || "No bio added yet."}
+                  </p>
+                  <button
+                    onClick={() => setEditing(true)}
+                    className="px-3 py-1 mt-2 text-xs rounded-xl bg-indigo-100 dark:bg-gray-700 text-indigo-700 dark:text-white hover:bg-indigo-200 dark:hover:bg-gray-600 transition shadow-sm"
+                  >
+                    Edit Bio
+                  </button>
+                </>
+              )}
+            </div>
 
             {/* Search Bar */}
             <div className="mt-4">
