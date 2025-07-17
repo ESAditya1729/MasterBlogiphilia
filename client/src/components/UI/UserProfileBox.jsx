@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
 import SearchBar from "./SearchBar";
 import UserListModal from "../Modals/UserListModals";
-import { getThemeColors } from "./ThemeColors";
+import { getThemeColors } from "./ThemeColor";
 import LevelBar from "./LevelBar";
 import UserStats from "./UserStats";
 import BioSection from "./BioSection";
