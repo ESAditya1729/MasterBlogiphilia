@@ -167,9 +167,9 @@ const Home = () => {
         <Navbar />
       </div>
 
-      {/* Sticky Welcome + UserProfileBox + GenreDropdown */}
-      <div className="sticky top-[64px] z-45 bg-gradient-to-b from-white/90 via-white/80 to-transparent dark:from-gray-900/90 dark:via-gray-900/80 backdrop-blur-md">
-        <div className="max-w-7xl mx-auto px-4 pt-2 space-y-2">
+      {/* Sticky Header Block (Welcome + Profile + Optional Dropdown) */}
+      <div className="sticky top-[64px] z-40 bg-white dark:bg-gray-900 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 py-4 space-y-3">
           <AnimatedWelcome />
           {userId && (
             <UserProfileBox
@@ -179,12 +179,10 @@ const Home = () => {
             />
           )}
           {activeTab === "genre" && (
-            <div className="mt-2">
-              <GenreDropdown
-                selectedGenre={selectedGenre}
-                setSelectedGenre={setSelectedGenre}
-              />
-            </div>
+            <GenreDropdown
+              selectedGenre={selectedGenre}
+              setSelectedGenre={setSelectedGenre}
+            />
           )}
         </div>
       </div>
