@@ -1,5 +1,10 @@
 import React, { useState, useRef } from "react";
-import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
+import {
+  motion,
+  useScroll,
+  useTransform,
+  AnimatePresence,
+} from "framer-motion";
 import { jwtDecode } from "jwt-decode";
 import Navbar from "../components/Layout/Header";
 import AnimatedWelcome from "../components/UI/AnimatedWelcome";
@@ -13,7 +18,7 @@ const Home = () => {
 
   const { scrollYProgress } = useScroll({
     target: contentRef,
-    offset: ["start start", "end start"]
+    offset: ["start start", "end start"],
   });
 
   const headerY = useTransform(scrollYProgress, [0, 0.2], [0, -30]);
@@ -37,9 +42,10 @@ const Home = () => {
       icon: "🌟",
       content: Array(15).fill({
         title: "Featured Blog Post",
-        excerpt: "This is a featured blog post about interesting topics that everyone should read.",
-        author: "Featured Writer"
-      })
+        excerpt:
+          "This is a featured blog post about interesting topics that everyone should read.",
+        author: "Featured Writer",
+      }),
     },
     genre: {
       title: `${selectedGenre} Blogs`,
@@ -47,8 +53,8 @@ const Home = () => {
       content: Array(10).fill({
         title: `${selectedGenre} Blog Post`,
         excerpt: `This is a specialized ${selectedGenre.toLowerCase()} blog post.`,
-        author: `${selectedGenre} Expert`
-      })
+        author: `${selectedGenre} Expert`,
+      }),
     },
     saved: {
       title: "Saved Blogs",
@@ -56,8 +62,8 @@ const Home = () => {
       content: Array(8).fill({
         title: "Saved Blog Post",
         excerpt: "You saved this blog post for later reading.",
-        author: "Your Favorite Author"
-      })
+        author: "Your Favorite Author",
+      }),
     },
     visited: {
       title: "Recently Visited",
@@ -65,8 +71,8 @@ const Home = () => {
       content: Array(12).fill({
         title: "Recently Viewed Blog",
         excerpt: "You recently viewed this blog post.",
-        author: "Popular Writer"
-      })
+        author: "Popular Writer",
+      }),
     },
     followers: {
       title: "Following Blogs",
@@ -74,9 +80,9 @@ const Home = () => {
       content: Array(5).fill({
         title: "Blog from Someone You Follow",
         excerpt: "This blog post is from someone in your network.",
-        author: "Followed Author"
-      })
-    }
+        author: "Followed Author",
+      }),
+    },
   };
 
   const renderTabContent = () => {
@@ -90,7 +96,7 @@ const Home = () => {
           style={{
             y: headerY,
             opacity: headerOpacity,
-            scale: headerScale
+            scale: headerScale,
           }}
         >
           <div className="absolute inset-0 bg-gradient-to-b from-white/90 via-white/80 to-transparent dark:from-gray-900/90 dark:via-gray-900/80 dark:to-transparent backdrop-blur-md border-b border-gray-200/50 dark:border-gray-700/50" />
@@ -133,7 +139,7 @@ const Home = () => {
                   duration: 0.3,
                   delay: index * 0.05,
                   type: "spring",
-                  stiffness: 100
+                  stiffness: 100,
                 }}
                 whileHover={{ y: -2 }}
               >
@@ -172,7 +178,6 @@ const Home = () => {
               setActiveTab={setActiveTab}
             />
           )}
-          {/* Show Genre Selector when genre tab is active */}
           {activeTab === "genre" && (
             <div className="mt-2">
               <GenreDropdown
