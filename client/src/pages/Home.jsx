@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import { jwtDecode } from "jwt-decode";
 import Navbar from "../components/Layout/Header";
@@ -9,7 +9,7 @@ import GenreDropdown from "../components/Layout/tabs/GenreSelector";
 const Home = () => {
   const [activeTab, setActiveTab] = useState("featured");
   const [selectedGenre, setSelectedGenre] = useState("All");
-  const contentRef = React.useRef(null);
+  const contentRef = useRef(null);
 
   const { scrollYProgress } = useScroll({
     target: contentRef,
@@ -85,7 +85,7 @@ const Home = () => {
     return (
       <div className="space-y-6" ref={contentRef}>
         {/* Sticky Tab Header */}
-        <motion.div 
+        <motion.div
           className="sticky top-[320px] z-30 w-full py-4 -mx-4"
           style={{
             y: headerY,
@@ -94,11 +94,11 @@ const Home = () => {
           }}
         >
           <div className="absolute inset-0 bg-gradient-to-b from-white/90 via-white/80 to-transparent dark:from-gray-900/90 dark:via-gray-900/80 dark:to-transparent backdrop-blur-md border-b border-gray-200/50 dark:border-gray-700/50" />
-          
+
           <div className="relative max-w-3xl mx-auto px-4 text-center">
             <AnimatePresence mode="wait">
               <motion.div
-                key={activeTab}
+                key={activeTab + selectedGenre}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
@@ -109,7 +109,7 @@ const Home = () => {
                 <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
                   {currentTab.title}
                 </h2>
-                <motion.div 
+                <motion.div
                   className="w-20 h-1 mt-2 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full"
                   initial={{ scaleX: 0 }}
                   animate={{ scaleX: 1 }}
@@ -124,13 +124,13 @@ const Home = () => {
         <div className="space-y-6 pt-4">
           <AnimatePresence>
             {currentTab.content.map((item, index) => (
-              <motion.div 
+              <motion.div
                 key={index}
                 className="p-6 bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ 
-                  duration: 0.3, 
+                transition={{
+                  duration: 0.3,
                   delay: index * 0.05,
                   type: "spring",
                   stiffness: 100
@@ -156,15 +156,14 @@ const Home = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 transition-colors duration-300">
-      
       {/* Sticky Navbar */}
       <div className="sticky top-0 z-50">
         <Navbar />
       </div>
 
-      {/* Sticky Welcome + UserProfileBox */}
-      <div className="sticky top-[64px] z-40 bg-gradient-to-b from-white/90 via-white/80 to-transparent dark:from-gray-900/90 dark:via-gray-900/80 backdrop-blur-md">
-        <div className="max-w-7xl mx-auto px-4 pt-2">
+      {/* Sticky Welcome + UserProfileBox + GenreDropdown */}
+      <div className="sticky top-[64px] z-45 bg-gradient-to-b from-white/90 via-white/80 to-transparent dark:from-gray-900/90 dark:via-gray-900/80 backdrop-blur-md">
+        <div className="max-w-7xl mx-auto px-4 pt-2 space-y-2">
           <AnimatedWelcome />
           {userId && (
             <UserProfileBox
@@ -172,6 +171,15 @@ const Home = () => {
               activeTab={activeTab}
               setActiveTab={setActiveTab}
             />
+          )}
+          {/* Show Genre Selector when genre tab is active */}
+          {activeTab === "genre" && (
+            <div className="mt-2">
+              <GenreDropdown
+                selectedGenre={selectedGenre}
+                setSelectedGenre={setSelectedGenre}
+              />
+            </div>
           )}
         </div>
       </div>
