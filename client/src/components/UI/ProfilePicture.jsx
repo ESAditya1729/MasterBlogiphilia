@@ -2,12 +2,13 @@ import React, { useState, useRef } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 
 const avatarOptions = [
-  { id: 1, url: '/avatars/girl1.png', label: 'Girl 1' },
-  { id: 2, url: '/avatars/girl2.png', label: 'Girl 2' },
-  { id: 3, url: '/avatars/Boy1.png', label: 'Boy 1' },
-  { id: 4, url: '/avatars/Boy2.png', label: 'Boy 2' },
-  { id: 5, url: '/avatars/Man1.png', label: 'Man 1' },
-  { id: 6, url: '/avatars/Man2.png', label: 'Man 2' },
+  { id: 1, url: '/avatars/girl1.jpg', label: 'Girl 1' },
+  { id: 2, url: '/avatars/girl2.jpg', label: 'Girl 2' },
+  { id: 3, url: '/avatars/Boy1.jpg', label: 'Boy 1' },
+  { id: 4, url: '/avatars/Boy2.jpg', label: 'Boy 2' },
+  { id: 5, url: '/avatars/Man1.jpg', label: 'Man 1' },
+  { id: 6, url: '/avatars/Man2.jpg', label: 'Man 2' },
+  { id: 7, url: '/avatars/Boy3.jpg', label: 'Boy 3' }
 ];
 
 const ProfilePicture = ({ user, onUpdate }) => {
