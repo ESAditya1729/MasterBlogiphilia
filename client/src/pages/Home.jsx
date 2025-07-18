@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   motion,
   useScroll,
@@ -9,19 +9,18 @@ import { jwtDecode } from "jwt-decode";
 import Navbar from "../components/Layout/Header";
 import AnimatedWelcome from "../components/UI/AnimatedWelcome";
 import UserProfileBox from "../components/UI/UserProfileBox";
-import GenreDropdown from "../components/Layout/tabs/GenreSelector";
 
 const Home = () => {
-  const [activeTab, setActiveTab] = useState("featured");
-  const [selectedGenre, setSelectedGenre] = useState("All");
+  const [activeTab, setActiveTab] = useState("leaderboard");
   const contentRef = useRef(null);
+  const profileRef = useRef(null);
+  const [showScrollButton, setShowScrollButton] = useState(false);
 
   const { scrollYProgress } = useScroll({
     target: contentRef,
     offset: ["start start", "end start"],
   });
 
-  const headerY = useTransform(scrollYProgress, [0, 0.2], [0, -30]);
   const headerOpacity = useTransform(scrollYProgress, [0, 0.15], [1, 0.95]);
   const headerScale = useTransform(scrollYProgress, [0, 0.1], [1, 0.97]);
 
@@ -36,51 +35,32 @@ const Home = () => {
     }
   }
 
+  const scrollToProfile = () => {
+    if (profileRef.current) {
+      window.scrollTo({
+        top: profileRef.current.offsetTop - 300,
+        behavior: "smooth",
+      });
+    }
+  };
+
   const tabContents = {
-    featured: {
-      title: "Featured Blogs",
-      icon: "🌟",
-      content: Array(15).fill({
-        title: "Featured Blog Post",
-        excerpt:
-          "This is a featured blog post about interesting topics that everyone should read.",
-        author: "Featured Writer",
-      }),
-    },
-    genre: {
-      title: `${selectedGenre} Blogs`,
-      icon: "🏷️",
+    leaderboard: {
+      title: "Leaderboard",
+      icon: "🏆",
       content: Array(10).fill({
-        title: `${selectedGenre} Blog Post`,
-        excerpt: `This is a specialized ${selectedGenre.toLowerCase()} blog post.`,
-        author: `${selectedGenre} Expert`,
+        title: "Top Blogger",
+        excerpt: "This user has written outstanding posts this week.",
+        author: "Star Author",
       }),
     },
-    saved: {
-      title: "Saved Blogs",
-      icon: "💾",
-      content: Array(8).fill({
-        title: "Saved Blog Post",
-        excerpt: "You saved this blog post for later reading.",
-        author: "Your Favorite Author",
-      }),
-    },
-    visited: {
-      title: "Recently Visited",
-      icon: "🕒",
-      content: Array(12).fill({
-        title: "Recently Viewed Blog",
-        excerpt: "You recently viewed this blog post.",
-        author: "Popular Writer",
-      }),
-    },
-    followers: {
-      title: "Following Blogs",
-      icon: "👥",
+    news: {
+      title: "Company News",
+      icon: "📰",
       content: Array(5).fill({
-        title: "Blog from Someone You Follow",
-        excerpt: "This blog post is from someone in your network.",
-        author: "Followed Author",
+        title: "Platform Update",
+        excerpt: "New features have been released in Blogiphilia!",
+        author: "Admin Team",
       }),
     },
   };
@@ -90,29 +70,28 @@ const Home = () => {
 
     return (
       <div className="space-y-6" ref={contentRef}>
-        {/* Sticky Tab Header */}
         <motion.div
-          className="sticky top-[320px] z-30 w-full py-4 -mx-4"
-          style={{
-            y: headerY,
-            opacity: headerOpacity,
-            scale: headerScale,
-          }}
+          className="sticky top-[180px] z-30 w-full px-4"
+          style={{ opacity: headerOpacity, scale: headerScale }}
         >
-          <div className="absolute inset-0 bg-gradient-to-b from-white/90 via-white/80 to-transparent dark:from-gray-900/90 dark:via-gray-900/80 dark:to-transparent backdrop-blur-md border-b border-gray-200/50 dark:border-gray-700/50" />
-
-          <div className="relative max-w-3xl mx-auto px-4 text-center">
-            <AnimatePresence mode="wait">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.4 }}
+              className="relative flex flex-col items-center text-center rounded-xl p-4 mt-4 bg-white/70 dark:bg-gray-900/60 shadow-lg border border-gray-200 dark:border-gray-700"
+            >
               <motion.div
-                key={activeTab + selectedGenre}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.3 }}
-                className="flex flex-col items-center"
-              >
-                <span className="text-2xl mb-1">{currentTab.icon}</span>
-                <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
+                className="absolute inset-0 rounded-xl bg-gradient-to-br from-pink-400/20 via-purple-400/20 to-indigo-400/20 blur-xl z-0"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.6 }}
+              />
+              <div className="z-10">
+                <span className="text-4xl mb-1 block">{currentTab.icon}</span>
+                <h2 className="text-3xl font-bold text-gray-800 dark:text-white drop-shadow">
                   {currentTab.title}
                 </h2>
                 <motion.div
@@ -121,13 +100,12 @@ const Home = () => {
                   animate={{ scaleX: 1 }}
                   transition={{ duration: 0.4, delay: 0.2 }}
                 />
-              </motion.div>
-            </AnimatePresence>
-          </div>
+              </div>
+            </motion.div>
+          </AnimatePresence>
         </motion.div>
 
-        {/* Scrollable Content */}
-        <div className="space-y-6 pt-4">
+        <div className="space-y-6 pt-6 px-4">
           <AnimatePresence>
             {currentTab.content.map((item, index) => (
               <motion.div
@@ -160,6 +138,28 @@ const Home = () => {
     );
   };
 
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setShowScrollButton(!entry.isIntersecting);
+      },
+      {
+        root: null,
+        threshold: 0.1,
+      }
+    );
+
+    if (profileRef.current) {
+      observer.observe(profileRef.current);
+    }
+
+    return () => {
+      if (profileRef.current) {
+        observer.unobserve(profileRef.current);
+      }
+    };
+  }, []);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 transition-colors duration-300">
       {/* Sticky Navbar */}
@@ -167,30 +167,51 @@ const Home = () => {
         <Navbar />
       </div>
 
-      {/* Sticky Header Block (Welcome + Profile + Optional Dropdown) */}
+      {/* Sticky Animated Header */}
       <div className="sticky top-[64px] z-40 bg-white dark:bg-gray-900 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 py-4 space-y-3">
+        <div className="max-w-7xl mx-auto px-4 py-4">
           <AnimatedWelcome />
-          {userId && (
-            <UserProfileBox
-              userId={userId}
-              activeTab={activeTab}
-              setActiveTab={setActiveTab}
-            />
-          )}
-          {activeTab === "genre" && (
-            <GenreDropdown
-              selectedGenre={selectedGenre}
-              setSelectedGenre={setSelectedGenre}
-            />
-          )}
         </div>
+      </div>
+      <br/>
+      <br/>
+      <br/>
+      <br/>
+      <br/>
+      <br/>
+      {/* Scrollable Profile Section */}
+      <div
+        ref={profileRef}
+        className="max-w-7xl mx-auto px-4 py-4 scroll-mt-[144px]"
+      >
+        {userId && (
+          <UserProfileBox
+            userId={userId}
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+          />
+        )}
       </div>
 
       {/* Tab Content */}
-      <div className="max-w-3xl mx-auto px-4 pb-16 relative">
-        {renderTabContent()}
-      </div>
+      <div className="w-full px-4 sm:px-8 pb-16">{renderTabContent()}</div>
+
+      {/* Floating Scroll-To-Profile Button */}
+      <AnimatePresence>
+        {showScrollButton && (
+          <motion.button
+            onClick={scrollToProfile}
+            className="fixed bottom-6 right-6 z-50 p-4 rounded-full bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-lg hover:scale-110 transition-transform animate-pulse"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            transition={{ duration: 0.3 }}
+            aria-label="Scroll to Profile"
+          >
+            ⬆️
+          </motion.button>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

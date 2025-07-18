@@ -1,4 +1,3 @@
-// src/App.js
 import { useState, useEffect } from "react";
 import {
   Routes,
@@ -49,6 +48,7 @@ function App() {
     >
       {!isAuthPage && isAuthenticated && <Navbar onLogout={handleLogout} />}
       <div className={`${!isAuthPage && isAuthenticated ? "pt-16" : ""}`}>
+        <div className="max-w-[68%] mx-auto">
         <Routes>
           {/* Auth routes */}
           <Route
@@ -124,6 +124,7 @@ function App() {
             }
           />
         </Routes>
+        </div>
       </div>
     </div>
   );

@@ -6,24 +6,17 @@ import { getThemeColors } from "./ThemeColor";
 import LevelBar from "./LevelBar";
 import UserStats from "./UserStats";
 import BioSection from "./BioSection";
-import TabMenu from "./TabMenu";
-import CollapsedHeader from "./CollapsedHeader";
 import ProfilePicture from "./ProfilePicture";
-
-// Animation configuration
+import ActivityStats from "./ActivityStats";
 const MOTION_CONFIG = {
   scrollTransition: {
     type: "spring",
     damping: 20,
     stiffness: 250,
   },
-  collapseTransition: {
-    duration: 0.25,
-    ease: [0.4, 0, 0.2, 1],
-  },
 };
 
-const UserProfileBox = ({ userId, activeTab, setActiveTab }) => {
+const UserProfileBox = ({ userId }) => {
   const [user, setUser] = useState(null);
   const [editing, setEditing] = useState(false);
   const [bio, setBio] = useState("");
@@ -31,26 +24,9 @@ const UserProfileBox = ({ userId, activeTab, setActiveTab }) => {
   const [showFollowers, setShowFollowers] = useState(false);
   const [showFollowing, setShowFollowing] = useState(false);
   const [loggedInUserId, setLoggedInUserId] = useState(null);
-  const [isScrolled, setIsScrolled] = useState(false);
   const fileInputRef = useRef();
 
   const colors = getThemeColors(darkMode);
-
-  // Optimized scroll handler
-  useEffect(() => {
-    let ticking = false;
-    const onScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          setIsScrolled(window.scrollY > 50);
-          ticking = false;
-        });
-        ticking = true;
-      }
-    };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
 
   useEffect(() => {
     const checkDark = () => {
@@ -88,10 +64,6 @@ const UserProfileBox = ({ userId, activeTab, setActiveTab }) => {
         const data = await res.json();
         setUser(data);
         setBio(data.bio || "");
-        if (data.profilePicture) {
-          const img = new Image();
-          img.src = `${process.env.REACT_APP_API_BASE_URL}${data.profilePicture}`;
-        }
       } catch (err) {
         console.error("Failed to fetch profile:", err);
       }
@@ -102,14 +74,17 @@ const UserProfileBox = ({ userId, activeTab, setActiveTab }) => {
   const handleSave = useCallback(async () => {
     try {
       const token = localStorage.getItem("authToken");
-      const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/users/${userId}/bio`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ bio }),
-      });
+      const res = await fetch(
+        `${process.env.REACT_APP_API_BASE_URL}/api/users/${userId}/bio`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ bio }),
+        }
+      );
 
       if (res.ok) {
         const updatedUser = await res.json();
@@ -153,7 +128,10 @@ const UserProfileBox = ({ userId, activeTab, setActiveTab }) => {
 
   if (!user) return null;
 
-  const userLevel = Math.min(Math.floor((user.followers?.length || 0) / 10) + 1, 10);
+  const userLevel = Math.min(
+    Math.floor((user.followers?.length || 0) / 10) + 1,
+    10
+  );
   const joinDate = user.createdAt
     ? new Date(user.createdAt).toLocaleDateString("en-US", {
         year: "numeric",
@@ -163,85 +141,69 @@ const UserProfileBox = ({ userId, activeTab, setActiveTab }) => {
     : "Date Unknown";
 
   return (
-    <div className="sticky top-0 z-20">
+    <div className="z-10 mt-4">
       <motion.div
         className={`border ${colors.border} ${colors.shadow} ${colors.card} backdrop-blur-sm bg-opacity-90 px-4`}
-        animate={{
-          scale: isScrolled ? 0.985 : 1,
-          boxShadow: isScrolled
-            ? darkMode
-              ? "0 4px 6px -1px rgba(0,0,0,0.3)"
-              : "0 4px 6px -1px rgba(0,0,0,0.1)"
-            : darkMode
-            ? "0 10px 15px -3px rgba(0,0,0,0.3)"
-            : "0 10px 15px -3px rgba(0,0,0,0.1)",
-        }}
         transition={MOTION_CONFIG.scrollTransition}
       >
-        {isScrolled ? (
-          <CollapsedHeader
+        <div className="flex items-center justify-between py-4">
+          <div className="flex items-center gap-3">
+            <ProfilePicture
+              user={user}
+              handleProfilePicClick={handleProfilePicClick}
+              fileInputRef={fileInputRef}
+              handleProfilePicChange={handleProfilePicChange}
+            />
+            <div>
+              <h3 className={`font-bold ${colors.text} text-lg`}>
+                {user.username}
+              </h3>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Joined {joinDate}
+              </p>
+            </div>
+          </div>
+          <LevelBar userLevel={userLevel} />
+        </div>
+
+        <div className="mt-2 flex justify-center">
+          <UserStats
             user={user}
-            colors={colors}
             setShowFollowers={setShowFollowers}
             setShowFollowing={setShowFollowing}
+            colors={colors}
           />
-        ) : (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={MOTION_CONFIG.collapseTransition}
-          >
-            <div className="flex items-center justify-between py-4">
-              <div className="flex items-center gap-3">
-                <ProfilePicture
-                  user={user}
-                  handleProfilePicClick={handleProfilePicClick}
-                  fileInputRef={fileInputRef}
-                  handleProfilePicChange={handleProfilePicChange}
-                />
-                <div>
-                  <h3 className={`font-bold ${colors.text} text-lg`}>
-                    {user.username}
-                  </h3>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    Joined {joinDate}
-                  </p>
-                </div>
-              </div>
-              <LevelBar userLevel={userLevel} />
-            </div>
+        </div>
 
-            <div className="mt-2 flex justify-center">
-              <UserStats
-                user={user}
-                setShowFollowers={setShowFollowers}
-                setShowFollowing={setShowFollowing}
-                colors={colors}
-              />
-            </div>
-
-            <BioSection
-              bio={bio}
-              editing={editing}
-              colors={colors}
-              handleSave={handleSave}
-              setBio={setBio}
-              setEditing={setEditing}
-            />
-
-            <div className="mt-4">
-              <SearchBar />
-            </div>
-          </motion.div>
-        )}
-
-        <TabMenu
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
+        <BioSection
+          bio={bio}
+          editing={editing}
           colors={colors}
-          isScrolled={isScrolled}
+          handleSave={handleSave}
+          setBio={setBio}
+          setEditing={setEditing}
         />
+
+        {/* ⬇️ NEW ACTIVITY STATS SECTION */}
+        <ActivityStats
+          stats={{
+            posts: user.totalPosts || 0,
+            likes: user.totalLikes || 0,
+            comments: user.totalComments || 0,
+            saved: user.savedPosts?.length || 0,
+          }}
+          colors={colors}
+        />
+
+        <div className="mt-8 px-2">
+          <h3
+            className={`text-sm font-medium text-gray-600 dark:text-gray-400 mb-2`}
+          >
+          </h3>
+          <SearchBar />
+          <br/>
+          <br/>
+        </div>
 
         {showFollowers && (
           <UserListModal
@@ -260,6 +222,8 @@ const UserProfileBox = ({ userId, activeTab, setActiveTab }) => {
           />
         )}
       </motion.div>
+      <br />
+      <br />
     </div>
   );
 };
