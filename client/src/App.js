@@ -48,7 +48,7 @@ function App() {
     >
       {!isAuthPage && isAuthenticated && <Navbar onLogout={handleLogout} />}
       <div className={`${!isAuthPage && isAuthenticated ? "pt-16" : ""}`}>
-        <div className="max-w-[68%] mx-auto">
+        <div className="max-w-[100%] mx-auto">
         <Routes>
           {/* Auth routes */}
           <Route
