@@ -166,7 +166,7 @@ export const toggleFollow = asyncHandler(async (req, res, next) => {
     success: true,
     followersCount: updatedUser.followers.length,
     followingCount: updatedUser.following.length,
-    isFollowing: !isFollowing,
+    isFollowing: isFollowing,
   });
 });
 
@@ -192,31 +192,46 @@ export const getFollowStats = asyncHandler(async (req, res, next) => {
 // @desc    Get user's followers list
 // @route   GET /api/users/:userId/followers
 // @access  Public
-export const getFollowers = asyncHandler(async (req, res, next) => {
-  const currentUserId = req.user?._id?.toString(); // get from auth middleware
+export const getFollowers = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.userId).populate(
+      "followers",
+      "username profilePicture createdAt"
+    );
 
-  const user = await User.findById(req.params.userId)
-    .select("followers")
-    .populate("followers", "username profilePicture createdAt followers");
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
 
-  if (!user) {
-    return next(new ErrorResponse("User not found", 404));
+    const currentUserId = req.user._id.toString();
+
+    const followersWithStatus = user.followers.map((follower) => {
+      const isFollowing = follower.following
+        ?.map((id) => id.toString())
+        .includes(currentUserId);
+      return {
+        _id: follower._id,
+        username: follower.username,
+        profilePicture: follower.profilePicture,
+        createdAt: follower.createdAt,
+        isFollowing: isFollowing || false,
+      };
+    });
+
+    res
+      .status(200)
+      .json({
+        success: true,
+        count: followersWithStatus.length,
+        data: followersWithStatus,
+      });
+  } catch (err) {
+    console.error("Failed to fetch followers:", err);
+    res.status(500).json({ success: false, message: "Server Error" });
   }
-
-  const data = user.followers.map((f) => ({
-    _id: f._id,
-    username: f.username,
-    profilePicture: f.profilePicture,
-    createdAt: f.createdAt,
-    isFollowing: f.followers.includes(currentUserId), // ✅
-  }));
-
-  res.status(200).json({
-    success: true,
-    count: data.length,
-    data,
-  });
-});
+};
 // @desc    Get user's following list
 // @route   GET /api/users/:userId/following
 // @access  Public
