@@ -17,7 +17,7 @@ app.use(cors({
   credentials: true
 }));
 app.use(express.json());
-app.use('/uploads', express.static('uploads')); // optional if you're serving static files
+app.use('/uploads', express.static('uploads')); 
 
 // Routes
 app.use('/api/auth', authRoutes);

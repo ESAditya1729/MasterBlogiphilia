@@ -30,8 +30,7 @@ const upload = multer({
   },
 });
 
-// REORDERED ROUTES - specific routes first
-router.get('/search', protect, searchUsers);  // This should come first
+router.get('/search', protect, searchUsers);
 router.post(
   '/upload-profile-picture',
   protect,
