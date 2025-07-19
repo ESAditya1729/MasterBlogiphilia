@@ -68,7 +68,7 @@ export const uploadProfilePicture = async (req, res, next) => {
 
     const result = await uploadToCloudinary(req.file.buffer, {
       folder: "profile-pictures",
-      public_id: req.user.userId,
+      public_id: req.user._id.toString(), // ✅ fixed
       overwrite: true,
       transformation: [
         { width: 500, height: 500, crop: "fill" },
@@ -77,7 +77,7 @@ export const uploadProfilePicture = async (req, res, next) => {
     });
 
     const user = await User.findByIdAndUpdate(
-      req.user.userId,
+      req.user._id, // ✅ fixed
       { profilePicture: result.secure_url },
       { new: true }
     ).select("-password");
