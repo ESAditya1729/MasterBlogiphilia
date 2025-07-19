@@ -196,7 +196,7 @@ export const getFollowStats = asyncHandler(async (req, res, next) => {
 export const getFollowers = asyncHandler(async (req, res, next) => {
   const user = await User.findById(req.params.userId)
     .select("followers")
-    .populate("followers", "username profilePicture createdAt");
+    .populate("followers", "username profilePicture createdAt followers");
 
   if (!user) {
     return next(new ErrorResponse("User not found", 404));
