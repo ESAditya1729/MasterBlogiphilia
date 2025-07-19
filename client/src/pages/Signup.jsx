@@ -13,7 +13,7 @@ import {
 import Input from "../components/UI/Input";
 import Button from "../components/UI/Button";
 import { motion } from "framer-motion";
-import centerImage from "../../public/assets/SignUpPage-SideImage.jpg";
+import centerImage from "../assets/SignUpPage-SideImage.jpg";
 
 const textVariants = {
   hidden: { opacity: 0, y: 30 },
