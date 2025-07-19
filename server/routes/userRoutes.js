@@ -46,6 +46,6 @@ router.post('/follow/:userId', protect, toggleFollow);
 router.get('/:userId/follow-stats', getFollowStats);
 router.get('/:userId/followers', getFollowers);
 router.get('/:userId/following', getFollowing);
-router.post('/avatar', protect, setAvatar);
+router.post('/avatar', protect, setAvatarFromList);
 
 export default router;
