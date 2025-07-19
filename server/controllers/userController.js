@@ -66,13 +66,8 @@ export const uploadProfilePicture = async (req, res, next) => {
       return next(new ErrorResponse("Please upload a file", 400));
     }
 
-    const userId = req.user._id.toString(); // safe string
-
     const result = await uploadToCloudinary(req.file.buffer, {
-      folder: `profile-pictures/${userId}`, // ✅ dedicated folder per user
-      public_id: "avatar", // ✅ consistent file name
-      overwrite: true,     // ✅ overwrite same image
-      resource_type: "image",
+      public_id: `profile-pictures/${req.user._id}`, // 🔐 Unique per user
       transformation: [
         { width: 500, height: 500, crop: "fill" },
         { quality: "auto" },
@@ -80,14 +75,14 @@ export const uploadProfilePicture = async (req, res, next) => {
     });
 
     const user = await User.findByIdAndUpdate(
-      userId,
+      req.user._id,
       { profilePicture: result.secure_url },
       { new: true }
     ).select("-password");
 
     res.status(200).json({
       success: true,
-      url: user.profilePicture, // ✅ immediately return new URL
+      url: user.profilePicture,
     });
   } catch (err) {
     next(err);
