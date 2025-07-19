@@ -124,7 +124,6 @@ export const searchUsers = asyncHandler(async (req, res, next) => {
   res.status(200).json(results);
 });
 
-
 // @desc    Follow/Unfollow a user
 // @route   POST /api/users/follow/:userId
 // @access  Private
@@ -196,7 +195,7 @@ export const getFollowStats = asyncHandler(async (req, res, next) => {
 export const getFollowers = asyncHandler(async (req, res, next) => {
   const user = await User.findById(req.params.userId)
     .select("followers")
-    .populate("followers", "username profilePicture createdAt followers");
+    .populate("followers", "username profilePicture createdAt");
 
   if (!user) {
     return next(new ErrorResponse("User not found", 404));
@@ -208,7 +207,6 @@ export const getFollowers = asyncHandler(async (req, res, next) => {
     data: user.followers,
   });
 });
-
 // @desc    Get user's following list
 // @route   GET /api/users/:userId/following
 // @access  Public
