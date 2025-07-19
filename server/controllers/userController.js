@@ -67,7 +67,9 @@ export const uploadProfilePicture = async (req, res, next) => {
     }
 
     const result = await uploadToCloudinary(req.file.buffer, {
-      public_id: `profile-pictures/${req.user._id}`, // 🔐 Unique per user
+      folder: "profile-pictures", // organized in one folder
+      public_id: `profile-pictures/${req.user._id}`, // ensures same file is overwritten
+      overwrite: true,
       transformation: [
         { width: 500, height: 500, crop: "fill" },
         { quality: "auto" },
@@ -85,6 +87,7 @@ export const uploadProfilePicture = async (req, res, next) => {
       url: user.profilePicture,
     });
   } catch (err) {
+    console.error("Upload error:", err);
     next(err);
   }
 };

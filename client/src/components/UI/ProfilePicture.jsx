@@ -1,21 +1,20 @@
-import React, { useRef } from 'react';
+import React from "react";
 
 const ProfilePicture = ({ user, handleProfilePicClick, fileInputRef, handleProfilePicChange }) => {
   return (
     <div className="relative">
       <img
-        src={user.profilePicture || '/avatars/default.png'}
+        src={user.profilePicture ? `${user.profilePicture}?v=${Date.now()}` : "/default.jpg"}
         alt="Profile"
-        className="w-24 h-24 rounded-full border-4 border-white shadow-lg cursor-pointer"
+        className="w-16 h-16 rounded-full cursor-pointer"
         onClick={handleProfilePicClick}
       />
-
       <input
         type="file"
         ref={fileInputRef}
-        className="hidden"
-        accept="image/*"
         onChange={handleProfilePicChange}
+        style={{ display: "none" }}
+        accept="image/*"
       />
     </div>
   );
