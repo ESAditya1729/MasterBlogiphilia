@@ -114,7 +114,7 @@ export const searchUsers = asyncHandler(async (req, res, next) => {
   const results = users.map((user) => ({
     id: user._id,
     username: user.username,
-    profilePicture: user.profilePicture || "", // ✅ added
+    profilePicture: user.profilePicture || "", 
     createdAt: user.createdAt,
     followersCount: user.followers.length,
     followingCount: user.following.length,

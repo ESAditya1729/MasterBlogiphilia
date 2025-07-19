@@ -44,13 +44,15 @@ const UserListModal = ({ title, type, userId, onClose, onUpdate }) => {
 
         const response = await res.json();
         // For Following list, all users should show "Unfollow" by default
-        const processedUsers = response.data?.map(user => ({
-          ...user,
-          followers: type === 'following' 
-            ? [...(user.followers || []), currentUserId] // Mark as followed for Following list
-            : user.followers || []
-        })) || [];
-        
+        const processedUsers =
+          response.data?.map((user) => ({
+            ...user,
+            followers:
+              type === "following"
+                ? [...(user.followers || []), currentUserId] // Mark as followed for Following list
+                : user.followers || [],
+          })) || [];
+
         setUsers(processedUsers);
       } catch (err) {
         console.error(err);
@@ -83,20 +85,22 @@ const UserListModal = ({ title, type, userId, onClose, onUpdate }) => {
       }
 
       // For Following list, remove the user after unfollowing
-      if (type === 'following') {
-        setUsers(prevUsers => prevUsers.filter(user => user._id !== targetId));
+      if (type === "following") {
+        setUsers((prevUsers) =>
+          prevUsers.filter((user) => user._id !== targetId)
+        );
       } else {
         // For Followers list, update the follow status
-        setUsers(prevUsers =>
-          prevUsers.map(user => {
+        setUsers((prevUsers) =>
+          prevUsers.map((user) => {
             if (user._id === targetId) {
               const currentFollowers = user.followers || [];
               const isFollowing = currentFollowers.includes(currentUserId);
               return {
                 ...user,
                 followers: isFollowing
-                  ? currentFollowers.filter(id => id !== currentUserId)
-                  : [...currentFollowers, currentUserId]
+                  ? currentFollowers.filter((id) => id !== currentUserId)
+                  : [...currentFollowers, currentUserId],
               };
             }
             return user;
@@ -141,12 +145,13 @@ const UserListModal = ({ title, type, userId, onClose, onUpdate }) => {
               </button>
             </div>
           ) : users.length > 0 ? (
-            users.map(user => {
+            users.map((user) => {
               // For Following list, always show "Unfollow"
-              const isFollowing = type === 'following' 
-                ? true 
-                : (user.followers || []).includes(currentUserId);
-              
+              const isFollowing =
+                type === "following"
+                  ? true
+                  : (user.followers || []).includes(currentUserId);
+
               return (
                 <div
                   key={user._id}
@@ -156,7 +161,7 @@ const UserListModal = ({ title, type, userId, onClose, onUpdate }) => {
                     <img
                       src={
                         user.profilePicture
-                          ? `${process.env.REACT_APP_API_BASE_URL}${user.profilePicture}`
+                          ? `${user.profilePicture}?v=${Date.now()}`
                           : "https://i.pravatar.cc/100"
                       }
                       alt={user.username}
