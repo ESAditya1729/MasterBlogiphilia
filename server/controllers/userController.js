@@ -109,11 +109,12 @@ export const searchUsers = asyncHandler(async (req, res, next) => {
   const users = await User.find({
     username: { $regex: query, $options: "i" },
     _id: { $ne: currentUserId },
-  }).select("username createdAt followers following");
+  }).select("username createdAt followers following profilePicture"); // ✅ added
 
   const results = users.map((user) => ({
     id: user._id,
     username: user.username,
+    profilePicture: user.profilePicture || "", // ✅ added
     createdAt: user.createdAt,
     followersCount: user.followers.length,
     followingCount: user.following.length,
@@ -122,6 +123,7 @@ export const searchUsers = asyncHandler(async (req, res, next) => {
 
   res.status(200).json(results);
 });
+
 
 // @desc    Follow/Unfollow a user
 // @route   POST /api/users/follow/:userId

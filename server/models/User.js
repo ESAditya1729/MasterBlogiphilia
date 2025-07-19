@@ -40,11 +40,15 @@ const userSchema = new mongoose.Schema({
     default: "",
   },
   following: {
-    type: [mongoose.Schema.Types.ObjectId],
-    ref: 'User',
-    default: []
-  },
-  resetPasswordToken: String,
+  type: [mongoose.Schema.Types.ObjectId],
+  ref: 'User',
+  default: []
+},
+profilePicture: {
+  type: String,
+  default: '', 
+},
+resetPasswordToken: String,
   resetPasswordExpire: Date,
   createdAt: {
     type: Date,
