@@ -114,7 +114,7 @@ export const searchUsers = asyncHandler(async (req, res, next) => {
   const results = users.map((user) => ({
     id: user._id,
     username: user.username,
-    profilePicture: user.profilePicture || "", 
+    profilePicture: user.profilePicture || "",
     createdAt: user.createdAt,
     followersCount: user.followers.length,
     followingCount: user.following.length,
@@ -193,39 +193,55 @@ export const getFollowStats = asyncHandler(async (req, res, next) => {
 // @route   GET /api/users/:userId/followers
 // @access  Public
 export const getFollowers = asyncHandler(async (req, res, next) => {
+  const currentUserId = req.user?._id?.toString(); // get from auth middleware
+
   const user = await User.findById(req.params.userId)
     .select("followers")
-    .populate("followers", "username profilePicture createdAt");
+    .populate("followers", "username profilePicture createdAt followers");
 
   if (!user) {
     return next(new ErrorResponse("User not found", 404));
   }
 
+  const data = user.followers.map((f) => ({
+    _id: f._id,
+    username: f.username,
+    profilePicture: f.profilePicture,
+    createdAt: f.createdAt,
+    isFollowing: f.followers.includes(currentUserId), // ✅
+  }));
+
   res.status(200).json({
     success: true,
-    count: user.followers.length,
-    data: user.followers,
+    count: data.length,
+    data,
   });
 });
 // @desc    Get user's following list
 // @route   GET /api/users/:userId/following
 // @access  Public
 export const getFollowing = asyncHandler(async (req, res, next) => {
+  const currentUserId = req.user?._id?.toString();
+
   const user = await User.findById(req.params.userId)
     .select("following")
-    .populate({
-      path: "following",
-      select: "username profilePicture createdAt followers following",
-      transform: (doc) => doc?.toJSON(),
-    });
+    .populate("following", "username profilePicture createdAt followers");
 
   if (!user) {
     return next(new ErrorResponse("User not found", 404));
   }
 
+  const data = user.following.map((f) => ({
+    _id: f._id,
+    username: f.username,
+    profilePicture: f.profilePicture,
+    createdAt: f.createdAt,
+    isFollowing: f.followers.includes(currentUserId), // ✅
+  }));
+
   res.status(200).json({
     success: true,
-    count: user.following?.length || 0,
-    data: user.following,
+    count: data.length,
+    data,
   });
 });
