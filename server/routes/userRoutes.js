@@ -43,8 +43,8 @@ router.get('/:userId/full-profile', protect, getUserProfile);
 router.put('/:userId/bio', protect, updateUserBio);
 router.post('/follow/:userId', protect, toggleFollow);
 router.get('/:userId/follow-stats', getFollowStats);
-router.get('/:userId/followers', getFollowers);
-router.get('/:userId/following', getFollowing);
+router.get('/:userId/followers', protect, getFollowers);
+router.get('/:userId/following', protect, getFollowing);
 //router.post('/avatar', protect, setAvatarFromList);
 
 export default router;
