@@ -192,46 +192,48 @@ export const getFollowStats = asyncHandler(async (req, res, next) => {
 // @desc    Get user's followers list
 // @route   GET /api/users/:userId/followers
 // @access  Public
-export const getFollowers = async (req, res) => {
-  try {
-    const user = await User.findById(req.params.userId).populate(
-      "followers",
-      "username profilePicture createdAt"
-    );
+export const getFollowers = asyncHandler(async (req, res, next) => {
+  const { userId } = req.params;
+  const currentUserId = req.user._id;
 
-    if (!user) {
-      return res
-        .status(404)
-        .json({ success: false, message: "User not found" });
-    }
+  const user = await User.findById(userId)
+    .populate("followers", "username profilePicture createdAt")
+    .lean();
 
-    const currentUserId = req.user._id.toString();
-
-    const followersWithStatus = user.followers.map((follower) => {
-      const isFollowing = follower.following
-        ?.map((id) => id.toString())
-        .includes(currentUserId);
-      return {
-        _id: follower._id,
-        username: follower.username,
-        profilePicture: follower.profilePicture,
-        createdAt: follower.createdAt,
-        isFollowing: isFollowing || false,
-      };
-    });
-
-    res
-      .status(200)
-      .json({
-        success: true,
-        count: followersWithStatus.length,
-        data: followersWithStatus,
-      });
-  } catch (err) {
-    console.error("Failed to fetch followers:", err);
-    res.status(500).json({ success: false, message: "Server Error" });
+  if (!user) {
+    return next(new ErrorResponse("User not found", 404));
   }
-};
+
+  const followersWithStatus = user.followers.map((follower) => {
+    const isFollowing = follower.followers?.includes(currentUserId.toString());
+
+    return {
+      ...follower,
+      isFollowing: isFollowing || false,
+    };
+  });
+
+  // OR (better): Check if current user follows each of the followers
+  // Assuming currentUser.following is fetched in advance
+
+  const currentUser = await User.findById(currentUserId).select("following").lean();
+  const followingIds = currentUser.following.map(id => id.toString());
+
+  const enhancedFollowers = user.followers.map(follower => ({
+    _id: follower._id,
+    username: follower.username,
+    profilePicture: follower.profilePicture,
+    createdAt: follower.createdAt,
+    isFollowing: followingIds.includes(follower._id.toString()),
+  }));
+
+  res.status(200).json({
+    success: true,
+    count: enhancedFollowers.length,
+    data: enhancedFollowers,
+  });
+});
+
 // @desc    Get user's following list
 // @route   GET /api/users/:userId/following
 // @access  Public
