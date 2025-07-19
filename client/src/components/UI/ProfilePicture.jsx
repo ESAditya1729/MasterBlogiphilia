@@ -45,7 +45,7 @@ const ProfilePicture = ({ user, onUpdate }) => {
     formData.append('profilePicture', file);
 
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/users/upload`, {
+      const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/users/upload-profile-picture`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('authToken')}`

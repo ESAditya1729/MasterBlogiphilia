@@ -9,7 +9,8 @@ import {
   toggleFollow,
   getFollowStats,
   getFollowers,
-  getFollowing
+  getFollowing,
+  setAvatar
 } from '../controllers/userController.js';
 import { protect } from '../middleware/auth.js';
 
@@ -45,5 +46,6 @@ router.post('/follow/:userId', protect, toggleFollow);
 router.get('/:userId/follow-stats', getFollowStats);
 router.get('/:userId/followers', getFollowers);
 router.get('/:userId/following', getFollowing);
+router.post('/avatar', protect, setAvatar);
 
 export default router;
