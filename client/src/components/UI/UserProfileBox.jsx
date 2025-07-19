@@ -8,6 +8,7 @@ import UserStats from "./UserStats";
 import BioSection from "./BioSection";
 import ProfilePicture from "./ProfilePicture";
 import ActivityStats from "./ActivityStats";
+
 const MOTION_CONFIG = {
   scrollTransition: {
     type: "spring",
@@ -23,7 +24,6 @@ const UserProfileBox = ({ userId }) => {
   const [darkMode, setDarkMode] = useState(false);
   const [showFollowers, setShowFollowers] = useState(false);
   const [showFollowing, setShowFollowing] = useState(false);
-  const [loggedInUserId, setLoggedInUserId] = useState(null);
   const fileInputRef = useRef();
 
   const colors = getThemeColors(darkMode);
@@ -45,7 +45,7 @@ const UserProfileBox = ({ userId }) => {
     const token = localStorage.getItem("authToken");
     if (token) {
       const payload = JSON.parse(atob(token.split(".")[1]));
-      setLoggedInUserId(payload.userId);
+      // Note: we removed setLoggedInUserId because it wasn't used
     }
   }, []);
 
@@ -99,8 +99,8 @@ const UserProfileBox = ({ userId }) => {
   }, [bio, userId]);
 
   const handleProfilePicClick = () => {
-  fileInputRef.current?.click();
-};
+    fileInputRef.current?.click();
+  };
 
   const handleProfilePicChange = useCallback(async (e) => {
     const file = e.target.files[0];
@@ -119,7 +119,11 @@ const UserProfileBox = ({ userId }) => {
       );
       if (!res.ok) throw new Error("Upload failed");
       const data = await res.json();
-      setUser((prev) => ({ ...prev, profilePicture: data.url }));
+
+      // ✅ Force cache busting with version string
+      const updatedUrl = `${data.url}?v=${Date.now()}`;
+
+      setUser((prev) => ({ ...prev, profilePicture: updatedUrl }));
     } catch (err) {
       console.error("Upload failed:", err);
       alert("Failed to upload profile picture.");
@@ -132,6 +136,7 @@ const UserProfileBox = ({ userId }) => {
     Math.floor((user.followers?.length || 0) / 10) + 1,
     10
   );
+
   const joinDate = user.createdAt
     ? new Date(user.createdAt).toLocaleDateString("en-US", {
         year: "numeric",
@@ -184,7 +189,6 @@ const UserProfileBox = ({ userId }) => {
           setEditing={setEditing}
         />
 
-        {/* ⬇️ NEW ACTIVITY STATS SECTION */}
         <ActivityStats
           stats={{
             posts: user.totalPosts || 0,
@@ -196,9 +200,9 @@ const UserProfileBox = ({ userId }) => {
         />
 
         <div className="mt-8 px-2">
-          <h3
-            className={`text-sm font-medium text-gray-600 dark:text-gray-400 mb-2`}
-          ></h3>
+          <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
+            Search Users
+          </h3>
           <SearchBar />
           <br />
           <br />

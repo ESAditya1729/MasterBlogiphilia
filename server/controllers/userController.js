@@ -66,10 +66,13 @@ export const uploadProfilePicture = async (req, res, next) => {
       return next(new ErrorResponse("Please upload a file", 400));
     }
 
+    const userId = req.user._id.toString(); // safe string
+
     const result = await uploadToCloudinary(req.file.buffer, {
-      folder: "profile-pictures",
-      public_id: req.user._id.toString(), // ✅ fixed
-      overwrite: true,
+      folder: `profile-pictures/${userId}`, // ✅ dedicated folder per user
+      public_id: "avatar", // ✅ consistent file name
+      overwrite: true,     // ✅ overwrite same image
+      resource_type: "image",
       transformation: [
         { width: 500, height: 500, crop: "fill" },
         { quality: "auto" },
@@ -77,14 +80,14 @@ export const uploadProfilePicture = async (req, res, next) => {
     });
 
     const user = await User.findByIdAndUpdate(
-      req.user._id, // ✅ fixed
+      userId,
       { profilePicture: result.secure_url },
       { new: true }
     ).select("-password");
 
     res.status(200).json({
       success: true,
-      url: user.profilePicture,
+      url: user.profilePicture, // ✅ immediately return new URL
     });
   } catch (err) {
     next(err);
