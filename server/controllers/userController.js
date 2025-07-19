@@ -66,9 +66,10 @@ export const uploadProfilePicture = async (req, res, next) => {
       return next(new ErrorResponse("Please upload a file", 400));
     }
 
-    const result = await uploadToCloudinary(req.file.buffer, {
-      folder: "profile-pictures", // organized in one folder
-      public_id: `profile-pictures/${req.user._id}`, // ensures same file is overwritten
+    // ✅ Make sure req.user.userId exists
+    const cloudinaryResult = await uploadToCloudinary(req.file.buffer, {
+      folder: "profile-pictures",
+      public_id: req.user._id.toString(), // overwrite for same user
       overwrite: true,
       transformation: [
         { width: 500, height: 500, crop: "fill" },
@@ -76,18 +77,20 @@ export const uploadProfilePicture = async (req, res, next) => {
       ],
     });
 
+    // ✅ Save URL to MongoDB
     const user = await User.findByIdAndUpdate(
       req.user._id,
-      { profilePicture: result.secure_url },
+      { profilePicture: cloudinaryResult.secure_url },
       { new: true }
     ).select("-password");
 
-    res.status(200).json({
+    // ✅ Return URL to frontend
+    return res.status(200).json({
       success: true,
       url: user.profilePicture,
     });
   } catch (err) {
-    console.error("Upload error:", err);
+    console.error("Upload Error:", err);
     next(err);
   }
 };

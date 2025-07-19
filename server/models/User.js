@@ -35,6 +35,10 @@ const userSchema = new mongoose.Schema({
     ref: 'User',
     default: []
   },
+  profilePicture: {
+    type: String,
+    default: "",
+  },
   following: {
     type: [mongoose.Schema.Types.ObjectId],
     ref: 'User',

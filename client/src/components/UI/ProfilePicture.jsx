@@ -4,17 +4,17 @@ const ProfilePicture = ({ user, handleProfilePicClick, fileInputRef, handleProfi
   return (
     <div className="relative">
       <img
-        src={user.profilePicture ? `${user.profilePicture}?v=${Date.now()}` : "/default.jpg"}
+        src={`${user.profilePicture}?v=${Date.now()}`} // 👈 busts cache
         alt="Profile"
-        className="w-16 h-16 rounded-full cursor-pointer"
+        className="w-16 h-16 rounded-full cursor-pointer hover:opacity-80 border border-gray-300 shadow-sm"
         onClick={handleProfilePicClick}
       />
       <input
         type="file"
-        ref={fileInputRef}
-        onChange={handleProfilePicChange}
-        style={{ display: "none" }}
         accept="image/*"
+        onChange={handleProfilePicChange}
+        ref={fileInputRef}
+        style={{ display: "none" }}
       />
     </div>
   );
