@@ -98,34 +98,6 @@ const UserProfileBox = ({ userId }) => {
     }
   }, [bio, userId]);
 
-  const handleProfilePicClick = useCallback(() => {
-    fileInputRef.current?.click();
-  }, []);
-
-  const handleProfilePicChange = useCallback(async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    try {
-      const token = localStorage.getItem("authToken");
-      const formData = new FormData();
-      formData.append("profilePicture", file);
-      const res = await fetch(
-        `${process.env.REACT_APP_API_BASE_URL}/api/users/upload-profile-picture`,
-        {
-          method: "POST",
-          headers: { Authorization: `Bearer ${token}` },
-          body: formData,
-        }
-      );
-      if (!res.ok) throw new Error("Upload failed");
-      const data = await res.json();
-      setUser((prev) => ({ ...prev, profilePicture: data.url }));
-    } catch (err) {
-      console.error("Upload failed:", err);
-      alert("Failed to upload profile picture.");
-    }
-  }, []);
-
   if (!user) return null;
 
   const userLevel = Math.min(
@@ -150,9 +122,9 @@ const UserProfileBox = ({ userId }) => {
           <div className="flex items-center gap-3">
             <ProfilePicture
               user={user}
-              handleProfilePicClick={handleProfilePicClick}
-              fileInputRef={fileInputRef}
-              handleProfilePicChange={handleProfilePicChange}
+              onUpdate={(newUrl) =>
+                setUser((prev) => ({ ...prev, profilePicture: newUrl }))
+              }
             />
             <div>
               <h3 className={`font-bold ${colors.text} text-lg`}>
@@ -198,11 +170,10 @@ const UserProfileBox = ({ userId }) => {
         <div className="mt-8 px-2">
           <h3
             className={`text-sm font-medium text-gray-600 dark:text-gray-400 mb-2`}
-          >
-          </h3>
+          ></h3>
           <SearchBar />
-          <br/>
-          <br/>
+          <br />
+          <br />
         </div>
 
         {showFollowers && (
