@@ -9,8 +9,7 @@ import {
   toggleFollow,
   getFollowStats,
   getFollowers,
-  getFollowing,
-  getCloudinaryImage 
+  getFollowing 
 } from '../controllers/userController.js';
 import { protect } from '../middleware/auth.js';
 
