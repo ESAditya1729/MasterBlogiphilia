@@ -26,3 +26,14 @@ export const uploadToCloudinary = (buffer, options = {}) => {
     streamifier.createReadStream(buffer).pipe(uploadStream);
   });
 };
+
+export const getImageUrlFromCloudinary = async (folder, filename) => {
+  const publicId = `${folder}/${filename}`;
+
+  try {
+    const result = await cloudinary.api.resource(publicId);
+    return result.secure_url; // Return public URL
+  } catch (error) {
+    throw new Error("Image not found or error fetching from Cloudinary");
+  }
+};

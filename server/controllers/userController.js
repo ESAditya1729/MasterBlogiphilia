@@ -213,9 +213,6 @@ export const getFollowers = asyncHandler(async (req, res, next) => {
     };
   });
 
-  // OR (better): Check if current user follows each of the followers
-  // Assuming currentUser.following is fetched in advance
-
   const currentUser = await User.findById(currentUserId).select("following").lean();
   const followingIds = currentUser.following.map(id => id.toString());
 
