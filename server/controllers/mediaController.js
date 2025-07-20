@@ -8,8 +8,6 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-import { v2 as cloudinary } from 'cloudinary';
-
 // @desc    Get a Cloudinary image by folder and filename
 // @route   GET /api/media/image/:folder/:filename
 // @access  Public
