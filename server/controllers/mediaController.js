@@ -11,12 +11,13 @@ cloudinary.config({
 // @desc    Get a Cloudinary image by folder and filename
 // @route   GET /api/media/image/:folder/:filename
 // @access  Public
+
 export const getCloudinaryImage = async (req, res) => {
   const { folder, filename } = req.params;
 
   try {
     const result = await cloudinary.search
-      .expression(`folder:${folder} AND filename:${filename}*`)
+      .expression(`public_id:${folder}/${filename}*`)
       .sort_by('created_at', 'desc')
       .max_results(1)
       .execute();
@@ -36,4 +37,5 @@ export const getCloudinaryImage = async (req, res) => {
     res.status(500).json({ success: false, message: "Failed to fetch image from Cloudinary" });
   }
 };
+
 
