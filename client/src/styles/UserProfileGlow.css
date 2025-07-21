@@ -1,0 +1,29 @@
+/* styles.css or tailwind.css (imported globally) */
+.glow-container::before {
+  content: "";
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  border-radius: 1rem;
+  background: linear-gradient(
+    130deg,
+    rgba(192, 132, 252, 0.6),
+    rgba(99, 102, 241, 0.6),
+    rgba(192, 132, 252, 0.6)
+  );
+  z-index: -1;
+  animation: rotate-glow 6s linear infinite;
+  background-size: 300% 300%;
+  filter: blur(8px);
+}
+
+@keyframes rotate-glow {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}

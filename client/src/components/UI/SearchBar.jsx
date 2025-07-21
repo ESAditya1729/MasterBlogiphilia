@@ -139,7 +139,7 @@ const SearchBar = () => {
                         <img
                           src={
                             user.profilePicture
-                              ? `${process.env.REACT_APP_API_BASE_URL}${user.profilePicture}`
+                              ? `${user.profilePicture}`
                               : "https://via.placeholder.com/40"
                           }
                           alt={user.username}

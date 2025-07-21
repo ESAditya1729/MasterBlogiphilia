@@ -43,15 +43,7 @@ const UserListModal = ({ title, type, userId, onClose, onUpdate }) => {
         }
 
         const response = await res.json();
-        // For Following list, all users should show "Unfollow" by default
-        const processedUsers =
-          response.data?.map((user) => ({
-            ...user,
-            followers:
-              type === "following"
-                ? [...(user.followers || []), currentUserId] // Mark as followed for Following list
-                : user.followers || [],
-          })) || [];
+        const processedUsers = response.data || [];
 
         setUsers(processedUsers);
       } catch (err) {
@@ -84,27 +76,19 @@ const UserListModal = ({ title, type, userId, onClose, onUpdate }) => {
         throw new Error(errorData.message || "Follow/unfollow failed");
       }
 
-      // For Following list, remove the user after unfollowing
       if (type === "following") {
+        // Remove from list on unfollow
         setUsers((prevUsers) =>
           prevUsers.filter((user) => user._id !== targetId)
         );
       } else {
-        // For Followers list, update the follow status
+        // Toggle isFollowing flag for Followers list
         setUsers((prevUsers) =>
-          prevUsers.map((user) => {
-            if (user._id === targetId) {
-              const currentFollowers = user.followers || [];
-              const isFollowing = currentFollowers.includes(currentUserId);
-              return {
-                ...user,
-                followers: isFollowing
-                  ? currentFollowers.filter((id) => id !== currentUserId)
-                  : [...currentFollowers, currentUserId],
-              };
-            }
-            return user;
-          })
+          prevUsers.map((user) =>
+            user._id === targetId
+              ? { ...user, isFollowing: !user.isFollowing }
+              : user
+          )
         );
       }
 
@@ -147,10 +131,7 @@ const UserListModal = ({ title, type, userId, onClose, onUpdate }) => {
           ) : users.length > 0 ? (
             users.map((user) => {
               // For Following list, always show "Unfollow"
-              const isFollowing =
-                type === "following"
-                  ? true
-                  : (user.followers || []).includes(currentUserId);
+              const isFollowing = type === "following" ? true : user.isFollowing;
 
               return (
                 <div

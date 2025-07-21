@@ -4,10 +4,21 @@
 
 /* Optional custom base styles */
 @layer base {
+  html, body, #root {
+    @apply m-0 p-0 h-full overflow-hidden;
+  }
+
   body {
     @apply bg-gray-50 text-gray-900;
   }
+
   h1 {
     @apply text-2xl font-bold;
+  }
+}
+
+@layer utilities {
+  .animate-glow-border {
+    animation: glow 3s ease-in-out infinite;
   }
 }

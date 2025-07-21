@@ -2,35 +2,86 @@ import React from "react";
 import { motion } from "framer-motion";
 
 const AnimatedWelcome = () => {
+  const headingVariants = {
+    hidden: { opacity: 0, y: -50, scale: 0.8 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      transition: {
+        delay: 0.4,
+        duration: 0.8,
+        ease: [0.17, 0.67, 0.83, 0.67],
+        staggerChildren: 0.1,
+      },
+    },
+  };
+
+  const letterVariants = {
+    hidden: { opacity: 0, y: 20, rotate: -10 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      rotate: 0,
+      transition: {
+        duration: 0.5,
+        ease: "backOut",
+      },
+    },
+  };
+
+  const dotVariants = {
+    hidden: { opacity: 0, scale: 0 },
+    visible: {
+      opacity: 1,
+      scale: [0.8, 1.2, 1],
+      transition: {
+        duration: 0.6,
+        ease: "anticipate",
+      },
+    },
+  };
+
+  const text = "Welcome to Blogiphilia";
+  const letters = text.split("");
+
   return (
     <motion.div
-      className="fixed top-0 left-0 w-full z-40 overflow-hidden"
-      initial={{ opacity: 0, y: -40 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.8, ease: "easeOut" }}
+      className="sticky top-[64px] z-40 w-full flex justify-center pointer-events-none overflow-visible"
+      variants={headingVariants}
+      initial="hidden"
+      animate="visible"
     >
-      {/* Solid + blurred background */}
-      <div className="absolute inset-0 z-0 bg-white dark:bg-gray-900 bg-opacity-95 backdrop-blur-2xl shadow-lg pointer-events-none" />
+      <div className="flex items-baseline">
+        {/* Left decorative dots */}
+        <motion.div 
+          className="flex items-center mr-4"
+          variants={dotVariants}
+        >
+          <span className="w-2 h-2 rounded-full bg-purple-500 mx-1"></span>
+          <span className="w-3 h-3 rounded-full bg-indigo-500 mx-1"></span>
+          <span className="w-2 h-2 rounded-full bg-pink-500 mx-1"></span>
+        </motion.div>
 
-      {/* Foreground content */}
-      <div className="relative z-10 pt-24 pb-12 px-4 text-center">
-        <h1 className="relative inline-block text-4xl sm:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 mb-6">
-          Welcome to Blogiphilia
-          <motion.span
-            className="absolute left-0 bottom-0 h-1 bg-gradient-to-r from-indigo-400 to-pink-400 rounded-full"
-            initial={{ width: 0 }}
-            animate={{ width: "100%" }}
-            transition={{ duration: 0.8, delay: 0.4, ease: "easeOut" }}
-          />
+        {/* Main text */}
+        <h1 className="text-5xl font-bold leading-[1.2] pt-1 pb-1 whitespace-nowrap text-center bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 pointer-events-auto">
+          {letters.map((letter, index) => (
+            <motion.span key={index} className="inline-block" variants={letterVariants}>
+              {letter === " " ? "\u00A0" : letter}
+            </motion.span>
+          ))}
         </h1>
 
-        <p className="italic text-lg sm:text-xl text-gray-700 dark:text-gray-300 max-w-2xl mx-auto mt-4">
-          Share your voice. Inspire the world.
-        </p>
+        {/* Right decorative dots */}
+        <motion.div 
+          className="flex items-center ml-4"
+          variants={dotVariants}
+        >
+          <span className="w-2 h-2 rounded-full bg-pink-500 mx-1"></span>
+          <span className="w-3 h-3 rounded-full bg-purple-500 mx-1"></span>
+          <span className="w-2 h-2 rounded-full bg-indigo-500 mx-1"></span>
+        </motion.div>
       </div>
-
-      {/* Bottom fade into scroll */}
-      <div className="absolute bottom-0 w-full h-10 z-5 bg-gradient-to-b from-white/90 to-transparent dark:from-gray-900/90 pointer-events-none" />
     </motion.div>
   );
 };
