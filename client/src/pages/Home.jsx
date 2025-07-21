@@ -47,10 +47,10 @@ const Home = () => {
       <div
         className="origin-top-left pt-16"
         style={{
-          transform: 'scale(0.67)',
-          transformOrigin: 'top left',
-          width: '149.25%',
-          height: '149.25%',
+          transform: "scale(0.67)",
+          transformOrigin: "top left",
+          width: "149.25%",
+          height: "149.25%",
         }}
       >
         {/* Sticky Tagore Quote */}
@@ -60,22 +60,26 @@ const Home = () => {
 
         {/* Sticky Welcome + Badge */}
         <div className="sticky top-[120px] z-30 w-full flex justify-between items-start px-8">
-          <div className="flex-1 pl-44"> 
+          <div className="flex-1 ml-44">
             <AnimatedWelcome />
             <div className="mt-4 flex justify-center">
-              <div className="w-full max-w-5xl px-4 ml-30">
+              <div className="w-full max-w-2xl">
                 <MiniProfileBar userId={userId} />
               </div>
             </div>
           </div>
-          <div className="ml-12 flex-shrink-0">
+          <div className="ml-8 flex-shrink-0">
             <BadgeSystem user={{ profileCompletion: 65 }} />
           </div>
         </div>
 
         {/* Sticky Tab Menu */}
         <div className="sticky top-[320px] z-10">
-          <TabMenu activeTab={activeTab} setActiveTab={setActiveTab} colors={colors} />
+          <TabMenu
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            colors={colors}
+          />
         </div>
 
         {/* Tab Content */}
