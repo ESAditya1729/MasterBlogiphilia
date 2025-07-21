@@ -16,8 +16,14 @@ export const getCloudinaryImage = async (req, res) => {
   const { folder, filename } = req.params;
 
   try {
+    // Option 1: Search by exact public_id (must match exactly including extension)
+    // const result = await cloudinary.search
+    //   .expression(`public_id:${folder}/${filename}`)
+    //   .execute();
+
+    // Option 2: More flexible search (matches files containing the filename)
     const result = await cloudinary.search
-      .expression(`public_id:${folder}/${filename}*`)
+      .expression(`resource_type:image AND folder:${folder} AND filename:${filename}*`)
       .sort_by('created_at', 'desc')
       .max_results(1)
       .execute();
@@ -27,14 +33,25 @@ export const getCloudinaryImage = async (req, res) => {
     }
 
     const image = result.resources[0];
-
+    
     res.status(200).json({
       success: true,
       imageUrl: image.secure_url,
+      // You might want to return additional info
+      imageInfo: {
+        public_id: image.public_id,
+        format: image.format,
+        width: image.width,
+        height: image.height
+      }
     });
   } catch (error) {
     console.error("Cloudinary fetch error:", error);
-    res.status(500).json({ success: false, message: "Failed to fetch image from Cloudinary" });
+    res.status(500).json({ 
+      success: false, 
+      message: "Failed to fetch image from Cloudinary",
+      error: error.message 
+    });
   }
 };
 
