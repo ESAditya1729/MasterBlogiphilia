@@ -3,6 +3,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Sun, Moon, ArrowLeft, LogIn, MailWarning, CheckCircle, Key, Mail } from "lucide-react";
 import loginIllustration from "../assets/Login-blogging.svg";
+import { useTheme } from "../context/ThemeContext";
+
 
 const Login = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
@@ -11,6 +13,8 @@ const Login = () => {
   const [darkMode, setDarkMode] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
   const navigate = useNavigate();
+  const { mode, toggleTheme } = useTheme();
+  
 
   useEffect(() => {
     const savedMode = localStorage.getItem("darkMode") === "true";
@@ -93,7 +97,7 @@ const Login = () => {
 
       {/* Dark/Light Mode Toggle */}
       <motion.button
-        onClick={toggleDarkMode}
+        onClick={toggleTheme}
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.95 }}
         className="absolute top-6 right-4 sm:top-4 p-2 rounded-full bg-white/90 dark:bg-slate-700/90 shadow-md hover:shadow-lg backdrop-blur-sm transition-all z-20"
