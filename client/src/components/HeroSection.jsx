@@ -14,7 +14,10 @@ const headingLineVariants = {
 
 const HeroSection = () => {
   return (
-    <section className="w-full py-20 px-6 md:px-10 bg-white dark:bg-slate-900 text-slate-900 dark:text-white transition-colors duration-300">
+    <section
+  id="home"
+  className="w-full py-24 md:pb-36 px-6 md:px-10 bg-white dark:bg-slate-900 text-slate-900 dark:text-white transition-colors duration-300"
+>
       <div className="max-w-7xl mx-auto flex flex-col-reverse md:flex-row items-center justify-between gap-12">
         {/* Left: Text Content */}
         <motion.div

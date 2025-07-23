@@ -49,10 +49,17 @@ const WhyBlogiphilia = () => {
   const rightFeatures = featureData.slice(3, 5); // Grow + Inspire
 
   return (
-    <section id="why-blogiphilia" className="w-full py-20 px-6 md:px-10 bg-gray-50 dark:bg-slate-800 text-slate-900 dark:text-white transition-colors duration-300">
+    <section
+      id="why-blogiphilia"
+      className="w-full pt-36 pb-20 scroll-mt-28 px-6 md:px-10 bg-gray-50 dark:bg-slate-800 text-slate-900 dark:text-white transition-colors duration-300"
+    >
       <div className="max-w-7xl mx-auto text-center mb-16">
         <h2 className="text-3xl md:text-4xl font-bold mb-4">
-          Why <span className="text-violet-600 dark:text-violet-400">Blogiphilia</span>?
+          Why{" "}
+          <span className="text-violet-600 dark:text-violet-400">
+            Blogiphilia
+          </span>
+          ?
         </h2>
         <p className="text-lg text-slate-600 dark:text-slate-300 max-w-2xl mx-auto">
           Because your words matter — and we’ve built the perfect home for them.
@@ -74,7 +81,9 @@ const WhyBlogiphilia = () => {
             >
               <div className="mb-4">{feature.icon}</div>
               <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
-              <p className="text-slate-600 dark:text-slate-400 text-sm">{feature.description}</p>
+              <p className="text-slate-600 dark:text-slate-400 text-sm">
+                {feature.description}
+              </p>
             </motion.div>
           ))}
         </div>
@@ -108,7 +117,9 @@ const WhyBlogiphilia = () => {
             >
               <div className="mb-4">{feature.icon}</div>
               <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
-              <p className="text-slate-600 dark:text-slate-400 text-sm">{feature.description}</p>
+              <p className="text-slate-600 dark:text-slate-400 text-sm">
+                {feature.description}
+              </p>
             </motion.div>
           ))}
         </div>
