@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Menu, X, Feather } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
+import { Link } from 'react-router-dom';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -37,13 +38,19 @@ const Navbar = () => {
           ))}
 
           <div className="flex items-center space-x-4 ml-4">
-            <button className="px-4 py-1.5 rounded-full border border-emerald-600 dark:border-emerald-400 text-emerald-700 dark:text-emerald-400 font-medium hover:bg-emerald-500/10 dark:hover:bg-emerald-400/10 transition-all duration-200">
+            <Link
+              to="/signup"
+              className="px-4 py-1.5 rounded-full border border-emerald-600 dark:border-emerald-400 text-emerald-700 dark:text-emerald-400 font-medium hover:bg-emerald-500/10 dark:hover:bg-emerald-400/10 transition-all duration-200"
+            >
               Sign Up
-            </button>
+            </Link>
 
-            <button className="px-4 py-1.5 rounded-full bg-gradient-to-r from-violet-600 to-purple-600 text-white font-medium hover:from-violet-700 hover:to-purple-700 transition duration-200 shadow-lg hover:shadow-violet-500/30">
+            <Link
+              to="/login"
+              className="px-4 py-1.5 rounded-full bg-gradient-to-r from-violet-600 to-purple-600 text-white font-medium hover:from-violet-700 hover:to-purple-700 transition duration-200 shadow-lg hover:shadow-violet-500/30"
+            >
               Login
-            </button>
+            </Link>
 
             <button
               onClick={() => setDarkMode(prev => !prev)}
@@ -90,13 +97,19 @@ const Navbar = () => {
             ))}
 
             <div className="flex flex-col w-full space-y-3 pt-2 border-t border-gray-200 dark:border-gray-700">
-              <button className="w-full py-2.5 rounded-full border border-emerald-600 dark:border-emerald-400 text-emerald-700 dark:text-emerald-400 font-medium hover:bg-emerald-500/10 dark:hover:bg-emerald-400/10 transition">
+              <Link
+                to="/signup"
+                className="w-full text-center py-2.5 rounded-full border border-emerald-600 dark:border-emerald-400 text-emerald-700 dark:text-emerald-400 font-medium hover:bg-emerald-500/10 dark:hover:bg-emerald-400/10 transition"
+              >
                 Sign Up
-              </button>
+              </Link>
 
-              <button className="w-full py-2.5 rounded-full bg-gradient-to-r from-violet-600 to-purple-600 text-white font-medium hover:from-violet-700 hover:to-purple-700 transition shadow-md">
+              <Link
+                to="/login"
+                className="w-full text-center py-2.5 rounded-full bg-gradient-to-r from-violet-600 to-purple-600 text-white font-medium hover:from-violet-700 hover:to-purple-700 transition shadow-md"
+              >
                 Login
-              </button>
+              </Link>
 
               <button
                 onClick={() => setDarkMode(prev => !prev)}
