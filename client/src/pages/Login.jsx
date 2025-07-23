@@ -1,35 +1,34 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Sun, Moon, ArrowLeft, LogIn, MailWarning, CheckCircle, Key, Mail } from "lucide-react";
+import {
+  Sun,
+  Moon,
+  ArrowLeft,
+  LogIn,
+  MailWarning,
+  CheckCircle,
+  Key,
+  Mail,
+} from "lucide-react";
 import loginIllustration from "../assets/Login-blogging.svg";
-import { useTheme } from "../context/ThemeContext";
-
+import { useTheme } from "../contexts/ThemeContext";
 
 const Login = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
-  const [message, setMessage] = useState({ type: "", text: "", details: "", action: null });
+  const [message, setMessage] = useState({
+    type: "",
+    text: "",
+    details: "",
+    action: null,
+  });
   const [loading, setLoading] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
   const navigate = useNavigate();
-  const { mode, toggleTheme } = useTheme();
-  
+  const { mode, toggleTheme } = useTheme(); // Using theme context exclusively
 
-  useEffect(() => {
-    const savedMode = localStorage.getItem("darkMode") === "true";
-    setDarkMode(savedMode);
-    document.documentElement.classList.toggle("dark", savedMode);
-  }, []);
-
-  const toggleDarkMode = () => {
-    const newMode = !darkMode;
-    setDarkMode(newMode);
-    localStorage.setItem("darkMode", newMode);
-    document.documentElement.classList.toggle("dark", newMode);
-  };
-
-  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleChange = (e) =>
+    setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -37,11 +36,14 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
+      const res = await fetch(
+        `${process.env.REACT_APP_API_BASE_URL}/api/auth/login`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(formData),
+        }
+      );
 
       const data = await res.json();
 
@@ -50,16 +52,20 @@ const Login = () => {
         if (res.status === 401) {
           errorDetails = "The email or password you entered is incorrect.";
         } else if (res.status === 404) {
-          errorDetails = "Account not found. Would you like to sign up instead?";
+          errorDetails =
+            "Account not found. Would you like to sign up instead?";
         }
 
         throw {
           message: "Login Failed",
           details: data.message || errorDetails,
-          action: res.status === 404 ? { 
-            text: "Create Account", 
-            path: "/signup" 
-          } : null
+          action:
+            res.status === 404
+              ? {
+                  text: "Create Account",
+                  path: "/signup",
+                }
+              : null,
         };
       }
 
@@ -75,7 +81,7 @@ const Login = () => {
         type: "error",
         text: err.message || "Login Error",
         details: err.details || "Something went wrong. Please try again.",
-        action: err.action
+        action: err.action,
       });
     } finally {
       setLoading(false);
@@ -95,7 +101,7 @@ const Login = () => {
         <div className="absolute bottom-1/4 -right-20 w-96 h-96 rounded-full bg-emerald-300/50 dark:bg-emerald-600/20 blur-3xl"></div>
       </div>
 
-      {/* Dark/Light Mode Toggle */}
+      {/* Dark/Light Mode Toggle - Using theme context */}
       <motion.button
         onClick={toggleTheme}
         whileHover={{ scale: 1.1 }}
@@ -103,7 +109,7 @@ const Login = () => {
         className="absolute top-6 right-4 sm:top-4 p-2 rounded-full bg-white/90 dark:bg-slate-700/90 shadow-md hover:shadow-lg backdrop-blur-sm transition-all z-20"
         aria-label="Toggle dark mode"
       >
-        {darkMode ? (
+        {mode === "dark" ? (
           <Sun className="w-5 h-5 text-amber-400" />
         ) : (
           <Moon className="w-5 h-5 text-slate-700" />
@@ -132,11 +138,11 @@ const Login = () => {
       <motion.div
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ 
-          delay: 0.2, 
+        transition={{
+          delay: 0.2,
           duration: 0.5,
           type: "spring",
-          damping: 10
+          damping: 10,
         }}
         className="max-w-6xl w-full bg-white/95 dark:bg-slate-800/95 rounded-2xl shadow-2xl flex flex-col md:flex-row overflow-hidden border border-gray-200/50 dark:border-slate-700/50 backdrop-blur-sm mt-8 sm:mt-0"
       >
@@ -204,11 +210,13 @@ const Login = () => {
                   <CheckCircle className="flex-shrink-0 w-5 h-5 mt-0.5 text-green-500 dark:text-green-400" />
                 )}
                 <div>
-                  <h4 className={`font-medium ${
-                    message.type === "error"
-                      ? "text-red-700 dark:text-red-300"
-                      : "text-green-700 dark:text-green-300"
-                  }`}>
+                  <h4
+                    className={`font-medium ${
+                      message.type === "error"
+                        ? "text-red-700 dark:text-red-300"
+                        : "text-green-700 dark:text-green-300"
+                    }`}
+                  >
                     {message.text}
                   </h4>
                   <p className="text-sm mt-1 text-slate-600 dark:text-slate-300">
@@ -301,9 +309,25 @@ const Login = () => {
                 )}
                 {loading ? (
                   <>
-                    <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    <svg
+                      className="animate-spin -ml-1 mr-2 h-5 w-5 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
                     </svg>
                     Authenticating...
                   </>
@@ -358,10 +382,10 @@ const Login = () => {
             className="max-w-[80%] h-auto z-10"
             initial={{ scale: 0.95 }}
             animate={{ scale: 1 }}
-            transition={{ 
+            transition={{
               delay: 0.7,
               duration: 0.8,
-              type: "spring"
+              type: "spring",
             }}
           />
         </motion.div>

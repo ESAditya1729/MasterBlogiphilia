@@ -1,16 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import {
-  Sun,
-  Moon,
-  ArrowLeft,
-  UserPlus,
-  MailWarning,
-  CheckCircle,
-} from "lucide-react";
+import { Sun, Moon, ArrowLeft, UserPlus, MailWarning, CheckCircle } from "lucide-react";
 import signupIllustration from "../assets/Signup-blogging.png";
-import { useTheme } from "../context/ThemeContext";
+import { useTheme } from "../contexts/ThemeContext";
 
 const Signup = () => {
   const [formData, setFormData] = useState({
@@ -27,24 +20,10 @@ const Signup = () => {
     action: null,
   });
   const [loading, setLoading] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
   const navigate = useNavigate();
+  const { mode, toggleTheme } = useTheme(); // Using theme context
 
   const { email, username, password, confirmPassword } = formData;
-  const { mode, toggleTheme } = useTheme();
-
-  useEffect(() => {
-    const savedMode = localStorage.getItem("darkMode") === "true";
-    setDarkMode(savedMode);
-    document.documentElement.classList.toggle("dark", savedMode);
-  }, []);
-
-  const toggleDarkMode = () => {
-    const newMode = !darkMode;
-    setDarkMode(newMode);
-    localStorage.setItem("darkMode", newMode);
-    document.documentElement.classList.toggle("dark", newMode);
-  };
 
   const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -135,7 +114,7 @@ const Signup = () => {
       transition={{ duration: 0.5 }}
       className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-violet-50 dark:from-slate-900 dark:to-slate-800 px-4 py-16 sm:py-10 relative"
     >
-      {/* Dark/Light Mode Toggle */}
+      {/* Dark/Light Mode Toggle - Using theme context */}
       <button
         onClick={toggleTheme}
         className="absolute top-6 right-4 sm:top-4 p-2 rounded-full bg-white dark:bg-slate-700 shadow-md hover:shadow-lg transition-all z-10"

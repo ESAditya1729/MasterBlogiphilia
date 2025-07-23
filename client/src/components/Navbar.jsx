@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
-import { Menu, X, Feather } from 'lucide-react';
-import { useTheme } from '../contexts/ThemeContext';
-import { Link } from 'react-router-dom';
+import React, { useState } from "react";
+import { Menu, X, Feather } from "lucide-react";
+import { useTheme } from "../contexts/ThemeContext";
+import { Link } from "react-router-dom";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const { darkMode, setDarkMode } = useTheme();
+  const { mode, toggleTheme } = useTheme();
 
   return (
     <nav className="sticky top-0 z-50 px-4 py-3 md:px-8 md:py-4 bg-white/90 dark:bg-gray-900/90 backdrop-blur-lg border-b border-gray-200 dark:border-gray-700 shadow-md dark:shadow-gray-800/50 transition-all duration-300">
@@ -27,7 +27,7 @@ const Navbar = () => {
 
         {/* Desktop Nav */}
         <div className="hidden md:flex items-center space-x-6">
-          {['Home', 'About', 'Contact'].map((label) => (
+          {["Home", "About", "Contact"].map((label) => (
             <a
               key={label}
               href="#"
@@ -53,11 +53,11 @@ const Navbar = () => {
             </Link>
 
             <button
-              onClick={() => setDarkMode(prev => !prev)}
+              onClick={toggleTheme}
               className="p-2 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition shadow-sm"
               aria-label="Toggle theme"
             >
-              {darkMode ? (
+              {mode === "dark" ? (
                 <span className="text-yellow-400">☀️</span>
               ) : (
                 <span className="text-purple-400">🌙</span>
@@ -86,7 +86,7 @@ const Navbar = () => {
       {isOpen && (
         <div className="md:hidden mt-4 space-y-3 animate-fadeIn bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg rounded-lg p-4 shadow-lg dark:shadow-gray-800/50 border border-gray-200 dark:border-gray-700">
           <div className="flex flex-col items-center space-y-3">
-            {['Home', 'Library', 'About', 'Contact'].map((label) => (
+            {["Home", "Library", "About", "Contact"].map((label) => (
               <a
                 key={label}
                 href="#"
@@ -112,10 +112,10 @@ const Navbar = () => {
               </Link>
 
               <button
-                onClick={() => setDarkMode(prev => !prev)}
+                onClick={toggleTheme}
                 className="w-full py-2.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition"
               >
-                Switch to {darkMode ? 'Light' : 'Dark'} Mode
+                Switch to {mode === "dark" ? "Light" : "Dark"} Mode
               </button>
             </div>
           </div>
