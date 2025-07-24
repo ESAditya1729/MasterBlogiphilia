@@ -10,6 +10,7 @@ import JoinEarlyWriters from "./components/JoinEarlyWriters";
 import Footer from "./components/Footer";
 import Signup from "./pages/Signup"; 
 import Login from "./pages/Login";
+import AboutUs from "./pages/AboutUs";
 
 function App() {
   return (
@@ -32,6 +33,7 @@ function App() {
           />
           <Route path="/signup" element={<Signup />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/about" element={<AboutUs />} />
         </Routes>
       </div>
     </Router>
