@@ -64,35 +64,42 @@ const Signup = () => {
       const data = await res.json();
 
       if (!res.ok) {
-        if (res.status === 409) {
-          throw {
-            message: "Email already in use",
-            details:
-              "This email is already registered. Would you like to log in instead?",
-            action: {
-              text: "Go to Login",
-              path: "/login",
-            },
-          };
-        }
-        throw new Error(data.message || "Registration failed");
-      }
+  if (res.status === 409) {
+    throw {
+      message: "Email already in use",
+      details:
+        "This email is already registered. Would you like to log in instead?",
+      action: {
+        text: "Go to Login",
+        path: "/login",
+      },
+    };
+  }
+  throw new Error(data.message || "Registration failed");
+}
 
-      setMessage({
-        type: "success",
-        text: "Welcome to Blogiphilia!",
-        details:
-          "Your account has been created successfully. Redirecting you to your dashboard...",
-      });
+// Store the token if it exists in the response
+if (data.token) {
+  localStorage.setItem('authToken', data.token);
+  // Optionally: You might want to also store user data
+  // localStorage.setItem('user', JSON.stringify(data.user));
+}
 
-      setFormData({
-        email: "",
-        username: "",
-        password: "",
-        confirmPassword: "",
-      });
+setMessage({
+  type: "success",
+  text: "Welcome to Blogiphilia!",
+  details:
+    "Your account has been created successfully. Redirecting you to your dashboard...",
+});
 
-      setTimeout(() => navigate("/dashboard"), 2000);
+setFormData({
+  email: "",
+  username: "",
+  password: "",
+  confirmPassword: "",
+});
+
+setTimeout(() => navigate("/dashboard"), 2000);
     } catch (err) {
       setMessage({
         type: "error",

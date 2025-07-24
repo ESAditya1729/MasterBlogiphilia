@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Menu, X, Sun, Moon } from "lucide-react"; // Added Sun and Moon imports
+import { Menu, X, Sun, Moon } from "lucide-react";
 import { useTheme } from "../contexts/ThemeContext";
 import { Link } from "react-router-dom";
 import Logo from "../utils/Logo";

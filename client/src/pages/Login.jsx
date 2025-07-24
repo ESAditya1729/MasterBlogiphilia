@@ -68,6 +68,12 @@ const Login = () => {
               : null,
         };
       }
+      if (data.token) {
+        localStorage.setItem("authToken", data.token);
+        if (data.user) {
+          localStorage.setItem("user", JSON.stringify(data.user));
+        }
+      }
 
       setMessage({
         type: "success",
