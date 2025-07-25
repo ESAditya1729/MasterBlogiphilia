@@ -4,3 +4,30 @@
 html {
   scroll-behavior: smooth;
 }
+/* Tiptap Editor Styles */
+.ProseMirror {
+  min-height: 400px;
+  padding: 1rem;
+}
+
+.ProseMirror:focus {
+  outline: none;
+}
+
+/* Dark mode styles */
+.dark .ProseMirror {
+  color: white;
+}
+
+/* Placeholder styling */
+.ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: #adb5bd;
+  pointer-events: none;
+  height: 0;
+}
+
+.dark .ProseMirror p.is-editor-empty:first-child::before {
+  color: #6b7280;
+}

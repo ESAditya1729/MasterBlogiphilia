@@ -11,6 +11,7 @@ import Footer from "./components/Footer";
 import Signup from "./pages/Signup"; 
 import Login from "./pages/Login";
 import AboutUs from "./pages/AboutUs";
+// import BlogEditor from "./pages/BlogEditor";
 
 function App() {
   return (
@@ -34,6 +35,7 @@ function App() {
           <Route path="/signup" element={<Signup />} />
           <Route path="/login" element={<Login />} />
           <Route path="/about" element={<AboutUs />} />
+          {/* <Route path="/editor" element={<BlogEditor />} /> */}
         </Routes>
       </div>
     </Router>

@@ -1,6 +1,5 @@
 import React from "react";
 import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
 import { motion } from "framer-motion";
 import {
   Users,
@@ -51,8 +50,8 @@ const AboutUs = () => {
   };
 
   return (
-    <div className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white overflow-hidden">
-      <Navbar />
+     <div className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
+      <Navbar/>
 
       {/* Hero Section */}
       <section className="relative max-w-7xl mx-auto px-4 py-28 md:py-36 text-center">
@@ -501,7 +500,11 @@ const AboutUs = () => {
         </motion.div>
       </section>
 
-      <Footer />
+      <div className="mt-10 border-t border-slate-300 dark:border-slate-700 pt-4 text-center text-sm text-slate-500 dark:text-slate-400">
+        © {new Date().getFullYear()} Blogiphilia. All rights reserved.
+      </div>
+      <br/>
+      <br/>
 
       {/* Animation styles */}
       <style jsx global>{`

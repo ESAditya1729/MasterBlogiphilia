@@ -21,6 +21,7 @@ const Navbar = () => {
           {["Home", "About", "Contact"].map((label) => (
             <Link
               key={label}
+              onClick={() => window.scrollTo(0, 0)}
               to={label === "Home" ? "/" : `/${label.toLowerCase()}`}
               className="px-4 py-2 text-sm font-medium rounded-full border border-transparent hover:border-emerald-500 dark:hover:border-emerald-400 text-gray-700 dark:text-gray-200 hover:text-emerald-600 dark:hover:text-emerald-400 transition duration-200"
             >
