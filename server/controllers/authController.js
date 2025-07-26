@@ -10,6 +10,11 @@ import asyncHandler from 'express-async-handler';
 export const signup = asyncHandler(async (req, res, next) => {
   const { username, email, password } = req.body;
 
+  // Validate input
+  if (!username || !email || !password) {
+    return next(new ErrorResponse('Please provide all required fields', 400));
+  }
+
   const existingUser = await User.findOne({ $or: [{ email }, { username }] });
   if (existingUser) {
     return next(new ErrorResponse(
@@ -45,7 +50,13 @@ export const login = asyncHandler(async (req, res, next) => {
   }
 
   const user = await User.findOne({ email }).select('+password');
-  if (!user || !(await user.matchPassword(password))) {
+  
+  if (!user) {
+    return next(new ErrorResponse('Invalid credentials', 401));
+  }
+
+  const isMatch = await user.matchPassword(password);
+  if (!isMatch) {
     return next(new ErrorResponse('Invalid credentials', 401));
   }
 
@@ -67,9 +78,13 @@ export const login = asyncHandler(async (req, res, next) => {
 // @desc    Verify authentication
 // @route   GET /api/auth/verify
 // @access  Private
-// authController.js
 export const verifyAuth = asyncHandler(async (req, res, next) => {
-  const user = req.user;
+  const user = await User.findById(req.user._id);
+  
+  if (!user) {
+    return next(new ErrorResponse('User not found', 404));
+  }
+
   res.status(200).json({
     success: true,
     user: {
@@ -91,6 +106,10 @@ export const verifyAuth = asyncHandler(async (req, res, next) => {
 export const forgotPassword = asyncHandler(async (req, res, next) => {
   const { email } = req.body;
 
+  if (!email) {
+    return next(new ErrorResponse('Please provide email', 400));
+  }
+
   const user = await User.findOne({ email });
   if (!user) {
     return next(new ErrorResponse('No user with that email', 404));
@@ -102,7 +121,6 @@ export const forgotPassword = asyncHandler(async (req, res, next) => {
   
   await user.save({ validateBeforeSave: false });
 
-  // TODO: Implement email sending in production
   const resetUrl = `${req.protocol}://${req.get('host')}/api/auth/resetpassword/${resetToken}`;
   console.log('Reset URL:', resetUrl);
 
@@ -131,6 +149,10 @@ export const resetPassword = asyncHandler(async (req, res, next) => {
     return next(new ErrorResponse('Invalid or expired token', 400));
   }
 
+  if (!req.body.password) {
+    return next(new ErrorResponse('Please provide a new password', 400));
+  }
+
   user.password = req.body.password;
   user.resetPasswordToken = undefined;
   user.resetPasswordExpire = undefined;
@@ -151,6 +173,9 @@ export const resetPassword = asyncHandler(async (req, res, next) => {
 
 // Generate JWT token
 const generateToken = (id) => {
+  if (!process.env.JWT_SECRET) {
+    throw new Error('JWT_SECRET is not defined');
+  }
   return jwt.sign({ id }, process.env.JWT_SECRET, { 
     expiresIn: process.env.JWT_EXPIRE || '30d' 
   });
