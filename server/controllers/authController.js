@@ -67,16 +67,9 @@ export const login = asyncHandler(async (req, res, next) => {
 // @desc    Verify authentication
 // @route   GET /api/auth/verify
 // @access  Private
+// authController.js
 export const verifyAuth = asyncHandler(async (req, res, next) => {
-  // The protect middleware already verified the token
-  const user = await User.findById(req.user._id)
-    .select('-password')
-    .lean();
-
-  if (!user) {
-    return next(new ErrorResponse('User not found', 404));
-  }
-
+  const user = req.user;
   res.status(200).json({
     success: true,
     user: {
