@@ -35,20 +35,21 @@ const userSchema = new mongoose.Schema({
     ref: 'User',
     default: []
   },
+  following: {
+    type: [mongoose.Schema.Types.ObjectId],
+    ref: 'User',
+    default: []
+  },
   profilePicture: {
     type: String,
-    default: "",
+    default: ''
   },
-  following: {
-  type: [mongoose.Schema.Types.ObjectId],
-  ref: 'User',
-  default: []
-},
-profilePicture: {
-  type: String,
-  default: '', 
-},
-resetPasswordToken: String,
+  isBanned: {
+    type: Boolean,
+    default: false
+  },
+  passwordChangedAt: Date,
+  resetPasswordToken: String,
   resetPasswordExpire: Date,
   createdAt: {
     type: Date,
@@ -56,12 +57,11 @@ resetPasswordToken: String,
   }
 });
 
-
 // ✅ Enable virtuals in both JSON and object outputs
 userSchema.set('toJSON', { virtuals: true });
 userSchema.set('toObject', { virtuals: true });
 
-// ✅ Virtuals with null safety
+// ✅ Virtuals
 userSchema.virtual('followersCount').get(function () {
   return this.followers?.length || 0;
 });
@@ -70,7 +70,7 @@ userSchema.virtual('followingCount').get(function () {
   return this.following?.length || 0;
 });
 
-// ✅ Encrypt password before save
+// ✅ Encrypt password before saving
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
   const salt = await bcrypt.genSalt(10);
@@ -78,7 +78,14 @@ userSchema.pre('save', async function (next) {
   next();
 });
 
-// ✅ Compare hashed password
+// ✅ Set passwordChangedAt timestamp
+userSchema.pre('save', function (next) {
+  if (!this.isModified('password') || this.isNew) return next();
+  this.passwordChangedAt = Date.now() - 1000; // subtract 1s to ensure it's before JWT iat
+  next();
+});
+
+// ✅ Compare raw password with hashed
 userSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
@@ -90,8 +97,17 @@ userSchema.methods.getResetPasswordToken = function () {
     .createHash('sha256')
     .update(resetToken)
     .digest('hex');
-  this.resetPasswordExpire = Date.now() + 10 * 60 * 1000;
+  this.resetPasswordExpire = Date.now() + 10 * 60 * 1000; // 10 mins
   return resetToken;
+};
+
+// ✅ Check if password changed after JWT was issued
+userSchema.methods.changedPasswordAfter = function (JWTTimestamp) {
+  if (this.passwordChangedAt) {
+    const changedTimestamp = parseInt(this.passwordChangedAt.getTime() / 1000, 10);
+    return JWTTimestamp < changedTimestamp;
+  }
+  return false;
 };
 
 const User = mongoose.model('User', userSchema);
