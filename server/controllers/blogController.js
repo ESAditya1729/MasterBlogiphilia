@@ -95,3 +95,22 @@ export const getTrendingBlogs = asyncHandler(async (req, res) => {
   res.status(200).json(blogs);
 });
 
+// @desc    Get trending genres based on number of published blogs
+// @route   GET /api/blogs/trending-genres
+// @access  Public
+export const getTrendingGenres = asyncHandler(async (req, res) => {
+  const topGenres = await Blog.aggregate([
+    { $match: { isPublished: true } },
+    {
+      $group: {
+        _id: "$genre",
+        count: { $sum: 1 },
+      },
+    },
+    { $sort: { count: -1 } },
+    { $limit: 5 }, // You can adjust this to return more/less genres
+  ]);
+
+  res.status(200).json(topGenres);
+});
+

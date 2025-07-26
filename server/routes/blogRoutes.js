@@ -7,20 +7,25 @@ import {
   getBlogById,
   updateBlog,
   deleteBlog,
-  getTrendingBlogs, // ✅ Newly added import
+  getTrendingGenres, 
+  getTrendingBlogs  
 } from '../controllers/blogController.js';
-// In future: import { protect } from '../middleware/authMiddleware.js';
 
+// Existing routes
 router.route('/')
-  .post(createBlog)      // POST /api/blogs
-  .get(getAllBlogs);     // GET /api/blogs
-
-router.route('/trending') 
-  .get(getTrendingBlogs); // ✅ GET /api/blogs/trending
+  .post(createBlog)
+  .get(getAllBlogs);
 
 router.route('/:id')
-  .get(getBlogById)      // GET /api/blogs/:id
-  .put(updateBlog)       // PUT /api/blogs/:id
-  .delete(deleteBlog);   // DELETE /api/blogs/:id
+  .get(getBlogById)
+  .put(updateBlog)
+  .delete(deleteBlog);
+
+// New trending routes
+router.route('/trending-genres')
+  .get(getTrendingGenres);
+
+router.route('/trending')
+  .get(getTrendingBlogs);
 
 export default router;
