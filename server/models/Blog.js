@@ -35,7 +35,15 @@ const blogSchema = new mongoose.Schema({
   },
   updatedAt: {
     type: Date
-  }
+  },
+  views: {
+  type: Number,
+  default: 0
+},
+likes: {
+  type: Number,
+  default: 0
+}
 });
 
 // Update updatedAt on save
