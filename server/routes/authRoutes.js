@@ -1,5 +1,6 @@
 import express from 'express';
-import { protect, signup, login, forgotPassword,verifyAuth } from '../controllers/authController.js';
+import {signup, login, forgotPassword,verifyAuth } from '../controllers/authController.js';
+import { protect } from '../middleware/auth.js';
 
 const router = express.Router();
 router.post('/signup', signup);
