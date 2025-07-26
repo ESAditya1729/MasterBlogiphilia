@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import loginIllustration from "../assets/Login-blogging.svg";
 import { useTheme } from "../contexts/ThemeContext";
+import { useAuth } from "../contexts/AuthContext";
 
 const Login = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
@@ -25,7 +26,8 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
   const navigate = useNavigate();
-  const { mode, toggleTheme } = useTheme(); // Using theme context exclusively
+  const { mode, toggleTheme } = useTheme();
+  const { login } = useAuth();
 
   const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -68,20 +70,21 @@ const Login = () => {
               : null,
         };
       }
-      if (data.token) {
-        localStorage.setItem("authToken", data.token);
-        if (data.user) {
-          localStorage.setItem("user", JSON.stringify(data.user));
-        }
+
+      // Use AuthContext's login function
+      const loginSuccess = await login(formData.email, formData.password, true);
+
+      if (loginSuccess) {
+        setMessage({
+          type: "success",
+          text: "Welcome Back!",
+          details: "Redirecting you to your dashboard...",
+        });
+
+        setTimeout(() => navigate("/dashboard"), 1500);
+      } else {
+        throw new Error("Failed to initialize session");
       }
-
-      setMessage({
-        type: "success",
-        text: "Welcome Back!",
-        details: "Redirecting you to your dashboard...",
-      });
-
-      setTimeout(() => navigate("/dashboard"), 1500);
     } catch (err) {
       setMessage({
         type: "error",
@@ -107,7 +110,7 @@ const Login = () => {
         <div className="absolute bottom-1/4 -right-20 w-96 h-96 rounded-full bg-emerald-300/50 dark:bg-emerald-600/20 blur-3xl"></div>
       </div>
 
-      {/* Dark/Light Mode Toggle - Using theme context */}
+      {/* Dark/Light Mode Toggle */}
       <motion.button
         onClick={toggleTheme}
         whileHover={{ scale: 1.1 }}

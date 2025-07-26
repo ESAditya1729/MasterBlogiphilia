@@ -1,9 +1,17 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Sun, Moon, ArrowLeft, UserPlus, MailWarning, CheckCircle } from "lucide-react";
+import {
+  Sun,
+  Moon,
+  ArrowLeft,
+  UserPlus,
+  MailWarning,
+  CheckCircle,
+} from "lucide-react";
 import signupIllustration from "../assets/Signup-blogging.png";
 import { useTheme } from "../contexts/ThemeContext";
+import { useAuth } from "../contexts/AuthContext"; // Added AuthContext import
 
 const Signup = () => {
   const [formData, setFormData] = useState({
@@ -21,33 +29,65 @@ const Signup = () => {
   });
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { mode, toggleTheme } = useTheme(); // Using theme context
+  const { mode, toggleTheme } = useTheme();
+  const { login } = useAuth();
 
   const { email, username, password, confirmPassword } = formData;
 
   const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    setMessage({ type: "", text: "", details: "", action: null });
-
-    if (password !== confirmPassword) {
-      return setMessage({
+  const validateForm = () => {
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setMessage({
         type: "error",
-        text: "Password mismatch",
-        details: "The passwords you entered don't match. Please try again.",
+        text: "Invalid email",
+        details: "Please enter a valid email address",
       });
+      return false;
     }
 
+    // Username validation
+    const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
+    if (!usernameRegex.test(username)) {
+      setMessage({
+        type: "error",
+        text: "Invalid username",
+        details:
+          "Username must be 3-20 characters (letters, numbers, underscores)",
+      });
+      return false;
+    }
+
+    // Password validation
     if (password.length < 8) {
-      return setMessage({
+      setMessage({
         type: "error",
         text: "Weak password",
         details: "For your security, please use at least 8 characters.",
       });
+      return false;
     }
+
+    if (password !== confirmPassword) {
+      setMessage({
+        type: "error",
+        text: "Password mismatch",
+        details: "The passwords you entered don't match. Please try again.",
+      });
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setMessage({ type: "", text: "", details: "", action: null });
+
+    if (!validateForm()) return;
 
     setLoading(true);
 
@@ -64,42 +104,48 @@ const Signup = () => {
       const data = await res.json();
 
       if (!res.ok) {
-  if (res.status === 409) {
-    throw {
-      message: "Email already in use",
-      details:
-        "This email is already registered. Would you like to log in instead?",
-      action: {
-        text: "Go to Login",
-        path: "/login",
-      },
-    };
-  }
-  throw new Error(data.message || "Registration failed");
-}
+        if (res.status === 409) {
+          throw {
+            message: "Email already in use",
+            details:
+              "This email is already registered. Would you like to log in instead?",
+            action: {
+              text: "Go to Login",
+              path: "/login",
+            },
+          };
+        }
+        throw new Error(data.message || "Registration failed");
+      }
 
-// Store the token if it exists in the response
-if (data.token) {
-  localStorage.setItem('authToken', data.token);
-  // Optionally: You might want to also store user data
-  // localStorage.setItem('user', JSON.stringify(data.user));
-}
+      // Use AuthContext login instead of direct localStorage
+      const loginSuccess = await login(
+        {
+          token: data.token,
+          user: data.user,
+        },
+        true
+      ); // true for remember me
 
-setMessage({
-  type: "success",
-  text: "Welcome to Blogiphilia!",
-  details:
-    "Your account has been created successfully. Redirecting you to your dashboard...",
-});
+      if (loginSuccess) {
+        setMessage({
+          type: "success",
+          text: "Welcome to Blogiphilia!",
+          details:
+            "Your account has been created successfully. Redirecting you to your dashboard...",
+        });
 
-setFormData({
-  email: "",
-  username: "",
-  password: "",
-  confirmPassword: "",
-});
+        setFormData({
+          email: "",
+          username: "",
+          password: "",
+          confirmPassword: "",
+        });
 
-setTimeout(() => navigate("/dashboard"), 2000);
+        setTimeout(() => navigate("/dashboard"), 2000);
+      } else {
+        throw new Error("Failed to initialize session");
+      }
     } catch (err) {
       setMessage({
         type: "error",

@@ -1,260 +1,318 @@
-import React, { useState, useEffect } from "react";
-import { NavLink } from "react-router-dom";
-import {
-  Home,
-  BookOpen,
-  User,
-  Settings,
-  LogOut,
-  ChevronLeft,
-  ChevronRight,
-  Feather,
-} from "lucide-react";
-import Logo from "../utils/Logo";
-import axios from "axios";
+import { motion } from 'framer-motion';
+import { 
+  FiFileText, 
+  FiSettings, 
+  FiUsers, 
+  FiBarChart2, 
+  FiBookmark, 
+  FiChevronLeft, 
+  FiMenu, 
+  FiSun, 
+  FiMoon,
+  FiUser,
+  FiLogOut,
+  FiExternalLink
+} from 'react-icons/fi';
+import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
+import Logo from '../utils/Logo';
 
-const Sidebar = () => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
-  const [userProfile, setUserProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+const Sidebar = ({ 
+  isCollapsed, 
+  toggleCollapse, 
+  activeTab, 
+  setActiveTab 
+}) => {
+  const { mode, toggleTheme } = useTheme();
   const { user, logout } = useAuth();
 
   const navItems = [
-    { label: "Overview", icon: Home, path: "/dashboard" },
-    { label: "Library", icon: BookOpen, path: "/dashboard/library" },
-    { label: "Profile", icon: User, path: "/dashboard/profile" },
-    { label: "Settings", icon: Settings, path: "/dashboard/settings" },
+    { id: 'overview', icon: <FiFileText />, label: 'Overview' },
+    { id: 'analytics', icon: <FiBarChart2 />, label: 'Analytics' },
+    { id: 'content', icon: <FiBookmark />, label: 'Content' },
+    { id: 'audience', icon: <FiUsers />, label: 'Audience' },
+    { id: 'settings', icon: <FiSettings />, label: 'Settings' },
   ];
 
-  useEffect(() => {
-    const fetchUserProfile = async () => {
-      if (!user?.id) {
-        setLoading(false);
-        return;
-      }
-
-      try {
-        setLoading(true);
-        setError(null);
-        
-        const response = await axios.get(
-          `${process.env.REACT_APP_API_BASE_URL}/api/users/${user.id}/full-profile`, 
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
-        );
-
-        if (!response.data) {
-          throw new Error("No profile data received");
-        }
-
-        // Map the backend response to expected frontend structure
-        const profileData = {
-          username: response.data.username,
-          email: response.data.email,
-          profilePicture: response.data.profilePicture || "/default-profile.jpg",
-          bio: response.data.bio,
-          followersCount: response.data.followersCount || 0,
-          followingCount: response.data.followingCount || 0,
-          createdAt: response.data.createdAt
-        };
-
-        setUserProfile(profileData);
-      } catch (err) {
-        console.error("Profile fetch error:", {
-          error: err,
-          response: err.response,
-          config: err.config
-        });
-        
-        setError(
-          err.response?.data?.message || 
-          err.message || 
-          "Failed to load profile"
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUserProfile();
-  }, [user?.id]);
-
-  const toggleSidebar = () => {
-    setIsCollapsed(!isCollapsed);
-  };
-
-  const handleLogout = () => {
-    logout();
-    window.location.reload();
-  };
-
   return (
-    <aside
-      className={`${
-        isCollapsed ? "w-20" : "w-64"
-      } min-h-screen bg-white dark:bg-slate-900 border-r border-gray-200 dark:border-slate-700 p-4 hidden md:flex flex-col justify-between transition-all duration-300 relative overflow-hidden`}
+    <motion.aside
+      initial={{ width: 240 }}
+      animate={{ 
+        width: isCollapsed ? 80 : 240,
+        borderRight: mode === 'dark' 
+          ? '1px solid rgba(99, 102, 241, 0.2)' 
+          : '1px solid rgba(99, 102, 241, 0.1)'
+      }}
+      transition={{ 
+        duration: 0.3, 
+        ease: [0.22, 1, 0.36, 1]
+      }}
+      className={`relative flex flex-col h-full ${
+        mode === 'dark' 
+          ? 'bg-gray-900' 
+          : 'bg-white'
+      } shadow-xl z-10`}
     >
-      {/* Glow effect */}
-      <div className="absolute inset-0 border-r-2 border-transparent pointer-events-none">
-        <div className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-emerald-400 to-emerald-600 opacity-20"></div>
-        <div className="absolute inset-y-0 left-0 w-0.5 bg-emerald-400/30"></div>
+      {/* Animated border highlight */}
+      <motion.div 
+        className="absolute top-0 right-0 h-full w-0.5 bg-indigo-500"
+        initial={{ opacity: 0 }}
+        animate={{ 
+          opacity: [0, 0.8, 0],
+          transition: { duration: 3, repeat: Infinity }
+        }}
+      />
+
+      {/* Collapse bar on top */}
+      <div className={`flex items-center justify-between p-3 border-b ${
+        mode === 'dark' ? 'border-gray-800' : 'border-gray-100'
+      }`}>
+        {!isCollapsed && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="flex items-center"
+          >
+            <Logo mode={mode} size="small" />
+          </motion.div>
+        )}
+        <motion.div
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.95 }}
+          className={`p-1 rounded-md cursor-pointer ${
+            mode === 'dark' ? 'hover:bg-gray-800' : 'hover:bg-gray-100'
+          }`}
+          onClick={toggleCollapse}
+        >
+          {isCollapsed ? (
+            <FiMenu className={mode === 'dark' ? 'text-gray-300' : 'text-gray-600'} />
+          ) : (
+            <FiChevronLeft className={mode === 'dark' ? 'text-gray-300' : 'text-gray-600'} />
+          )}
+        </motion.div>
       </div>
 
-      {/* Top Section - Profile and Nav */}
-      <div>
-        {/* Profile Section */}
-        <div className="flex flex-col items-center gap-3 mb-8">
+      {/* Enhanced Profile Section */}
+      <div className={`p-4 ${isCollapsed ? 'pt-2' : ''}`}>
+        <motion.div 
+          className={`flex ${isCollapsed ? 'flex-col items-center' : 'flex-row items-center'} gap-3`}
+          whileHover={{ 
+            backgroundColor: mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
+          }}
+        >
           <div className="relative group">
-            {loading ? (
-              <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 animate-pulse"></div>
-            ) : error ? (
-              <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
-                <User size={20} className="text-red-500" />
+            {(() => {
+              const storedUser = JSON.parse(localStorage.getItem('user'));
+              const currentUser = storedUser || user;
+              const hasImage = currentUser?.profilePicture;
+              
+              return (
+                <>
+                  {hasImage ? (
+                    <motion.img
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      src={currentUser.profilePicture}
+                      alt={currentUser.username}
+                      className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-lg cursor-pointer"
+                    />
+                  ) : (
+                    <motion.div
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold cursor-pointer shadow-lg"
+                    >
+                      {currentUser?.username?.charAt(0).toUpperCase() || 'U'}
+                    </motion.div>
+                  )}
+                  <motion.div 
+                    className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-green-500 border-2 border-white"
+                    animate={{ scale: [1, 1.2, 1] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  />
+                  {isCollapsed && (
+                    <div className="absolute left-full ml-3 px-2 py-1 bg-gray-800 text-white text-xs rounded-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                      {currentUser?.username || 'User'}
+                    </div>
+                  )}
+                </>
+              );
+            })()}
+          </div>
+          
+          {!isCollapsed && (() => {
+            const storedUser = JSON.parse(localStorage.getItem('user'));
+            const currentUser = storedUser || user;
+            
+            return (
+              <motion.div
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.1 }}
+                className="flex-1 overflow-hidden"
+              >
+                <h3 className={`font-bold text-sm truncate ${
+                  mode === 'dark' ? 'text-gray-100' : 'text-gray-800'
+                }`}>
+                  {currentUser?.username || 'User Name'}
+                </h3>
+                <p className={`text-xs ${
+                  mode === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                } truncate`}>
+                  {currentUser?.email || 'admin@example.com'}
+                </p>
+              </motion.div>
+            );
+          })()}
+        </motion.div>
+
+        {!isCollapsed && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="mt-3"
+          >
+            <motion.button
+              whileHover={{ 
+                scale: 1.02, 
+                backgroundColor: mode === 'dark' ? 'rgba(74, 222, 128, 0.2)' : 'rgba(74, 222, 128, 0.1)'
+              }}
+              whileTap={{ scale: 0.98 }}
+              className={`w-full flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-sm font-semibold ${
+                mode === 'dark' ? 'text-green-300' : 'text-green-600'
+              }`}
+            >
+              <span>View Profile</span>
+              <FiExternalLink size={14} />
+            </motion.button>
+          </motion.div>
+        )}
+      </div>
+
+      {/* Animated separator */}
+      <motion.div 
+        className={`w-full h-px mx-auto my-2 ${
+          mode === 'dark' ? 'bg-gray-800' : 'bg-gray-100'
+        }`}
+        initial={{ width: 0 }}
+        animate={{ width: '100%' }}
+        transition={{ duration: 0.5 }}
+      />
+
+      {/* Navigation Items */}
+      <nav className="flex-1 overflow-y-auto py-2 px-2">
+        {navItems.map((item) => (
+          <motion.div
+            key={item.id}
+            whileHover={{ 
+              translateX: 5,
+              backgroundColor: mode === 'dark' ? 'rgba(74, 222, 128, 0.2)' : 'rgba(74, 222, 128, 0.1)'
+            }}
+            whileTap={{ 
+              scale: 0.98,
+              backgroundColor: mode === 'dark' ? 'rgba(74, 222, 128, 0.3)' : 'rgba(74, 222, 128, 0.2)'
+            }}
+            className={`flex items-center px-3 py-3 rounded-lg mx-1 cursor-pointer ${
+              activeTab === item.id 
+                ? mode === 'dark' 
+                  ? 'bg-green-900/30 text-green-300' 
+                  : 'bg-green-100 text-green-700'
+                : mode === 'dark' 
+                  ? 'text-gray-300' 
+                  : 'text-gray-600'
+            }`}
+            onClick={() => setActiveTab(item.id)}
+          >
+            <div className={`text-lg ${
+              activeTab === item.id 
+                ? mode === 'dark' 
+                  ? 'text-green-300' 
+                  : 'text-green-600'
+                : mode === 'dark'
+                  ? 'text-gray-400'
+                  : 'text-gray-500'
+            }`}>
+              {item.icon}
+            </div>
+            {!isCollapsed && (
+              <motion.span
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ 
+                  opacity: 1, 
+                  x: 0,
+                  fontWeight: activeTab === item.id ? 700 : 600
+                }}
+                transition={{ delay: 0.1 }}
+                className={`ml-3 text-sm ${
+                  activeTab === item.id 
+                    ? 'font-bold' 
+                    : 'font-semibold'
+                }`}
+              >
+                {item.label}
+              </motion.span>
+            )}
+            {isCollapsed && (
+              <div className="absolute left-full ml-3 px-2 py-1 bg-gray-800 text-white text-xs rounded-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                {item.label}
               </div>
+            )}
+          </motion.div>
+        ))}
+      </nav>
+
+      {/* Bottom Controls */}
+      <div className={`p-3 border-t ${
+        mode === 'dark' ? 'border-gray-800' : 'border-gray-100'
+      }`}>
+        {/* Theme Toggle */}
+        <motion.div
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          className={`flex items-center justify-between p-2 rounded-lg cursor-pointer ${
+            mode === 'dark' 
+              ? 'bg-gray-800 hover:bg-gray-700' 
+              : 'bg-gray-50 hover:bg-gray-100'
+          }`}
+          onClick={toggleTheme}
+        >
+          <div className="flex items-center">
+            {mode === 'dark' ? (
+              <FiMoon className="text-lg text-green-300" />
             ) : (
-              <>
-                <img
-                  src={userProfile?.profilePicture}
-                  alt="Profile"
-                  className="w-10 h-10 rounded-full object-cover cursor-pointer border-2 border-emerald-400/30 hover:border-emerald-400/50 transition-all"
-                />
-                {isCollapsed && (
-                  <div className="absolute left-full ml-2 px-2 py-1 bg-white dark:bg-slate-800 rounded-md shadow-lg text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-50">
-                    {userProfile?.username || "Profile"}
-                  </div>
-                )}
-              </>
+              <FiSun className="text-lg text-yellow-500" />
+            )}
+            {!isCollapsed && (
+              <span className={`ml-3 text-sm font-semibold ${
+                mode === 'dark' ? 'text-gray-200' : 'text-gray-700'
+              }`}>
+                {mode === 'dark' ? 'Light Mode' : 'Dark Mode'}
+              </span>
             )}
           </div>
-          {!isCollapsed && (
-            <div className="text-center">
-              {loading ? (
-                <>
-                  <div className="h-5 w-32 bg-slate-200 dark:bg-slate-700 rounded animate-pulse mb-2"></div>
-                  <div className="h-4 w-24 bg-slate-200 dark:bg-slate-700 rounded animate-pulse mx-auto"></div>
-                </>
-              ) : error ? (
-                <div className="text-red-500 text-xs p-2 bg-red-50 dark:bg-red-900/20 rounded">
-                  {error}
-                  <button 
-                    onClick={() => window.location.reload()}
-                    className="block mt-1 text-emerald-600 hover:underline text-xs"
-                  >
-                    Click to retry
-                  </button>
-                </div>
-              ) : (
-                <>
-                  <h3 className="font-medium text-slate-800 dark:text-slate-200">
-                    {userProfile?.username || "User"}
-                  </h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 truncate max-w-[200px]">
-                    {userProfile?.email || "No email"}
-                  </p>
-                  {userProfile?.bio && (
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 px-2">
-                      {userProfile.bio}
-                    </p>
-                  )}
-                  <div className="flex justify-center gap-4 mt-2 text-xs text-slate-500 dark:text-slate-400">
-                    <span>{userProfile?.followersCount || 0} Followers</span>
-                    <span>{userProfile?.followingCount || 0} Following</span>
-                  </div>
-                </>
-              )}
-            </div>
-          )}
-        </div>
+        </motion.div>
 
-        {/* Collapse Button */}
-        <button
-          onClick={toggleSidebar}
-          className="flex items-center justify-center w-full mb-6 p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group"
-          aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-        >
-          {isCollapsed ? (
-            <ChevronRight
-              size={20}
-              className="text-slate-600 dark:text-slate-300 group-hover:text-emerald-500"
-            />
-          ) : (
-            <ChevronLeft
-              size={20}
-              className="text-slate-600 dark:text-slate-300 group-hover:text-emerald-500"
-            />
-          )}
-        </button>
-
-        {/* Brand Logo Section */}
-        <div
-          className={`flex items-center gap-2 text-2xl font-bold text-emerald-600 mb-8 ${
-            isCollapsed ? "justify-center" : ""
-          }`}
-        >
-          {isCollapsed ? (
-            <Feather
-              size={26}
-              className="text-emerald-600 hover:text-emerald-500 transition-colors"
-            />
-          ) : (
-            <Logo />
-          )}
-        </div>
-
-        {/* Nav Items */}
-        <nav className="flex flex-col gap-2">
-          {navItems.map(({ label, icon: Icon, path }) => (
-            <NavLink
-              key={label}
-              to={path}
-              className={({ isActive }) =>
-                `group flex items-center ${
-                  isCollapsed ? "justify-center px-0" : "gap-3 px-3"
-                } py-2 rounded-lg font-medium text-sm transition-all duration-200 ${
-                  isActive
-                    ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-700/20 dark:text-emerald-300"
-                    : "text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
-                }`
-              }
-            >
-              <Icon
-                size={20}
-                className="transition-transform group-hover:scale-110"
-              />
-              {!isCollapsed && <span>{label}</span>}
-              {isCollapsed && (
-                <div className="absolute left-full ml-2 px-2 py-1 bg-white dark:bg-slate-800 rounded-md shadow-lg text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-50">
-                  {label}
-                </div>
-              )}
-            </NavLink>
-          ))}
-        </nav>
+        {/* Profile/Logout */}
+        {!isCollapsed && (
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className={`mt-2 flex items-center p-2 rounded-lg cursor-pointer ${
+              mode === 'dark' 
+                ? 'bg-gray-800 hover:bg-gray-700 text-red-400' 
+                : 'bg-gray-50 hover:bg-gray-100 text-red-500'
+            }`}
+            onClick={logout}
+          >
+            <FiLogOut className="text-lg" />
+            <span className={`ml-3 text-sm font-semibold ${
+              mode === 'dark' ? 'text-red-400' : 'text-red-500'
+            }`}>Logout</span>
+          </motion.div>
+        )}
       </div>
-
-      {/* Logout */}
-      <div className="pt-6 border-t border-gray-200 dark:border-slate-700">
-        <button
-          onClick={handleLogout}
-          className={`flex items-center ${
-            isCollapsed ? "justify-center" : "gap-3 px-3"
-          } py-2 rounded-lg text-sm font-medium text-red-500 hover:bg-red-100 dark:hover:bg-red-500/10 transition-colors w-full`}
-        >
-          <LogOut size={20} />
-          {!isCollapsed && <span>Logout</span>}
-          {isCollapsed && (
-            <div className="absolute left-full ml-2 px-2 py-1 bg-white dark:bg-slate-800 rounded-md shadow-lg text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-50">
-              Logout
-            </div>
-          )}
-        </button>
-      </div>
-    </aside>
+    </motion.aside>
   );
 };
 

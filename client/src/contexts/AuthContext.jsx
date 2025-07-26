@@ -1,133 +1,172 @@
 import { createContext, useState, useEffect, useCallback, useContext } from 'react';
 import { jwtDecode } from 'jwt-decode';
-import axios from 'axios';
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [authState, setAuthState] = useState({
+    user: null,
+    loading: true,
+    error: null
+  });
 
-  // Enhanced token validation with additional checks
   const validateToken = useCallback((token) => {
     try {
+      if (!token) return null;
+
       const decoded = jwtDecode(token);
       const currentTime = Date.now() / 1000;
-      
+
       if (decoded.exp < currentTime) {
-        throw new Error('Token expired');
+        return null;
       }
-      
-      return { 
-        ...decoded, 
-        token,
-        id: decoded.userId || decoded.sub || decoded.id,
-        isAuthenticated: true
-      };
+
+      return decoded;
     } catch (err) {
-      console.error("Token validation failed:", err.message);
+      return null;
+    }
+  }, []);
+
+  const verifyToken = useCallback(async (token) => {
+    try {
+      const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/auth/verify`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Token verification failed');
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (err) {
       throw err;
     }
   }, []);
 
-  // Initialize auth state
-  useEffect(() => {
-    const initializeAuth = async () => {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setLoading(false);
-        return;
-      }
+  const logout = useCallback(() => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setAuthState({
+      user: null,
+      loading: false,
+      error: null
+    });
+  }, []);
 
-      try {
-        const validatedUser = validateToken(token);
-        
-        // Verify token with backend
-        await axios.get('/api/auth/verify', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        
-        setUser(validatedUser);
-      } catch (err) {
-        console.error("Authentication initialization failed:", err);
-        localStorage.removeItem('token');
-        setUser(null);
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const initializeAuth = useCallback(async () => {
+    const token = localStorage.getItem('token');
+    const userData = localStorage.getItem('user');
 
-    initializeAuth();
-  }, [validateToken]);
+    if (!token) {
+      setAuthState({ user: null, loading: false, error: null });
+      return;
+    }
 
-  const login = async (userData, remember = true) => {
+    const decoded = validateToken(token);
+    if (!decoded) {
+      logout();
+      return;
+    }
+
+    let parsedUser = null;
     try {
-      const validatedUser = validateToken(userData.token);
-      
-      if (remember) {
-        localStorage.setItem('token', userData.token);
+      parsedUser = userData ? JSON.parse(userData) : null;
+    } catch (err) {
+      logout();
+      return;
+    }
+
+    setAuthState({
+      user: parsedUser ? { ...parsedUser, isAuthenticated: true } : null,
+      loading: true,
+      error: null
+    });
+
+    try {
+      const verifiedUser = await verifyToken(token);
+      const completeUser = {
+        ...verifiedUser.user,
+        isAuthenticated: true
+      };
+
+      setAuthState({
+        user: completeUser,
+        loading: false,
+        error: null
+      });
+      localStorage.setItem('user', JSON.stringify(completeUser));
+    } catch (err) {
+      console.warn("⚠️ Token backend verification failed. Logging out.");
+      logout();
+    }
+  }, [validateToken, verifyToken, logout]);
+
+  useEffect(() => {
+    initializeAuth();
+  }, [initializeAuth]);
+
+  const login = async (email, password, remember = true) => {
+    try {
+      setAuthState(prev => ({ ...prev, loading: true, error: null }));
+
+      const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, password })
+      });
+
+      if (!response.ok) {
+        throw new Error(await response.text());
       }
-      
-      setUser(validatedUser);
-      setError(null);
+
+      const data = await response.json();
+      const user = {
+        ...data.user,
+        token: data.token,
+        isAuthenticated: true
+      };
+
+      if (remember) {
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(user));
+      }
+
+      setAuthState({
+        user,
+        loading: false,
+        error: null
+      });
+
       return true;
     } catch (err) {
-      console.error("Login failed:", err);
-      setError(err.message);
+      setAuthState({
+        user: null,
+        loading: false,
+        error: err.message
+      });
       return false;
     }
   };
 
-  const logout = useCallback(() => {
-    localStorage.removeItem('token');
-    setUser(null);
-    setError(null);
-    // Optional: Add API call to invalidate token on server
-    // axios.post('/api/auth/logout');
-  }, []);
-
-  // Function to refresh user data (for profile updates)
-  const refreshUser = useCallback(async () => {
-    if (!user?.token) return;
-    
-    try {
-      const response = await axios.get(`/api/users/${user.id}/full-profile`, {
-        headers: { Authorization: `Bearer ${user.token}` }
-      });
-      
-      setUser(prev => ({
-        ...prev,
-        ...response.data,
-        token: prev.token,
-        isAuthenticated: true
-      }));
-      setError(null);
-    } catch (err) {
-      console.error("Failed to refresh user data:", err);
-      setError(err.response?.data?.message || "Failed to refresh profile");
-    }
-  }, [user]);
-
-  const value = {
-    user,
-    loading,
-    error,
-    login,
-    logout,
-    refreshUser,
-    isAuthenticated: !!user?.isAuthenticated
-  };
-
   return (
-    <AuthContext.Provider value={value}>
-      {!loading && children}
+    <AuthContext.Provider value={{
+      ...authState,
+      login,
+      logout,
+      isAuthenticated: authState.user?.isAuthenticated || false
+    }}>
+      {children}
     </AuthContext.Provider>
   );
 }
 
-// Custom hook for consuming context
 export function useAuth() {
   const context = useContext(AuthContext);
   if (!context) {
