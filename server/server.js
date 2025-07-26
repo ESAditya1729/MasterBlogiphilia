@@ -9,6 +9,7 @@ import userRoutes from './routes/userRoutes.js';
 import ErrorResponse from './utils/errorResponse.js';
 import mediaRoutes from './routes/mediaRoutes.js';
 import blogRoutes from './routes/blogRoutes.js';
+import statsRoutes from "./routes/statsRoutes.js";
 
 dotenv.config();
 const app = express();
@@ -27,6 +28,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/media', mediaRoutes);
 app.use('/api/blogs', blogRoutes);
+app.use("/api/stats", statsRoutes);
+
 
 // Error handling middleware (must be after routes)
 app.use((err, req, res, next) => {
