@@ -7,11 +7,14 @@ import {
   getBlogById,
   updateBlog,
   deleteBlog,
-  getTrendingGenres, 
-  getTrendingBlogs  
+  getTrendingGenres // <- your new controller
 } from '../controllers/blogController.js';
 
-// Existing routes
+// FIRST: Register specific routes
+router.route('/trending-genres')
+  .get(getTrendingGenres); // GET /api/blogs/trending-genres
+
+// THEN: Regular blog routes
 router.route('/')
   .post(createBlog)
   .get(getAllBlogs);
@@ -20,12 +23,5 @@ router.route('/:id')
   .get(getBlogById)
   .put(updateBlog)
   .delete(deleteBlog);
-
-// New trending routes
-router.route('/trending-genres')
-  .get(getTrendingGenres);
-
-router.route('/trending')
-  .get(getTrendingBlogs);
 
 export default router;
