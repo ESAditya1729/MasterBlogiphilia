@@ -1,59 +1,126 @@
-import { motion } from 'framer-motion';
+import { useState } from "react";
+import { motion } from "framer-motion";
+
+import BlogViewModal from "../../components/modals/BlogViewModal";
+import ViewAllPostsModal from "../../components/modals/ViewAllPostsModal";
+import ViewAllGenresModal from "../../components/modals/ViewAllGenresModal";
+
 import {
-  FiTrendingUp,
-  FiBookOpen,
-  FiUsers,
-  FiCheckCircle
-} from 'react-icons/fi';
+  OverviewHeader,
+  StatsCards,
+  TrendingPosts,
+  TrendingGenres,
+  SearchSection,
+  HelpSection
+} from "../../components/Dash-Overview";
+
 
 const Overview = () => {
-  const stats = [
+  const [selectedBlogId, setSelectedBlogId] = useState(null); 
+  const [showAllPosts, setShowAllPosts] = useState(false);
+  const [showAllGenres, setShowAllGenres] = useState(false);
+
+  // TODO: Replace with API calls
+  // const stats = [
+  //   {
+  //     title: "Total Users",
+  //     value: 1024,
+  //     trend: "+12%",
+  //     trendColor: "text-green-500",
+  //     icon: <span>👤</span>, // Replace with your real icon component
+  //   },
+  //   {
+  //     title: "Total Posts",
+  //     value: 345,
+  //     trend: "+8%",
+  //     trendColor: "text-green-500",
+  //     icon: <span>📝</span>,
+  //   },
+  //   {
+  //     title: "Comments",
+  //     value: 892,
+  //     trend: "+5%",
+  //     trendColor: "text-green-500",
+  //     icon: <span>💬</span>,
+  //   },
+  // ];
+
+  const trendingPosts = [
     {
-      title: 'Total Posts',
-      value: 48,
-      icon: <FiBookOpen className="text-blue-500 text-2xl" />
+      id: "1",
+      title: "Understanding React Server Components",
+      author: "John Doe",
+      views: 3400,
     },
     {
-      title: 'Monthly Views',
-      value: '12.4K',
-      icon: <FiTrendingUp className="text-green-500 text-2xl" />
+      id: "2",
+      title: "Advanced CSS Techniques for 2025",
+      author: "Jane Smith",
+      views: 2780,
+    },
+  ];
+
+  const trendingGenres = [
+    {
+      id: "tech",
+      name: "Technology",
+      postCount: 102,
     },
     {
-      title: 'Subscribers',
-      value: 320,
-      icon: <FiUsers className="text-purple-500 text-2xl" />
+      id: "design",
+      name: "Design",
+      postCount: 88,
     },
-    {
-      title: 'Published',
-      value: 36,
-      icon: <FiCheckCircle className="text-emerald-500 text-2xl" />
-    }
   ];
 
   return (
-    <motion.div
-      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.4 }}
-    >
-      {stats.map((stat, idx) => (
-        <motion.div
-          key={idx}
-          className="p-6 rounded-xl bg-white dark:bg-gray-800 shadow-sm border border-gray-200 dark:border-gray-700 flex items-center space-x-4"
-          whileHover={{ scale: 1.02 }}
-          transition={{ type: 'spring', stiffness: 300 }}
-        >
-          <div className="p-3 bg-gray-100 dark:bg-gray-700 rounded-full">
-            {stat.icon}
+    <div className="space-y-8">
+      <OverviewHeader />
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Left Column */}
+        <div className="lg:col-span-2 space-y-8">
+          <StatsCards />
+
+          <TrendingPosts
+            posts={trendingPosts}
+            onViewAll={() => setShowAllPosts(true)}
+            onPostClick={setSelectedBlogId}
+          />
+
+          <TrendingGenres
+            genres={trendingGenres}
+            onViewAll={() => setShowAllGenres(true)}
+          />
+        </div>
+
+        {/* Right Column */}
+        <div className="space-y-8">
+          <div className="sticky top-6 space-y-8">
+            <SearchSection />
+            <HelpSection />
           </div>
-          <div>
-            <p className="text-gray-600 dark:text-gray-400 text-sm">{stat.title}</p>
-            <h2 className="text-xl font-bold dark:text-white">{stat.value}</h2>
-          </div>
-        </motion.div>
-      ))}
-    </motion.div>
+        </div>
+      </div>
+
+      {/* Modals */}
+      <BlogViewModal
+        blogId={selectedBlogId}
+        onClose={() => setSelectedBlogId(null)}
+      />
+
+      <ViewAllPostsModal
+        posts={trendingPosts}
+        isOpen={showAllPosts}
+        onClose={() => setShowAllPosts(false)}
+      />
+
+      <ViewAllGenresModal
+        genres={trendingGenres}
+        isOpen={showAllGenres}
+        onClose={() => setShowAllGenres(false)}
+      />
+    </div>
   );
 };
 
