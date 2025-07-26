@@ -82,3 +82,16 @@ export const deleteBlog = asyncHandler(async (req, res) => {
   await blog.remove();
   res.status(200).json({ message: 'Blog deleted successfully' });
 });
+
+// @desc    Get trending blogs (e.g., top 5 published by views)
+// @route   GET /api/blogs/trending
+// @access  Public
+export const getTrendingBlogs = asyncHandler(async (req, res) => {
+  const blogs = await Blog.find({ isPublished: true })
+    .sort({ views: -1 })
+    .limit(5)
+    .populate('author', 'username');
+
+  res.status(200).json(blogs);
+});
+
