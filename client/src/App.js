@@ -18,6 +18,9 @@ import Login from "./pages/Login";
 import AboutUs from "./pages/AboutUs";
 import Dashboard from "./pages/Dashboard"; 
 import PrivateRoute from "./components/PrivateRoute";
+import ProfilePage from './pages/ProfilePage.jsx';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 
 function App() {
@@ -70,8 +73,23 @@ function AuthWrapper() {
         />
         <Route path="/about" element={<AboutUs />} />
         <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
-        {/* Add other protected routes similarly */}
+        <Route path="/profile" element={<PrivateRoute><ProfilePage /></PrivateRoute>} />
+        <Route path="/profile/:userId" element={<PrivateRoute><ProfilePage /></PrivateRoute>} />
       </Routes>
+      
+      {/* Add ToastContainer here */}
+      <ToastContainer 
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="colored"
+      />
     </div>
   );
 }

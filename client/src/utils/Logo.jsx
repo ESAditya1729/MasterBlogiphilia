@@ -2,9 +2,9 @@ import { motion } from "framer-motion";
 import { Feather } from "lucide-react";
 import { Link } from "react-router-dom";
 
-const Logo = () => {
+const Logo = ({ className = "" }) => {
   return (
-    <Link to="/" className="focus:outline-none">
+    <Link to="/" className={`focus:outline-none ${className}`}>
       <motion.div 
         className="flex items-center space-x-1 cursor-pointer"
         whileHover={{ scale: 1.03 }}
@@ -12,7 +12,7 @@ const Logo = () => {
         transition={{ type: "spring", stiffness: 400, damping: 10 }}
       >
         <motion.span 
-          className="text-3xl font-bold bg-gradient-to-r from-emerald-500 to-teal-600 bg-clip-text text-transparent"
+          className="text-3xl font-bold text-emerald-500 dark:text-teal-400"
           initial={{ opacity: 0, x: -10 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5 }}
@@ -33,7 +33,7 @@ const Logo = () => {
         </motion.div>
         
         <motion.span 
-          className="text-3xl font-bold bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent"
+          className="text-3xl font-bold text-violet-600 dark:text-purple-400"
           initial={{ opacity: 0, x: 10 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5 }}
