@@ -3,7 +3,7 @@ import express from 'express';
 import multer from 'multer';
 import {
   getUserProfile,
-  updateUserBio,
+  updateUserProfile,
   uploadProfilePicture,
   searchUsers,
   toggleFollow,
@@ -40,7 +40,7 @@ router.post(
 
 // Parameterized routes come after specific routes
 router.get('/:userId/full-profile', protect, getUserProfile);
-router.put('/:userId/bio', protect, updateUserBio);
+router.put('/:userId/profile', protect, updateUserProfile);
 router.post('/follow/:userId', protect, toggleFollow);
 router.get('/:userId/follow-stats', getFollowStats);
 router.get('/:userId/followers', protect, getFollowers);

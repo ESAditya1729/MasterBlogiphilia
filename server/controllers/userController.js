@@ -31,7 +31,7 @@ export const getUserProfile = async (req, res, next) => {
 };
 
 // @desc    Update user bio
-// @route   PUT /api/users/:userId/bio
+// @route   PUT /api/users/:userId/profile
 // @access  Private
 export const updateUserProfile = async (req, res, next) => {
   try {
