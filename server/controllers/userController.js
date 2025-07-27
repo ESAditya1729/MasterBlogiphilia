@@ -149,9 +149,9 @@ export const toggleFollow = asyncHandler(async (req, res, next) => {
     return next(new ErrorResponse("User not found", 404));
   }
 
-  const isFollowing = userToFollow.followers.includes(currentUserId);
+  const wasFollowing = userToFollow.followers.includes(currentUserId);
 
-  if (isFollowing) {
+  if (wasFollowing) {
     // Unfollow
     await User.findByIdAndUpdate(currentUserId, {
       $pull: { following: userId },
@@ -175,7 +175,7 @@ export const toggleFollow = asyncHandler(async (req, res, next) => {
     success: true,
     followersCount: updatedUser.followers.length,
     followingCount: updatedUser.following.length,
-    isFollowing: isFollowing,
+    isFollowing: !wasFollowing, 
   });
 });
 
