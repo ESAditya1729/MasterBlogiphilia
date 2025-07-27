@@ -1,4 +1,5 @@
 import express from 'express';
+import asyncHandler from 'express-async-handler';
 import {
   createBlog,
   getAllBlogs,
@@ -7,19 +8,21 @@ import {
   deleteBlog,
   getTrendingBlogs,
   getTrendingGenres,
+  getBlogsByAuthor
 } from '../controllers/blogController.js';
 
 const router = express.Router();
 
 // Most specific routes FIRST
-router.get('/trending-genres', getTrendingGenres);
-router.get('/trending', getTrendingBlogs);
+router.get('/trending-genres', asyncHandler(getTrendingGenres));
+router.get('/trending', asyncHandler(getTrendingBlogs));
+router.get('/author/:userId', asyncHandler(getBlogsByAuthor));
 
 // Then general ones
-router.get('/', getAllBlogs);
-router.post('/', createBlog);
-router.get('/:id', getBlogById);
-router.put('/:id', updateBlog);
-router.delete('/:id', deleteBlog);
+router.get('/', asyncHandler(getAllBlogs));
+router.post('/', asyncHandler(createBlog));
+router.get('/:id', asyncHandler(getBlogById));
+router.put('/:id', asyncHandler(updateBlog));
+router.delete('/:id', asyncHandler(deleteBlog));
 
 export default router;

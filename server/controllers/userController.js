@@ -268,3 +268,40 @@ export const getFollowing = asyncHandler(async (req, res, next) => {
     data,
   });
 });
+
+// @desc    Get user profile by slug or ID
+// @route   GET /api/users/:userId/profile
+// @access  Public
+export const getProfileBySlugOrId = asyncHandler(async (req, res, next) => {
+  try {
+    let userId = req.params.userId;
+    
+    // Check if the parameter is in "username-id" format
+    if (userId.includes('-')) {
+      const lastHyphen = userId.lastIndexOf('-');
+      userId = userId.slice(lastHyphen + 1); // Extract the ID part
+    }
+    
+    // Validate the ID format
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return next(new ErrorResponse("Invalid user identifier", 400));
+    }
+
+    const user = await User.findById(userId)
+      .select("-password")
+      .populate("followers", "_id username profilePicture createdAt")
+      .populate("following", "_id username profilePicture createdAt");
+
+    if (!user) {
+      return next(new ErrorResponse("User not found", 404));
+    }
+
+    const profile = user.toObject();
+    profile.followersCount = (user.followers || []).length;
+    profile.followingCount = (user.following || []).length;
+    
+    res.status(200).json(profile);
+  } catch (err) {
+    next(err);
+  }
+});

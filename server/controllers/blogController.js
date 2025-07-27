@@ -114,3 +114,13 @@ export const getTrendingGenres = asyncHandler(async (req, res) => {
   res.status(200).json(topGenres);
 });
 
+// @desc    Get blogs by a specific author
+// @route   GET /api/blogs/author/:userId
+// @access  Public
+export const getBlogsByAuthor = asyncHandler(async (req, res) => {
+  const blogs = await Blog.find({ 
+    author: req.params.userId,
+    isPublished: true 
+  }).sort('-createdAt');
+  res.status(200).json(blogs);
+});
