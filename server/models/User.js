@@ -30,6 +30,48 @@ const userSchema = new mongoose.Schema({
     default: '',
     maxlength: [500, 'Bio cannot exceed 500 characters']
   },
+  socialLinks: {
+    facebook: {
+      type: String,
+      default: '',
+      match: [
+        /^(https?:\/\/)?(www\.)?facebook\.com\/.+/i,
+        'Please enter a valid Facebook URL'
+      ]
+    },
+    instagram: {
+      type: String,
+      default: '',
+      match: [
+        /^(https?:\/\/)?(www\.)?instagram\.com\/.+/i,
+        'Please enter a valid Instagram URL'
+      ]
+    },
+    linkedin: {
+      type: String,
+      default: '',
+      match: [
+        /^(https?:\/\/)?(www\.)?linkedin\.com\/.+/i,
+        'Please enter a valid LinkedIn URL'
+      ]
+    },
+    twitter: {
+      type: String,
+      default: '',
+      match: [
+        /^(https?:\/\/)?(www\.)?twitter\.com\/.+/i,
+        'Please enter a valid Twitter URL'
+      ]
+    },
+    website: {
+      type: String,
+      default: '',
+      match: [
+        /^(https?:\/\/)?(www\.)?[a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/i,
+        'Please enter a valid website URL'
+      ]
+    }
+  },
   followers: {
     type: [mongoose.Schema.Types.ObjectId],
     ref: 'User',

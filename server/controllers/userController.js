@@ -33,7 +33,7 @@ export const getUserProfile = async (req, res, next) => {
 // @desc    Update user bio
 // @route   PUT /api/users/:userId/bio
 // @access  Private
-export const updateUserBio = async (req, res, next) => {
+export const updateUserProfile = async (req, res, next) => {
   try {
     if (req.params.userId.toString() !== req.user._id.toString()) {
       return next(
@@ -41,12 +41,21 @@ export const updateUserBio = async (req, res, next) => {
       );
     }
 
-    const { bio } = req.body;
+    const { bio, socialLinks } = req.body;
+
+    const updateData = {};
+    if (bio !== undefined) updateData.bio = bio;
+    if (socialLinks !== undefined) updateData.socialLinks = socialLinks;
 
     const user = await User.findByIdAndUpdate(
       req.params.userId,
-      { bio },
-      { new: true, runValidators: true }
+      updateData,
+      { 
+        new: true, 
+        runValidators: true,
+        // Ensures empty strings don't overwrite existing values if not provided
+        overwrite: false 
+      }
     ).select("-password");
 
     if (!user) return next(new ErrorResponse("User not found", 404));
