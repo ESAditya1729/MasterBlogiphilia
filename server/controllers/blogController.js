@@ -124,3 +124,15 @@ export const getBlogsByAuthor = asyncHandler(async (req, res) => {
   }).sort('-createdAt');
   res.status(200).json(blogs);
 });
+
+// @desc    Get all drafts for current user
+// @route   GET /api/blogs/drafts
+// @access  Private
+export const getUserDrafts = asyncHandler(async (req, res) => {
+  const drafts = await Blog.find({
+    author: req.user._id,
+    isPublished: false
+  }).sort('-updatedAt');
+  
+  res.status(200).json(drafts);
+});
