@@ -22,6 +22,10 @@ import ProfileTabs from "../components/Dash-Profile/ProfileTabs";
 import ProfilePostsGrid from "../components/Dash-Profile/ProfilePostsGrid";
 import ProfileDrafts from "../components/Dash-Profile/ProfileDrafts";
 import ProfileAchievements from "../components/Dash-Profile/ProfileAchievements";
+import FollowersModal from "../components/modals/FollowersModal";
+import FollowingModal from "../components/modals/FollowingModal";
+// import PostsModal from "../components/Dash-Profile/PostsModal";
+// import ReadingModal from "../components/Dash-Profile/ReadingModal";
 import axios from "axios";
 import { useMediaQuery } from "react-responsive";
 
@@ -54,7 +58,6 @@ const ProfilePage = () => {
   const navigate = useNavigate();
   const isMobile = useMediaQuery({ maxWidth: 768 });
   
-  // Enhanced isOwnProfile calculation
   const isOwnProfile = !userId || 
                      userId === user?._id || 
                      (userId.includes("-") && userId.split("-").pop() === user?._id);
@@ -69,27 +72,23 @@ const ProfilePage = () => {
   const [isFollowLoading, setIsFollowLoading] = useState(false);
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [activeModal, setActiveModal] = useState(null);
+  const [followUpdate, setFollowUpdate] = useState({});
 
   const fetchProfile = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      // Wait for user to be available if we don't have it yet
-      if (!user && !userId) {
-        return;
-      }
+      if (!user && !userId) return;
 
       const token = localStorage.getItem("token");
       const currentUserId = user?._id;
       const idToFetch = userId || currentUserId;
-
-      // Extract ID from URL if it's in slug format (username-id)
       const profileId = idToFetch.includes("-")
         ? idToFetch.split("-").pop()
         : idToFetch;
 
-      // Verify if the extracted ID is valid
       if (!/^[0-9a-fA-F]{24}$/.test(profileId)) {
         throw new Error("Invalid user identifier");
       }
@@ -101,7 +100,6 @@ const ProfilePage = () => {
         }
       );
 
-      // Generate clean URL (username-id format)
       const usernameSlug = response.data.username
         ? encodeURIComponent(
             response.data.username
@@ -114,12 +112,10 @@ const ProfilePage = () => {
       const cleanUrl = `/profile/${usernameSlug}-${response.data._id}`;
       const fullUrl = `${window.location.origin}${cleanUrl}`;
 
-      // Update browser URL if different (without page reload)
       if (window.location.pathname !== cleanUrl) {
         window.history.replaceState(null, "", cleanUrl);
       }
 
-      // Check if current user is following this profile
       const currentUserFollowing = response.data.followers?.some(
         (follower) => follower._id === currentUserId
       );
@@ -133,7 +129,6 @@ const ProfilePage = () => {
       );
       console.error("Profile fetch error:", err);
 
-      // Redirect to clean URL if ID was valid but URL wasn't in slug format
       if (
         err.message === "Invalid user identifier" &&
         userId &&
@@ -199,21 +194,30 @@ const ProfilePage = () => {
     }
   };
 
+  const handleFollowChange = (userId, newState) => {
+    setFollowUpdate(prev => ({
+      ...prev,
+      [userId]: newState
+    }));
+    fetchProfile(); // Refresh profile data after follow change
+  };
+
   const copyProfileUrl = () => {
     navigator.clipboard.writeText(profileUrl);
     toast.success("Profile link copied to clipboard!");
   };
 
   useEffect(() => {
-    console.log("Current user:", user?._id);
-    console.log("Profile user:", profile?._id);
-    console.log("isOwnProfile:", isOwnProfile);
-    
-    // Only fetch if we have the necessary data
     if (user || userId) {
       fetchProfile();
     }
   }, [userId, user?._id]);
+
+  useEffect(() => {
+    if (Object.keys(followUpdate).length > 0) {
+      fetchProfile();
+    }
+  }, [followUpdate]);
 
   if (authLoading || loading) return <LoadingSpinner fullScreen />;
 
@@ -225,9 +229,7 @@ const ProfilePage = () => {
           animate={{ scale: 1, opacity: 1 }}
           className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-xl text-center w-full max-w-md"
         >
-          <h2 className="text-2xl font-bold text-red-500 mb-4">
-            Profile Error
-          </h2>
+          <h2 className="text-2xl font-bold text-red-500 mb-4">Profile Error</h2>
           <p className="text-gray-600 dark:text-gray-300 mb-6">{error}</p>
           <button
             onClick={fetchProfile}
@@ -246,7 +248,6 @@ const ProfilePage = () => {
     <div className="relative min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-gray-900 dark:to-gray-800 overflow-hidden">
       <FloatingBookElements />
 
-      {/* Mobile Menu Button */}
       {isMobile && (
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -266,8 +267,7 @@ const ProfilePage = () => {
         transition={{ duration: 0.5 }}
         className="max-w-6xl mx-auto px-4 sm:px-6 py-8 relative z-10"
       >
-        {/* Profile Actions Section (URL Sharing + Follow) */}
-        {/* Profile URL Sharing Section - ONLY shown for OWN profile */}
+        {/* Profile URL Sharing */}
         {isOwnProfile && (
           <motion.div
             initial={{ y: -20, opacity: 0 }}
@@ -299,7 +299,7 @@ const ProfilePage = () => {
           </motion.div>
         )}
 
-        {/* Follow Button - ONLY shown for OTHER profiles */}
+        {/* Follow Button */}
         {!isOwnProfile && (
           <motion.div
             initial={{ y: -20, opacity: 0 }}
@@ -337,12 +337,10 @@ const ProfilePage = () => {
           </motion.div>
         )}
 
-        {/* Mobile Menu Overlay */}
         {isMobile && mobileMenuOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 z-40" onClick={() => setMobileMenuOpen(false)}></div>
         )}
 
-        {/* Profile Header */}
         <ProfileHeader
           profile={profile}
           isOwnProfile={isOwnProfile}
@@ -352,25 +350,18 @@ const ProfilePage = () => {
           isMobile={isMobile}
         />
 
-        {/* Profile Stats */}
         <ProfileStats
           postsCount={profile.postsCount || 0}
           followersCount={profile.followersCount || 0}
           followingCount={profile.followingCount || 0}
           readingTime={profile.readingTime || 0}
           isOwnProfile={isOwnProfile}
-          onFollowersClick={() => {
-            setActiveTab("followers");
-            if (isMobile) setMobileMenuOpen(false);
-          }}
-          onFollowingClick={() => {
-            setActiveTab("following");
-            if (isMobile) setMobileMenuOpen(false);
-          }}
-          isMobile={isMobile}
+          onPostsClick={() => setActiveModal('posts')}
+          onFollowersClick={() => setActiveModal('followers')}
+          onFollowingClick={() => setActiveModal('following')}
+          onReadingClick={() => setActiveModal('reading')}
         />
 
-        {/* Profile Content Tabs */}
         <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -432,7 +423,31 @@ const ProfilePage = () => {
         </motion.div>
       </motion.div>
 
-      {/* Decorative Floating Elements - Hidden on mobile for performance */}
+      {/* Modals */}
+      <FollowersModal 
+        isOpen={activeModal === 'followers'}
+        onClose={() => setActiveModal(null)}
+        userId={profile._id}
+        onFollowChange={handleFollowChange}
+      />
+      
+      <FollowingModal 
+        isOpen={activeModal === 'following'}
+        onClose={() => setActiveModal(null)}
+        userId={profile._id}
+        onFollowChange={handleFollowChange}
+      />
+
+      {/* <PostsModal 
+        isOpen={activeModal === 'posts'}
+        onClose={() => setActiveModal(null)}
+      />
+
+      <ReadingModal 
+        isOpen={activeModal === 'reading'}
+        onClose={() => setActiveModal(null)}
+      /> */}
+
       {!isMobile && (
         <motion.div
           variants={floatingElements}

@@ -1,14 +1,16 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { FiEdit, FiCalendar, FiCheckCircle, FiUpload, FiX } from "react-icons/fi";
+import { FiEdit, FiCalendar, FiCheckCircle, FiUpload, FiX, FiHome, FiGrid } from "react-icons/fi";
 import { FaFacebook, FaInstagram, FaLinkedin, FaTwitter, FaGlobe } from "react-icons/fa";
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import axios from "axios";
-
+import { useNavigate } from "react-router-dom";
+import Logo from "../../utils/Logo";
 const MAX_BIO_LENGTH = 200;
 
 const ProfileHeader = ({ profile, isOwnProfile, isEditing, onEditToggle, onUpdate }) => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const fileInputRef = useRef(null);
   const [bio, setBio] = useState(profile.bio || "");
   const [displayBio, setDisplayBio] = useState(profile.bio || "");
@@ -167,6 +169,28 @@ const ProfileHeader = ({ profile, isOwnProfile, isEditing, onEditToggle, onUpdat
       transition={{ duration: 0.5 }}
       className="relative flex flex-col items-center text-center mb-8 px-4"
     >
+      {/* Navigation Buttons */}
+      <div className="flex justify-between w-full max-w-6xl mb-6">
+        <motion.button
+          onClick={() => navigate("/")}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          className="flex items-center px-4 py-2 rounded-full bg-white dark:bg-gray-700 text-gray-800 dark:text-white border border-gray-200 dark:border-gray-600 shadow-sm hover:shadow-md"
+        >
+          <FiHome className="mr-2" />
+          Home
+        </motion.button>
+          <motion.button
+            onClick={() => navigate("/dashboard")}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="flex items-center px-4 py-2 rounded-full bg-white dark:bg-gray-700 text-gray-800 dark:text-white border border-gray-200 dark:border-gray-600 shadow-sm hover:shadow-md"
+          >
+            <FiGrid className="mr-2" />
+            Dashboard
+          </motion.button>
+      </div>
+
       {/* Background Glow Effect */}
       <motion.div 
         className="absolute -top-20 -left-20 w-80 h-80 rounded-full bg-green-100 dark:bg-green-900 opacity-20 dark:opacity-30 blur-3xl -z-10"
