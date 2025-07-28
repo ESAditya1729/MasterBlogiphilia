@@ -8,8 +8,10 @@ import {
   deleteBlog,
   getTrendingBlogs,
   getTrendingGenres,
-  getBlogsByAuthor
+  getBlogsByAuthor,
+  getUserDrafts
 } from '../controllers/blogController.js';
+import { protect } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -17,6 +19,8 @@ const router = express.Router();
 router.get('/trending-genres', asyncHandler(getTrendingGenres));
 router.get('/trending', asyncHandler(getTrendingBlogs));
 router.get('/author/:userId', asyncHandler(getBlogsByAuthor));
+router.route('/drafts')
+  .get(protect, getUserDrafts);
 
 // Then general ones
 router.get('/', asyncHandler(getAllBlogs));
