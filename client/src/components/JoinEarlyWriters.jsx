@@ -1,10 +1,25 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { Sparkles, PenLine, ArrowRight } from "lucide-react";
+import { Sparkles, PenLine, ArrowRight, Badge, Star, Gem } from "lucide-react";
 
 const JoinEarlyWriters = () => {
+  const benefits = [
+    {
+      icon: <Badge className="w-5 h-5 text-amber-500" />,
+      text: "Exclusive Founder Badge"
+    },
+    {
+      icon: <Star className="w-5 h-5 text-violet-500" />,
+      text: "Priority Access to New Features"
+    },
+    {
+      icon: <Gem className="w-5 h-5 text-emerald-500" />,
+      text: "Special Recognition in Community"
+    }
+  ];
+
   return (
-    <section id= "join" className="w-full py-28 px-6 md:px-10 bg-gradient-to-b from-indigo-50/70 via-white to-white dark:from-slate-900/90 dark:via-slate-950 dark:to-slate-950 relative overflow-hidden">
+    <section id="join" className="w-full py-28 px-6 md:px-10 bg-gradient-to-b from-indigo-50/70 via-white to-white dark:from-slate-900/90 dark:via-slate-950 dark:to-slate-950 relative overflow-hidden">
       {/* Decorative elements */}
       <div className="absolute inset-0 opacity-10 dark:opacity-5 pointer-events-none">
         <div className="absolute top-20 -left-20 w-64 h-64 rounded-full bg-violet-500 blur-3xl"></div>
@@ -49,43 +64,54 @@ const JoinEarlyWriters = () => {
         >
           Join our <span className="font-semibold text-violet-700 dark:text-violet-400">exclusive founding writers</span> program. Get early access, special badges, and help build a platform designed <span className="italic">by writers, for writers</span>.
         </motion.p>
-        <motion.form
+
+        {/* Benefits List */}
+        <motion.div 
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          transition={{ delay: 0.6, duration: 0.6 }}
+          className="flex flex-wrap justify-center gap-4 mb-10"
+        >
+          {benefits.map((benefit, index) => (
+            <motion.div
+              key={index}
+              whileHover={{ y: -3 }}
+              className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800/80 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 backdrop-blur-sm"
+            >
+              {benefit.icon}
+              <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                {benefit.text}
+              </span>
+            </motion.div>
+          ))}
+        </motion.div>
+
+        {/* CTA Button */}
+        <motion.div
           initial={{ opacity: 0, y: 10 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.7, duration: 0.6 }}
-          onSubmit={(e) => e.preventDefault()}
-          className="flex flex-col sm:flex-row items-center justify-center gap-3 max-w-xl mx-auto"
+          className="flex justify-center"
         >
-          <motion.div 
-            whileHover={{ scale: 1.02 }}
-            whileFocusWithin={{ scale: 1.02 }}
-            className="w-full sm:w-80"
-          >
-            <input
-              type="email"
-              placeholder="your@email.com"
-              className="w-full px-5 py-3.5 rounded-full border border-gray-300 dark:border-slate-700 bg-white/90 dark:bg-slate-900/90 text-slate-900 dark:text-white placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition shadow-sm backdrop-blur-sm"
-              required
-            />
-          </motion.div>
-          <motion.button
+          <motion.a
+            href="/signup?founder=true"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            type="submit"
-            className="px-6 py-3.5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white rounded-full font-semibold transition-all shadow-lg hover:shadow-xl flex items-center gap-2"
+            className="px-8 py-4 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white rounded-full font-semibold transition-all shadow-lg hover:shadow-xl flex items-center gap-2 text-lg"
           >
-            <PenLine className="w-4 h-4" />
-            <span>Join as Founder</span>
-          </motion.button>
-        </motion.form>
+            <PenLine className="w-5 h-5" />
+            <span>Apply as Founding Writer</span>
+            <ArrowRight className="w-4 h-4 ml-1" />
+          </motion.a>
+        </motion.div>
 
         <motion.p
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           transition={{ delay: 0.9, duration: 0.6 }}
-          className="mt-4 text-sm text-slate-500 dark:text-slate-400 text-center"
+          className="mt-6 text-sm text-slate-500 dark:text-slate-400 text-center max-w-md mx-auto"
         >
-          We respect your privacy. Unsubscribe anytime.
+          Limited spots available. Applications reviewed within 48 hours.
         </motion.p>
       </motion.div>
     </section>

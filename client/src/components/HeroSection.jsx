@@ -1,5 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import heroImg from "../assets/HeroSec-svg.svg";
 import tagoreImg from "../assets/HeroSec-Tagore.png";
 
@@ -13,11 +14,17 @@ const headingLineVariants = {
 };
 
 const HeroSection = () => {
+  const navigate = useNavigate();
+
+  const handleButtonClick = () => {
+    navigate("/dashboard");
+  };
+
   return (
     <section
-  id="home"
-  className="w-full py-24 md:pb-36 px-6 md:px-10 bg-white dark:bg-slate-900 text-slate-900 dark:text-white transition-colors duration-300"
->
+      id="home"
+      className="w-full py-24 md:pb-36 px-6 md:px-10 bg-white dark:bg-slate-900 text-slate-900 dark:text-white transition-colors duration-300"
+    >
       <div className="max-w-7xl mx-auto flex flex-col-reverse md:flex-row items-center justify-between gap-12">
         {/* Left: Text Content */}
         <motion.div
@@ -74,14 +81,17 @@ const HeroSection = () => {
               transition={{ duration: 0.6 }}
               className="text-sm italic text-gray-700 dark:text-gray-300"
             >
-              “Let your life lightly dance on the edges of Time like dew on the
-              tip of a leaf.”
+              "Let your life lightly dance on the edges of Time like dew on the
+              tip of a leaf."
             </motion.p>
           </div>
 
           {/* Buttons */}
           <div className="flex flex-col sm:flex-row justify-center md:justify-start gap-4 mt-4">
-            <button className="px-6 py-3 rounded-full bg-violet-600 text-white font-semibold hover:bg-violet-700 transition-all duration-200">
+            <button 
+              onClick={handleButtonClick}
+              className="px-6 py-3 rounded-full bg-violet-600 text-white font-semibold hover:bg-violet-700 transition-all duration-200"
+            >
               Become a Blogiphilian
             </button>
             <button className="px-6 py-3 rounded-full border border-violet-500 text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-800/20 transition-all duration-200">
