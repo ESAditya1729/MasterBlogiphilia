@@ -136,3 +136,97 @@ export const getUserDrafts = asyncHandler(async (req, res) => {
   
   res.status(200).json(drafts);
 });
+
+/////////////////////////////////////NEW Addition for Blog Editor Page and other Usages/////////////////////////////////////////////////////////>>
+// @desc    Save blog as draft or publish
+// @route   POST /api/blogs/save
+// @access  Private
+export const saveBlog = asyncHandler(async (req, res) => {
+  const { 
+    title, 
+    excerpt, 
+    genre, 
+    tags, 
+    content, 
+    isFeatured,
+    isPublished,
+    wordCount,
+    coverImage,
+    seoKeywords,
+    blogId 
+  } = req.body;
+
+  if (!title || !genre || !content) {
+    return res.status(400).json({ message: 'Missing required fields' });
+  }
+
+  let blog;
+  if (blogId) {
+    // Update existing blog
+    blog = await Blog.findById(blogId);
+    if (!blog) {
+      return res.status(404).json({ message: 'Blog not found' });
+    }
+    if (blog.author.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+
+    blog.title = title;
+    blog.excerpt = excerpt;
+    blog.genre = genre;
+    blog.tags = tags;
+    blog.content = content;
+    blog.isFeatured = isFeatured;
+    blog.wordCount = wordCount;
+    blog.coverImage = coverImage;
+    blog.seoKeywords = seoKeywords;
+    
+    if (isPublished && !blog.isPublished) {
+      blog.isPublished = true;
+      blog.publishedAt = new Date();
+      blog.status = 'published';
+    }
+  } else {
+    // Create new blog
+    blog = new Blog({
+      title,
+      excerpt,
+      genre,
+      tags,
+      content,
+      isFeatured,
+      isPublished,
+      wordCount,
+      coverImage,
+      seoKeywords,
+      author: req.user._id,
+      status: isPublished ? 'published' : 'draft',
+      publishedAt: isPublished ? new Date() : null
+    });
+  }
+
+  const savedBlog = await blog.save();
+  res.status(blogId ? 200 : 201).json(savedBlog);
+});
+
+// @desc    Get blog by status (draft/published) for current user
+// @route   GET /api/blogs/status/:status
+// @access  Private
+export const getBlogsByStatus = asyncHandler(async (req, res) => {
+  const { status } = req.params;
+  const blogs = await Blog.find({
+    author: req.user._id,
+    status
+  }).sort('-updatedAt');
+  res.status(200).json(blogs);
+});
+
+// @desc    Increment blog views
+// @route   PUT /api/blogs/:id/views
+// @access  Public
+export const incrementViews = asyncHandler(async (req, res) => {
+  await Blog.findByIdAndUpdate(req.params.id, { 
+    $inc: { views: 1 } 
+  });
+  res.status(200).json({ message: 'View counted' });
+});

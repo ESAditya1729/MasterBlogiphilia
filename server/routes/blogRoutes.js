@@ -9,24 +9,40 @@ import {
   getTrendingBlogs,
   getTrendingGenres,
   getBlogsByAuthor,
-  getUserDrafts
+  getUserDrafts,
+  saveBlog,
+  getBlogsByStatus,
+  incrementViews
 } from '../controllers/blogController.js';
 import { protect } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// Most specific routes FIRST
+// Public routes (no authentication required)
 router.get('/trending-genres', asyncHandler(getTrendingGenres));
 router.get('/trending', asyncHandler(getTrendingBlogs));
 router.get('/author/:userId', asyncHandler(getBlogsByAuthor));
-router.route('/drafts')
-  .get(protect, getUserDrafts);
-
-// Then general ones
-router.get('/', asyncHandler(getAllBlogs));
-router.post('/', asyncHandler(createBlog));
 router.get('/:id', asyncHandler(getBlogById));
-router.put('/:id', asyncHandler(updateBlog));
-router.delete('/:id', asyncHandler(deleteBlog));
+router.put('/:id/views', asyncHandler(incrementViews));
+
+// Protected routes (require authentication)
+router.use(protect);
+
+// Blog status management
+router.get('/status/:status', asyncHandler(getBlogsByStatus));
+router.post('/save', asyncHandler(saveBlog));
+
+// Drafts specific routes
+router.route('/drafts')
+  .get(asyncHandler(getUserDrafts));
+
+// General CRUD routes
+router.route('/')
+  .get(asyncHandler(getAllBlogs))
+  .post(asyncHandler(createBlog));
+
+router.route('/:id')
+  .put(asyncHandler(updateBlog))
+  .delete(asyncHandler(deleteBlog));
 
 export default router;
