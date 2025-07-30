@@ -9,7 +9,6 @@ import {
   getTrendingBlogs,
   getTrendingGenres,
   getBlogsByAuthor,
-  getUserDrafts,
   saveBlog,
   getBlogsByStatus,
   incrementViews
@@ -18,25 +17,21 @@ import { protect } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// Public routes (no authentication required)
+// Public routes
 router.get('/trending-genres', asyncHandler(getTrendingGenres));
 router.get('/trending', asyncHandler(getTrendingBlogs));
 router.get('/author/:userId', asyncHandler(getBlogsByAuthor));
 router.get('/:id', asyncHandler(getBlogById));
 router.put('/:id/views', asyncHandler(incrementViews));
 
-// Protected routes (require authentication)
+// Protected routes
 router.use(protect);
 
-// Blog status management
+// Blog operations
 router.get('/status/:status', asyncHandler(getBlogsByStatus));
 router.post('/save', asyncHandler(saveBlog));
 
-// Drafts specific routes
-router.route('/drafts')
-  .get(asyncHandler(getUserDrafts));
-
-// General CRUD routes
+// CRUD operations
 router.route('/')
   .get(asyncHandler(getAllBlogs))
   .post(asyncHandler(createBlog));

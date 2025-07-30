@@ -251,7 +251,7 @@ export const getRelatedBlogs = asyncHandler(async (req, res) => {
   }
   
   const relatedBlogs = await Blog.find({
-    _id: { $ne: blog._id }, // Exclude current blog
+    _id: { $ne: blog._id }, 
     status: 'published',
     $or: [
       { genre: blog.genre },
