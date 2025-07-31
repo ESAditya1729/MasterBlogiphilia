@@ -21,6 +21,7 @@ import PrivateRoute from "./components/PrivateRoute";
 import ProfilePage from './pages/ProfilePage.jsx';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import BlogEditor from "./components/Dash-Editor/Navbar.jsx"
 
 
 function App() {
@@ -75,6 +76,7 @@ function AuthWrapper() {
         <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
         <Route path="/profile" element={<PrivateRoute><ProfilePage /></PrivateRoute>} />
         <Route path="/profile/:userId" element={<PrivateRoute><ProfilePage /></PrivateRoute>} />
+        <Route path="/editor" element={<PrivateRoute><BlogEditor /></PrivateRoute>} />
       </Routes>
       
       {/* Add ToastContainer here */}

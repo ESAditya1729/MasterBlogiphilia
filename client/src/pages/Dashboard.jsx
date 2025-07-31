@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Sidebar from "../components/Sidebar";
 import Overview from "./DashboardTabs/Overview";
+import EditorStudio from "./DashboardTabs/EditorStudio";
 import {
   FiHelpCircle,
   FiEdit,
@@ -118,6 +119,8 @@ const Dashboard = () => {
             >
               {activeTab === "overview" ? (
                 <Overview />
+              ) : activeTab === "studio" ? (
+                <EditorStudio />
               ) : (
                 <motion.div
                   initial={{ opacity: 0 }}

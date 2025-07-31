@@ -12,6 +12,7 @@ import {
   FiUser,
   FiLogOut,
   FiExternalLink,
+  FiLayers
 } from "react-icons/fi";
 import { useTheme } from "../contexts/ThemeContext";
 import { useAuth } from "../contexts/AuthContext";
@@ -29,6 +30,7 @@ const Sidebar = ({ isCollapsed, toggleCollapse, activeTab, setActiveTab }) => {
     { id: "content", icon: <FiBookmark />, label: "Content" },
     { id: "audience", icon: <FiUsers />, label: "Audience" },
     { id: "settings", icon: <FiSettings />, label: "Settings" },
+    { id:"studio", icon: <FiLayers/>, label: "Your Workspace" },
   ];
 
   return (

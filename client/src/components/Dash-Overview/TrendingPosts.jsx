@@ -5,19 +5,37 @@ import { FiAward, FiArrowRight } from "react-icons/fi";
 export const TrendingPosts = ({ onViewAll, onPostClick }) => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchTrendingPosts = async () => {
       try {
+        setLoading(true);
+        setError(null);
+        
         const res = await fetch(
           `${process.env.REACT_APP_API_BASE_URL}/api/blogs/trending`
         );
-        if (!res.ok) throw new Error("Failed to fetch trending posts");
+        
+        if (!res.ok) {
+          throw new Error(`Failed to fetch trending posts: ${res.status}`);
+        }
 
         const data = await res.json();
-        setPosts(data);
+        
+        // Ensure we're working with an array
+        if (data && Array.isArray(data.data)) {
+          setPosts(data.data);
+        } else if (data && Array.isArray(data)) {
+          // Handle case where response is directly the array
+          setPosts(data);
+        } else {
+          throw new Error("Invalid data format received from API");
+        }
       } catch (err) {
         console.error("Error fetching trending posts:", err);
+        setError(err.message);
+        setPosts([]); // Reset to empty array on error
       } finally {
         setLoading(false);
       }
@@ -31,6 +49,16 @@ export const TrendingPosts = ({ onViewAll, onPostClick }) => {
       <div className="p-6 rounded-xl bg-white dark:bg-gray-800 shadow-md border border-gray-200 dark:border-gray-700">
         <p className="text-sm text-gray-500 dark:text-gray-400">
           Loading trending posts...
+        </p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6 rounded-xl bg-white dark:bg-gray-800 shadow-md border border-gray-200 dark:border-gray-700">
+        <p className="text-sm text-red-500 dark:text-red-400">
+          Error: {error}
         </p>
       </div>
     );
@@ -64,7 +92,7 @@ export const TrendingPosts = ({ onViewAll, onPostClick }) => {
         ) : (
           posts.map((post, idx) => (
             <motion.div
-              key={post._id}
+              key={post._id || idx}
               className="flex items-center justify-between p-4 border-l-4 rounded-lg transition-all cursor-pointer bg-gray-50 dark:bg-gray-900 border-transparent hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-gray-700"
               whileHover={{ x: 4 }}
               initial={{ opacity: 0 }}
