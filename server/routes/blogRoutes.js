@@ -1,7 +1,7 @@
 import express from 'express';
 import asyncHandler from 'express-async-handler';
 import {
-  createBlog,
+  upsertBlog,
   getAllBlogs,
   getBlogById,
   updateBlog,
@@ -38,7 +38,7 @@ router.get('/stats', asyncHandler(getBlogStats));
 
 // CRUD operations
 router.route('/')
-  .post(asyncHandler(createBlog));
+  .post(asyncHandler(upsertBlog));
 
 router.route('/:id')
   .put(asyncHandler(updateBlog))

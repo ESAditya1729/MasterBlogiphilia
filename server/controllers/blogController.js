@@ -24,8 +24,19 @@ const sanitizeOptions = {
 // @desc    Create new blog
 // @route   POST /api/blogs
 // @access  Private
-export const createBlog = asyncHandler(async (req, res) => {
-  const { title, excerpt, genre, tags, content, status, isFeatured, coverImage, seoKeywords } = req.body;
+export const upsertBlog = asyncHandler(async (req, res) => {
+  const {
+    _id,
+    title,
+    excerpt,
+    genre,
+    tags,
+    content,
+    status,
+    isFeatured,
+    coverImage,
+    seoKeywords,
+  } = req.body;
 
   // Validate required fields
   if (!title || !genre || !content) {
@@ -38,35 +49,64 @@ export const createBlog = asyncHandler(async (req, res) => {
     return errorResponse(res, 400, `Invalid status value. Must be one of: ${validStatuses.join(', ')}`);
   }
 
-  // Sanitize content
+  // Sanitize inputs
   const sanitizedContent = sanitizeHtml(content, sanitizeOptions);
-
-  const blog = new Blog({
+  const sanitizedBlogData = {
     title: sanitizeHtml(title),
     excerpt: excerpt ? sanitizeHtml(excerpt) : '',
     genre: sanitizeHtml(genre),
-    tags: tags ? tags.map(tag => sanitizeHtml(tag)) : [],
+    tags: tags?.map(tag => sanitizeHtml(tag)) || [],
     content: sanitizedContent,
     status: status || 'draft',
     isFeatured: isFeatured || false,
     coverImage,
-    seoKeywords: seoKeywords ? seoKeywords.map(keyword => sanitizeHtml(keyword)) : [],
+    seoKeywords: seoKeywords?.map(keyword => sanitizeHtml(keyword)) || [],
     author: req.user._id,
-    ...(status === 'published' && { publishedAt: new Date() })
-  });
+    updatedAt: new Date(),
+  };
 
-  const savedBlog = await blog.save();
-  
-  // Update user's blog count
-  await User.findByIdAndUpdate(req.user._id, { $inc: { blogCount: 1 } });
+  // If publishing, set publishedAt
+  if (status === 'published') {
+    sanitizedBlogData.publishedAt = new Date();
+  }
 
-  res.status(201).json({ 
-    success: true, 
+  let savedBlog;
+  let message;
+
+  if (_id) {
+    // Update existing blog
+    savedBlog = await Blog.findOneAndUpdate(
+      { _id, author: req.user._id },
+      { $set: sanitizedBlogData },
+      { new: true }
+    );
+
+    if (!savedBlog) {
+      return errorResponse(res, 404, 'Blog not found or unauthorized');
+    }
+
+    message = 'Blog updated successfully';
+  } else {
+    // Create new blog
+    const blog = new Blog({
+      ...sanitizedBlogData,
+      createdAt: new Date(),
+    });
+
+    savedBlog = await blog.save();
+
+    // Update user's blog count
+    await User.findByIdAndUpdate(req.user._id, { $inc: { blogCount: 1 } });
+
+    message = 'Blog created successfully';
+  }
+
+  res.status(_id ? 200 : 201).json({
+    success: true,
     data: savedBlog,
-    message: 'Blog created successfully'
+    message,
   });
 });
-
 // @desc    Get all blogs with filtering options
 // @route   GET /api/blogs
 // @access  Public
