@@ -1,10 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-
 import BlogViewModal from "../../components/modals/BlogViewModal";
 import ViewAllPostsModal from "../../components/modals/ViewAllPostsModal";
 import ViewAllGenresModal from "../../components/modals/ViewAllGenresModal";
-
 import {
   OverviewHeader,
   StatsCards,
@@ -14,64 +12,103 @@ import {
   HelpSection
 } from "../../components/Dash-Overview";
 
-
 const Overview = () => {
-  const [selectedBlogId, setSelectedBlogId] = useState(null); 
+  const [selectedBlogId, setSelectedBlogId] = useState(null);
   const [showAllPosts, setShowAllPosts] = useState(false);
   const [showAllGenres, setShowAllGenres] = useState(false);
+  const [trendingPosts, setTrendingPosts] = useState([]);
+  const [trendingGenres, setTrendingGenres] = useState([]);
+  const [loading, setLoading] = useState({
+    posts: true,
+    genres: true
+  });
+  const [error, setError] = useState({
+    posts: null,
+    genres: null
+  });
 
-  // TODO: Replace with API calls
-  // const stats = [
-  //   {
-  //     title: "Total Users",
-  //     value: 1024,
-  //     trend: "+12%",
-  //     trendColor: "text-green-500",
-  //     icon: <span>👤</span>, // Replace with your real icon component
-  //   },
-  //   {
-  //     title: "Total Posts",
-  //     value: 345,
-  //     trend: "+8%",
-  //     trendColor: "text-green-500",
-  //     icon: <span>📝</span>,
-  //   },
-  //   {
-  //     title: "Comments",
-  //     value: 892,
-  //     trend: "+5%",
-  //     trendColor: "text-green-500",
-  //     icon: <span>💬</span>,
-  //   },
-  // ];
+  useEffect(() => {
+    const fetchTrendingPosts = async () => {
+      try {
+        setLoading(prev => ({ ...prev, posts: true }));
+        setError(prev => ({ ...prev, posts: null }));
+        
+        const res = await fetch(
+          `${process.env.REACT_APP_API_BASE_URL}/api/blogs/trending`,
+          {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+          }
+        );
+        
+        if (!res.ok) {
+          throw new Error(`Failed to fetch trending posts: ${res.status}`);
+        }
 
-  const trendingPosts = [
-    {
-      id: "1",
-      title: "Understanding React Server Components",
-      author: "John Doe",
-      views: 3400,
-    },
-    {
-      id: "2",
-      title: "Advanced CSS Techniques for 2025",
-      author: "Jane Smith",
-      views: 2780,
-    },
-  ];
+        const data = await res.json();
+        
+        if (data && Array.isArray(data.data)) {
+          setTrendingPosts(data.data);
+        } else if (data && Array.isArray(data)) {
+          setTrendingPosts(data);
+        } else {
+          throw new Error("Invalid posts data format received from API");
+        }
+      } catch (err) {
+        console.error("Error fetching trending posts:", err);
+        setError(prev => ({ ...prev, posts: err.message }));
+        setTrendingPosts([]);
+      } finally {
+        setLoading(prev => ({ ...prev, posts: false }));
+      }
+    };
 
-  const trendingGenres = [
-    {
-      id: "tech",
-      name: "Technology",
-      postCount: 102,
-    },
-    {
-      id: "design",
-      name: "Design",
-      postCount: 88,
-    },
-  ];
+    const fetchTrendingGenres = async () => {
+      try {
+        setLoading(prev => ({ ...prev, genres: true }));
+        setError(prev => ({ ...prev, genres: null }));
+        
+        const res = await fetch(
+          `${process.env.REACT_APP_API_BASE_URL}/api/blogs/trending-genres`,
+          {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+          }
+        );
+        
+        if (!res.ok) {
+          throw new Error(`Failed to fetch trending genres: ${res.status}`);
+        }
+
+        const { data } = await res.json();
+        
+        if (data && Array.isArray(data)) {
+          // Transform API response to match expected format
+          const transformedGenres = data.map(genre => ({
+            id: genre._id,
+            name: genre._id,
+            postCount: genre.count,
+            totalViews: genre.totalViews,
+            totalLikes: genre.totalLikes
+          }));
+          setTrendingGenres(transformedGenres);
+        } else {
+          throw new Error("Invalid genres data format received from API");
+        }
+      } catch (err) {
+        console.error("Error fetching trending genres:", err);
+        setError(prev => ({ ...prev, genres: err.message }));
+        setTrendingGenres([]);
+      } finally {
+        setLoading(prev => ({ ...prev, genres: false }));
+      }
+    };
+
+    // Fetch both posts and genres in parallel
+    Promise.all([fetchTrendingPosts(), fetchTrendingGenres()]);
+  }, []);
 
   return (
     <div className="space-y-8">
@@ -84,12 +121,16 @@ const Overview = () => {
 
           <TrendingPosts
             posts={trendingPosts}
+            loading={loading.posts}
+            error={error.posts}
             onViewAll={() => setShowAllPosts(true)}
             onPostClick={setSelectedBlogId}
           />
 
           <TrendingGenres
             genres={trendingGenres}
+            loading={loading.genres}
+            error={error.genres}
             onViewAll={() => setShowAllGenres(true)}
           />
         </div>
@@ -113,6 +154,7 @@ const Overview = () => {
         posts={trendingPosts}
         isOpen={showAllPosts}
         onClose={() => setShowAllPosts(false)}
+        onPostClick={setSelectedBlogId}
       />
 
       <ViewAllGenresModal
