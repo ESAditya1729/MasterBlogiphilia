@@ -10,7 +10,7 @@ import ErrorResponse from './utils/errorResponse.js';
 import mediaRoutes from './routes/mediaRoutes.js';
 import blogRoutes from './routes/blogRoutes.js';
 import statsRoutes from "./routes/statsRoutes.js";
-import feedbackRoutes from './routes/feedbackRoutes';
+import feedbackRoutes from './routes/feedbackRoutes.js';
 
 dotenv.config();
 const app = express();
