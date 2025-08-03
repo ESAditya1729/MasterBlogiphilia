@@ -1,5 +1,17 @@
 const mongoose = require('mongoose');
 
+const messageSchema = new mongoose.Schema({
+  content: {
+    type: String,
+    required: [true, 'Message content is required'],
+    minlength: [10, 'Message should be at least 10 characters long']
+  },
+  sentAt: {
+    type: Date,
+    default: Date.now
+  }
+});
+
 const feedbackSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -8,14 +20,11 @@ const feedbackSchema = new mongoose.Schema({
   email: {
     type: String,
     required: [true, 'Email is required'],
-    match: [/.+\@.+\..+/, 'Please enter a valid email']
+    match: [/.+\@.+\..+/, 'Please enter a valid email'],
+    unique: true
   },
-  message: {
-    type: String,
-    required: [true, 'Message is required'],
-    minlength: [10, 'Message should be at least 10 characters long']
-  },
-  createdAt: {
+  messages: [messageSchema],
+  updatedAt: {
     type: Date,
     default: Date.now
   },
@@ -27,6 +36,6 @@ const feedbackSchema = new mongoose.Schema({
 });
 
 // Add text index for search functionality
-feedbackSchema.index({ name: 'text', email: 'text', message: 'text' });
+feedbackSchema.index({ name: 'text', email: 'text', 'messages.content': 'text' });
 
 module.exports = mongoose.model('Feedback', feedbackSchema);

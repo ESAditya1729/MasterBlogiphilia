@@ -13,7 +13,10 @@ const feedbackValidationRules = [
 // Submit feedback
 router.post('/', feedbackValidationRules, feedbackController.submitFeedback);
 
-// Get all feedback (for admin dashboard)
+// Get all feedback (with pagination)
 router.get('/', feedbackController.getFeedback);
+
+// Get message history for a specific email
+router.get('/history/:email', feedbackController.getMessageHistory);
 
 module.exports = router;
