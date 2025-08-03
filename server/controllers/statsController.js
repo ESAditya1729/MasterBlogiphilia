@@ -1,5 +1,6 @@
 import User from "../models/User.js";
 import Blog from "../models/Blog.js";
+import asyncHandler from 'express-async-handler';
 
 // @desc    Get user-related stats (Total users, New users in last 7 days)
 // @route   GET /api/stats/user-stats
