@@ -1,4 +1,3 @@
-// server.js
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
@@ -10,7 +9,7 @@ import ErrorResponse from './utils/errorResponse.js';
 import mediaRoutes from './routes/mediaRoutes.js';
 import blogRoutes from './routes/blogRoutes.js';
 import statsRoutes from "./routes/statsRoutes.js";
-const feedbackRoutes = require('./routes/feedbackRoutes');
+import feedbackRoutes from './routes/feedbackRoutes.js';
 
 dotenv.config();
 const app = express();

@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const messageSchema = new mongoose.Schema({
   content: {
@@ -38,4 +38,4 @@ const feedbackSchema = new mongoose.Schema({
 // Add text index for search functionality
 feedbackSchema.index({ name: 'text', email: 'text', 'messages.content': 'text' });
 
-module.exports = mongoose.model('Feedback', feedbackSchema);
+export default mongoose.model('Feedback', feedbackSchema);

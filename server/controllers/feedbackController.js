@@ -1,7 +1,7 @@
-const Feedback = require('../models/feedback');
-const { validationResult } = require('express-validator');
+import Feedback from '../models/feedback.js';
+import { validationResult } from 'express-validator';
 
-exports.submitFeedback = async (req, res) => {
+export const submitFeedback = async (req, res) => {
   // Validate request
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -33,9 +33,6 @@ exports.submitFeedback = async (req, res) => {
       }
     );
 
-    // Send confirmation email (implement as needed)
-    // await sendConfirmationEmail(email, name);
-
     res.status(201).json({
       success: true,
       message: 'Thank you for your feedback! We will get back to you soon.',
@@ -52,7 +49,7 @@ exports.submitFeedback = async (req, res) => {
 };
 
 // Get all feedback with pagination
-exports.getFeedback = async (req, res) => {
+export const getFeedback = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
@@ -84,7 +81,7 @@ exports.getFeedback = async (req, res) => {
 };
 
 // Get single user's message history
-exports.getMessageHistory = async (req, res) => {
+export const getMessageHistory = async (req, res) => {
   try {
     const { email } = req.params;
     const feedback = await Feedback.findOne({ email });

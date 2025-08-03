@@ -1,7 +1,12 @@
-const express = require('express');
+import express from 'express';
+import { body } from 'express-validator';
+import {
+  submitFeedback,
+  getFeedback,
+  getMessageHistory
+} from '../controllers/feedbackController.js';
+
 const router = express.Router();
-const feedbackController = require('../controllers/feedbackController');
-const { body } = require('express-validator');
 
 // Validation rules
 const feedbackValidationRules = [
@@ -11,12 +16,12 @@ const feedbackValidationRules = [
 ];
 
 // Submit feedback
-router.post('/', feedbackValidationRules, feedbackController.submitFeedback);
+router.post('/', feedbackValidationRules, submitFeedback);
 
 // Get all feedback (with pagination)
-router.get('/', feedbackController.getFeedback);
+router.get('/', getFeedback);
 
 // Get message history for a specific email
-router.get('/history/:email', feedbackController.getMessageHistory);
+router.get('/history/:email', getMessageHistory);
 
-module.exports = router;
+export default router;
