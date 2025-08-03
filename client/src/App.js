@@ -23,6 +23,7 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import BlogEditor from "./components/Dash-Editor/BlogEditor.jsx"
 import BlogPostPage from './pages/BlogPostPage';
+import ContactPage from "./pages/ContactUs.jsx";
 
 
 
@@ -75,6 +76,7 @@ function AuthWrapper() {
           element={isAuthenticated ? <Navigate to="/dashboard" /> : <Login />}
         />
         <Route path="/about" element={<AboutUs />} />
+        <Route path="/contact" element={<ContactPage />} />
         <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
         <Route path="/profile" element={<PrivateRoute><ProfilePage /></PrivateRoute>} />
         <Route path="/profile/:userId" element={<PrivateRoute><ProfilePage /></PrivateRoute>} />
