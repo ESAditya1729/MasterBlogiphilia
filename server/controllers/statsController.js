@@ -26,21 +26,18 @@ export const getUserStats = async (req, res) => {
 // @desc    Get total published blogs
 // @route   GET /api/stats/published-blogs
 // @access  Private/Admin
-export const getTotalPublishedBlogs = async (req, res) => {
-  try {
-    const count = await Blog.countDocuments({ isPublished: true });
+export const getTotalPublishedBlogs = asyncHandler(async (req, res) => {
+  const count = await Blog.countDocuments({ 
+    status: 'published' 
+  });
 
-    res.status(200).json({
-      success: true,
-      data: {
-        totalPublishedBlogs: count,
-      },
-    });
-  } catch (error) {
-    console.error("Error fetching published blogs:", error.message);
-    res.status(500).json({
-      success: false,
-      message: "Server error while fetching published blog count",
-    });
-  }
-};
+  res.status(200).json({ 
+    success: true, 
+    data: { 
+      total: count,
+      metric: 'published-blogs',
+      updatedAt: new Date()
+    },
+    message: 'Total published blogs retrieved successfully'
+  });
+});
