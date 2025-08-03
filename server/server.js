@@ -10,6 +10,7 @@ import ErrorResponse from './utils/errorResponse.js';
 import mediaRoutes from './routes/mediaRoutes.js';
 import blogRoutes from './routes/blogRoutes.js';
 import statsRoutes from "./routes/statsRoutes.js";
+import feedbackRoutes from './routes/feedbackRoutes';
 
 dotenv.config();
 const app = express();
@@ -28,7 +29,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/media', mediaRoutes);
 app.use('/api/blogs', blogRoutes);
-app.use("/api/stats", statsRoutes);
+app.use('/api/stats', statsRoutes);
+app.use('/api/feedback', feedbackRoutes);
 
 
 // Error handling middleware (must be after routes)
