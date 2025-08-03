@@ -2,13 +2,13 @@ import axios from 'axios';
 import DOMPurify from 'dompurify';
 
 // Configure API base URL with fallback
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000';
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api';
 if (!API_BASE_URL) {
   console.error('API base URL not configured!');
 }
 
 // Request timeout configuration (in milliseconds)
-const REQUEST_TIMEOUT = 15000;
+const REQUEST_TIMEOUT = 30000;
 const LONG_REQUEST_TIMEOUT = 30000; // For content-heavy requests
 
 // Create axios instance with default config
@@ -37,7 +37,16 @@ apiClient.interceptors.request.use(
 // Response interceptor for handling errors
 apiClient.interceptors.response.use(
   (response) => {
-    // You can modify successful responses here
+    // Standardize successful responses
+    if (response.data && typeof response.data === 'object') {
+      return {
+        ...response,
+        data: {
+          success: true,
+          ...response.data
+        }
+      };
+    }
     return response;
   },
   (error) => {
@@ -83,13 +92,16 @@ const sanitizeBlogData = (data) => {
     tags: {
       maxItems: 5,
       transform: (tags) => Array.isArray(tags) 
-        ? tags.filter(tag => tag.trim().length > 0)
-        : tags.split(',').map(tag => tag.trim()).filter(tag => tag)
+        ? tags.filter(tag => tag.trim().length > 0).slice(0, 5)
+        : tags.split(',').map(tag => tag.trim()).filter(tag => tag).slice(0, 5)
     },
     seoKeywords: {
       transform: (keywords) => Array.isArray(keywords)
         ? keywords.filter(kw => kw.trim().length > 0)
         : keywords.split(',').map(kw => kw.trim()).filter(kw => kw)
+    },
+    status: {
+      validate: (status) => ['draft', 'published', 'archived'].includes(status)
     }
   };
 
@@ -108,6 +120,12 @@ const sanitizeBlogData = (data) => {
 
     // Skip validation if field is empty and not required
     if (!value && !config.required) {
+      return;
+    }
+
+    // Validate status
+    if (field === 'status' && config.validate && !config.validate(value)) {
+      errors[field] = `Status must be one of: draft, published, archived`;
       return;
     }
 
@@ -254,7 +272,6 @@ const handleApiError = (error) => {
  * Saves blog to backend (draft or published)
  * @param {Object} blogData - Complete blog data
  * @param {string|null} blogId - ID for existing blog (null for new)
- * @param {string} token - Auth token
  * @param {boolean} publish - Whether to publish
  * @returns {Promise<Object>} - Saved blog data
  * @throws {Error} - Validation or API error
@@ -263,33 +280,36 @@ export const saveBlogApi = async (blogData, blogId, publish = false) => {
   // Validate and sanitize data
   const sanitizedData = sanitizeBlogData({
     ...blogData,
-    status: publish ? 'published' : blogData.status || 'draft'
+    status: publish ? 'published' : blogData.status || 'draft',
+    updatedAt: new Date().toISOString()
   });
 
   const config = {
     timeout: sanitizedData.content?.length > 10000 ? LONG_REQUEST_TIMEOUT : REQUEST_TIMEOUT
   };
 
-  const endpoint = blogId 
-    ? `/api/blogs/${blogId}`
-    : '/api/blogs';
-
-  const method = blogId ? 'put' : 'post';
-
   try {
-    const response = await apiClient[method](endpoint, sanitizedData, config);
+    let response;
     
+    if (blogId) {
+      // Update existing blog
+      response = await apiClient.put(`/api/blogs/${blogId}`, sanitizedData, config);
+    } else {
+      // Create new blog
+      response = await apiClient.post('/api/blogs', sanitizedData, config);
+    }
+
     // Validate response structure
-    if (!response.data?._id || !response.data?.title || !response.data?.status) {
+    if (!response.data?.data?._id) {
       throw {
         name: 'InvalidResponse',
         message: 'Invalid response structure from server'
       };
     }
 
-    return response.data;
+    return response.data.data;
   } catch (error) {
-    throw error; // Error is already processed by interceptor
+    throw handleApiError(error);
   }
 };
 
@@ -308,19 +328,19 @@ export const loadBlogApi = async (blogId) => {
   }
 
   try {
-    const response = await apiClient.get(`/api/blogs/${blogId}`);
+    const response = await apiClient.get(`/blogs/${blogId}`);
 
     // Validate response structure
-    if (!response.data?._id || !response.data?.title) {
+    if (!response.data?.data?._id || !response.data?.data?.title) {
       throw {
         name: 'InvalidResponse',
         message: 'Invalid blog data received from server'
       };
     }
 
-    return response.data;
+    return response.data.data;
   } catch (error) {
-    throw error; // Error is already processed by interceptor
+    throw handleApiError(error);
   }
 };
 
@@ -330,12 +350,10 @@ export const loadBlogApi = async (blogId) => {
  */
 export const getTrendingBlogs = async () => {
   try {
-    const response = await apiClient.get('/api/blogs/trending');
+    const response = await apiClient.get('/blogs/trending');
     
-    // Handle different response formats
-    if (Array.isArray(response.data)) {
-      return response.data;
-    } else if (Array.isArray(response.data.data)) {
+    // Handle response format
+    if (response.data?.data) {
       return response.data.data;
     }
     
@@ -344,7 +362,7 @@ export const getTrendingBlogs = async () => {
       message: 'Invalid response format for trending blogs'
     };
   } catch (error) {
-    throw error;
+    throw handleApiError(error);
   }
 };
 
@@ -374,6 +392,63 @@ export const formatApiError = (error) => {
       return 'Request was cancelled';
     default:
       return error.message || 'An unexpected error occurred';
+  }
+};
+
+// Additional blog-related API functions
+
+/**
+ * Delete a blog
+ * @param {string} blogId - ID of blog to delete
+ * @returns {Promise<Object>} - Delete confirmation
+ */
+export const deleteBlogApi = async (blogId) => {
+  try {
+    const response = await apiClient.delete(`/blogs/${blogId}`);
+    return response.data;
+  } catch (error) {
+    throw handleApiError(error);
+  }
+};
+
+/**
+ * Toggle like on a blog
+ * @param {string} blogId - ID of blog to like/unlike
+ * @returns {Promise<Object>} - Updated like status
+ */
+export const toggleLikeApi = async (blogId) => {
+  try {
+    const response = await apiClient.put(`/blogs/${blogId}/like`);
+    return response.data;
+  } catch (error) {
+    throw handleApiError(error);
+  }
+};
+
+/**
+ * Get related blogs
+ * @param {string} blogId - ID of blog to find related content for
+ * @returns {Promise<Array>} - Array of related blogs
+ */
+export const getRelatedBlogsApi = async (blogId) => {
+  try {
+    const response = await apiClient.get(`/blogs/${blogId}/related`);
+    return response.data?.data || [];
+  } catch (error) {
+    throw handleApiError(error);
+  }
+};
+
+/**
+ * Get blog statistics
+ * @returns {Promise<Object>} - Blog statistics data
+ */
+export const getBlogStatsApi = async () => {
+  try {
+    const response = await apiClient.get('/blogs/stats');
+    return response.data?.data || {};
+  } catch (error) {
+    throw handleApiError(error);
   }
 };
 

@@ -1,411 +1,448 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { useEditor, EditorContent } from '@tiptap/react';
-import { FloatingMenu } from '@tiptap/extension-floating-menu';
-import { BubbleMenu } from '@tiptap/extension-bubble-menu';
-import StarterKit from '@tiptap/starter-kit';
-import Underline from '@tiptap/extension-underline';
-import Link from '@tiptap/extension-link';
-import Image from '@tiptap/extension-image';
-import Placeholder from '@tiptap/extension-placeholder';
-import CharacterCount from '@tiptap/extension-character-count';
-import { TextStyle } from '@tiptap/extension-text-style';
-import { Color } from '@tiptap/extension-color';
-import TextAlign from '@tiptap/extension-text-align';
-import { Table } from '@tiptap/extension-table';
-import { TableRow } from '@tiptap/extension-table-row';
-import { TableHeader } from '@tiptap/extension-table-header';
-import { TableCell } from '@tiptap/extension-table-cell';
-import DOMPurify from 'dompurify';
+import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { FiSave, FiUpload, FiCheckCircle, FiX } from "react-icons/fi";
+import { useTheme } from "../../contexts/ThemeContext";
+import api from "./BlogApi";
+import { toast } from "react-toastify";
+import BlogEditorNavbar from "./EditorNavbar";
+import BlogEditorTabs from "./BlogEditorTabs";
+import EditorSpace from "./EditorSpace";
+import MetadataForm from "./MetadataForm";
+import AskLillyTab from "./AskLillyTab";
 
-// Import local components with correct paths
-import EditorToolbar from './EditorToolbar';
-import MetadataPanel from './MetadataPanel';
-import PreviewPane from './PreviewPane';
-import StatusBar from './StatusBar';
-import EditorNavbar from './EditorNavbar';
-import LoadingOverlay from './LoadingOverlay';
-import ErrorDialog from './ErrorDialog';
+const BlogEditor = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(true);
+  const [isGeneratingKeywords, setIsGeneratingKeywords] = useState(false);
+  const [formErrors, setFormErrors] = useState({});
+  const [activeTab, setActiveTab] = useState("contents");
+  const { mode } = useTheme();
+  const darkMode = mode === "dark";
+  const [isSaving, setIsSaving] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [showPublishConfirm, setShowPublishConfirm] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [publishedBlogUrl, setPublishedBlogUrl] = useState("");
 
-// Import your API functions (make sure BlogApi.js exists in the same directory)
-import { saveBlogApi, loadBlogApi, formatApiError } from './BlogApi';
-
-const MAX_CONTENT_LENGTH = 100000;
-
-const BlogEditor = ({ blogId, onSaveSuccess }) => {
   const [blogData, setBlogData] = useState({
-    title: '',
-    excerpt: '',
-    genre: '',
-    content: '',
+    title: "",
+    content: "",
+    genre: "",
     tags: [],
+    excerpt: "",
     seoKeywords: [],
-    featuredImage: '',
-    status: 'draft',
-    author: localStorage.getItem('username') || '',
-  });
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState('editor');
-  const [wordCount, setWordCount] = useState(0);
-  const [isDirty, setIsDirty] = useState(false);
-  const [lastSaved, setLastSaved] = useState(null);
-
-  // Initialize the editor
-  const editor = useEditor({
-    extensions: [
-      StarterKit.configure({
-        heading: {
-          levels: [1, 2, 3],
-        },
-        codeBlock: {
-          HTMLAttributes: {
-            class: 'rounded-md bg-gray-100 p-4 font-mono text-sm',
-          },
-        },
-        blockquote: {
-          HTMLAttributes: {
-            class: 'border-l-4 border-gray-300 pl-4 italic',
-          },
-        },
-      }),
-      Underline,
-      Link.configure({
-        openOnClick: false,
-        HTMLAttributes: {
-          class: 'text-blue-600 hover:underline',
-        },
-      }),
-      Image.configure({
-        HTMLAttributes: {
-          class: 'rounded-lg max-w-full h-auto',
-        },
-      }),
-      Placeholder.configure({
-        placeholder: ({ node }) => {
-          if (node.type.name === 'heading') {
-            return `Heading ${node.attrs.level}`;
-          }
-          return 'Write something amazing...';
-        },
-      }),
-      CharacterCount.configure({
-        limit: MAX_CONTENT_LENGTH,
-      }),
-      TextStyle,
-      Color,
-      TextAlign.configure({
-        types: ['heading', 'paragraph'],
-      }),
-      Table.configure({
-        resizable: true,
-      }),
-      TableRow,
-      TableHeader,
-      TableCell,
-    ],
-    content: blogData.content,
-    onUpdate: ({ editor }) => {
-      const html = editor.getHTML();
-      setBlogData(prev => ({ ...prev, content: html }));
-      setWordCount(countWords(editor.getText()));
-      setIsDirty(true);
-    },
+    coverImage: "",
+    status: "draft",
+    author: "",
   });
 
-  // Count words in plain text
-  const countWords = useCallback((text) => {
-    return text.trim() ? text.trim().split(/\s+/).length : 0;
-  }, []);
-
-  // Load blog data if editing existing blog
+  // Set author only if creating a new blog
   useEffect(() => {
-    if (blogId) {
-      const loadBlog = async () => {
-        setIsLoading(true);
+    if (!id) {
+      const storedUser = localStorage.getItem("user");
+      if (storedUser) {
         try {
-          const data = await loadBlogApi(blogId);
-          setBlogData(data);
-          if (editor) {
-            editor.commands.setContent(data.content);
+          const parsedUser = JSON.parse(storedUser);
+          if (parsedUser?.username) {
+            setBlogData((prev) => ({
+              ...prev,
+              author: parsedUser.username,
+            }));
           }
-          setWordCount(countWords(editor?.getText() || ''));
-          setIsDirty(false);
-          setLastSaved(new Date(data.updatedAt || data.createdAt));
         } catch (err) {
-          setError(formatApiError(err));
-        } finally {
-          setIsLoading(false);
+          console.error("Failed to parse user from localStorage", err);
         }
-      };
-      loadBlog();
-    }
-  }, [blogId, editor, countWords]);
-
-  // Handle metadata changes
-  const handleMetadataChange = (field, value) => {
-    setBlogData(prev => {
-      const newData = { ...prev, [field]: value };
-      // For array fields, ensure we're working with arrays
-      if (['tags', 'seoKeywords'].includes(field)) {
-        newData[field] = Array.isArray(value) ? value : value.split(',').map(item => item.trim());
       }
-      return newData;
-    });
-    setIsDirty(true);
-  };
-
-  // Handle image upload
-  const handleImageUpload = async (file) => {
-    setIsLoading(true);
-    try {
-      // In a real app, you would upload the image to your server here
-      // For demo purposes, we'll just create a local URL
-      const imageUrl = URL.createObjectURL(file);
-      handleMetadataChange('featuredImage', imageUrl);
-      
-      // Insert image into editor at current position
-      if (editor) {
-        editor.chain().focus().setImage({ src: imageUrl }).run();
-      }
-    } catch (err) {
-      setError('Failed to upload image. Please try again.');
-    } finally {
       setIsLoading(false);
     }
+  }, [id]);
+
+  // Fetch blog data if editing existing post
+  useEffect(() => {
+    const fetchBlog = async () => {
+      if (!id) return;
+
+      try {
+        const { data } = await api.get(`/blogs/${id}`);
+        setBlogData({
+          ...data,
+          tags: data.tags || [],
+          seoKeywords: data.seoKeywords || [],
+          coverImage: data.coverImage || "",
+        });
+      } catch (err) {
+        toast.error("Failed to load blog post");
+        console.error(err);
+        navigate("/dashboard");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchBlog();
+  }, [id, navigate]);
+
+  const validateForm = () => {
+    const errors = {};
+    if (!blogData.title.trim()) errors.title = "Title is required";
+    if (!blogData.excerpt.trim()) errors.excerpt = "Excerpt is required";
+    if (!blogData.genre.trim()) errors.genre = "Genre is required";
+    if (blogData.excerpt.length > 200)
+      errors.excerpt = "Excerpt must be 200 characters or less";
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
-  // Save blog (draft or publish)
-  const handleSave = async (publish = false) => {
-    if (!editor) return;
-    
-    setIsLoading(true);
+  const handleSave = async (isPublishingAction = false) => {
+    if (!validateForm()) {
+      toast.error("Please fix form errors before saving");
+      return;
+    }
+
+    // For publish action, show confirmation first
+    if (isPublishingAction && !showPublishConfirm) {
+      setShowPublishConfirm(true);
+      return;
+    }
+
+    // Prevent duplicate submissions
+    if (isSaving || isPublishing) return;
+
+    // Set the appropriate loading state
+    if (isPublishingAction) {
+      setIsPublishing(true);
+      setShowPublishConfirm(false);
+    } else {
+      setIsSaving(true);
+    }
+
     try {
-      // Get the latest content from editor
-      const content = editor.getHTML();
-      const dataToSave = { ...blogData, content, status: publish ? 'published' : 'draft' };
-      
-      const savedBlog = await saveBlogApi(dataToSave, blogId, publish);
-      
-      setBlogData(savedBlog);
-      setIsDirty(false);
-      setLastSaved(new Date());
-      
-      if (onSaveSuccess) {
-        onSaveSuccess(savedBlog);
+      const payload = {
+        ...blogData,
+        status: isPublishingAction ? "published" : "draft",
+        lastUpdated: new Date().toISOString(),
+      };
+
+      const blogId = blogData._id;
+      const response = blogId
+        ? await api.put(`/api/blogs/${blogId}`, payload)
+        : await api.post("/api/blogs", payload);
+
+      if (!response.data?.success || !response.data?.data) {
+        throw new Error("Invalid response from server");
       }
-      
+
+      const savedBlog = response.data.data;
+      setBlogData(savedBlog);
+
+      if (isPublishingAction) {
+        setPublishedBlogUrl(`/blog/${savedBlog.slug || savedBlog._id}`);
+        setShowSuccessModal(true);
+      } else {
+        toast.success("Draft saved successfully");
+      }
+
+      if (!blogId) navigate(`/editor`);
       return savedBlog;
     } catch (err) {
-      setError(formatApiError(err));
+      const errorMessage =
+        err?.response?.data?.message ||
+        err?.message ||
+        "An unexpected error occurred";
+
+      console.error("Blog save error:", err);
+      toast.error(
+        `Failed to ${isPublishingAction ? "publish" : "save"} blog: ${errorMessage}`
+      );
       throw err;
     } finally {
-      setIsLoading(false);
+      setIsSaving(false);
+      setIsPublishing(false);
     }
   };
 
-  // Keyboard shortcuts
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-        e.preventDefault();
-        handleSave(false);
-      }
-    };
-    
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleSave]);
+  const handleGenerateKeywords = async () => {
+    if (!blogData.title.trim()) {
+      setFormErrors((prev) => ({
+        ...prev,
+        seoKeywords: "Please enter a title first",
+      }));
+      return;
+    }
 
-  // Confirm before leaving if there are unsaved changes
-  useEffect(() => {
-    const handleBeforeUnload = (e) => {
-      if (isDirty) {
-        e.preventDefault();
-        e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
-      }
-    };
-    
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [isDirty]);
+    setIsGeneratingKeywords(true);
+    try {
+      const { data } = await api.post("/ai/generate-keywords", {
+        title: blogData.title,
+        excerpt: blogData.excerpt,
+      });
 
-  if (!editor) {
-    return <div className="flex justify-center items-center h-screen">Initializing editor...</div>;
+      setBlogData((prev) => ({
+        ...prev,
+        seoKeywords: [...new Set([...prev.seoKeywords, ...data.keywords])],
+      }));
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to generate keywords");
+    } finally {
+      setIsGeneratingKeywords(false);
+    }
+  };
+
+  const handleCoverImageUpload = async (file) => {
+    try {
+      const formData = new FormData();
+      formData.append("image", file);
+
+      const { data } = await api.post("/upload", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      setBlogData((prev) => ({ ...prev, coverImage: data.url }));
+      toast.success("Cover image uploaded successfully");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to upload cover image");
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
   }
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50">
-      {/* Navigation Bar */}
-      <EditorNavbar 
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        onSave={handleSave}
-        onPublish={() => handleSave(true)}
-        isDirty={isDirty}
-        status={blogData.status}
-      />
-      
-      {/* Main Content Area */}
-      <div className="flex flex-1 overflow-hidden">
-        {/* Metadata Panel (left sidebar) */}
-        <MetadataPanel 
-          data={blogData}
-          onChange={handleMetadataChange}
-          onImageUpload={handleImageUpload}
+    <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
+      {/* Fixed Navbar */}
+      <header className="fixed top-0 left-0 right-0 h-16 z-30">
+        <BlogEditorNavbar
+          blogData={blogData}
+          onSave={() => handleSave(false)}
+          onPublish={() => handleSave(true)}
+          isSubmitting={isSaving || isPublishing}
+          onCoverImageUpload={handleCoverImageUpload}
         />
-        
-        {/* Editor/Preview Area */}
-        <div className="flex-1 flex flex-col overflow-hidden">
-          {activeTab === 'editor' ? (
-            <>
-              {/* Editor Toolbar */}
-              <EditorToolbar editor={editor} />
+      </header>
+
+      {/* Publish Confirmation Dialog */}
+      {showPublishConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className={`rounded-lg p-6 max-w-md w-full mx-4 ${darkMode ? "bg-gray-800" : "bg-white"}`}>
+            <div className="flex justify-between items-start mb-4">
+              <h3 className="text-lg font-bold">Confirm Publication</h3>
+              <button 
+                onClick={() => setShowPublishConfirm(false)}
+                className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+              >
+                <FiX size={20} />
+              </button>
+            </div>
+            <p className="mb-6">
+              Are you sure you want to publish this blog? It will be visible to the public.
+            </p>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => setShowPublishConfirm(false)}
+                className={`px-4 py-2 rounded-lg ${darkMode ? "bg-gray-700 hover:bg-gray-600" : "bg-gray-200 hover:bg-gray-300"}`}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleSave(true)}
+                className="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white"
+                disabled={isPublishing}
+              >
+                {isPublishing ? "Publishing..." : "Yes, Publish"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Success Modal */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className={`rounded-lg p-6 max-w-md w-full mx-4 ${darkMode ? "bg-gray-800" : "bg-white"}`}>
+            <div className="text-center">
+              <FiCheckCircle className="mx-auto text-green-500 mb-4" size={48} />
+              <h3 className="text-xl font-bold mb-2">Blog Published Successfully!</h3>
+              <p className="mb-6">Your blog is now live and visible to the public.</p>
               
-              {/* Editor Content */}
-              <div className="flex-1 overflow-auto p-6 bg-white">
-                {/* Title input (outside the editor) */}
-                <input
-                  type="text"
-                  value={blogData.title}
-                  onChange={(e) => handleMetadataChange('title', e.target.value)}
-                  placeholder="Blog Title"
-                  className="w-full text-4xl font-bold mb-6 p-2 border-none outline-none focus:ring-2 focus:ring-blue-200 rounded"
-                />
-                
-                {/* Excerpt input */}
-                <textarea
-                  value={blogData.excerpt}
-                  onChange={(e) => handleMetadataChange('excerpt', e.target.value)}
-                  placeholder="Write a short excerpt..."
-                  className="w-full text-lg mb-6 p-2 border-none outline-none focus:ring-2 focus:ring-blue-200 rounded resize-none"
-                  rows={3}
-                />
-                
-                {/* Floating menu for adding content */}
-                {editor && (
-                  <FloatingMenu editor={editor} tippyOptions={{ duration: 100 }}>
-                    <div className="flex items-center space-x-1 bg-white shadow-lg rounded-md p-1 border border-gray-200">
-                      <button
-                        onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-                        className={`p-2 rounded hover:bg-gray-100 ${editor.isActive('heading', { level: 1 }) ? 'bg-gray-200' : ''}`}
-                      >
-                        H1
-                      </button>
-                      <button
-                        onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-                        className={`p-2 rounded hover:bg-gray-100 ${editor.isActive('heading', { level: 2 }) ? 'bg-gray-200' : ''}`}
-                      >
-                        H2
-                      </button>
-                      <button
-                        onClick={() => editor.chain().focus().toggleBulletList().run()}
-                        className={`p-2 rounded hover:bg-gray-100 ${editor.isActive('bulletList') ? 'bg-gray-200' : ''}`}
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <line x1="8" y1="6" x2="21" y2="6"></line>
-                          <line x1="8" y1="12" x2="21" y2="12"></line>
-                          <line x1="8" y1="18" x2="21" y2="18"></line>
-                          <line x1="3" y1="6" x2="3.01" y2="6"></line>
-                          <line x1="3" y1="12" x2="3.01" y2="12"></line>
-                          <line x1="3" y1="18" x2="3.01" y2="18"></line>
-                        </svg>
-                      </button>
-                      <button
-                        onClick={() => editor.chain().focus().toggleBlockquote().run()}
-                        className={`p-2 rounded hover:bg-gray-100 ${editor.isActive('blockquote') ? 'bg-gray-200' : ''}`}
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                        </svg>
-                      </button>
-                    </div>
-                  </FloatingMenu>
-                )}
-                
-                {/* Bubble menu for formatting selected text */}
-                {editor && (
-                  <BubbleMenu editor={editor} tippyOptions={{ duration: 100 }}>
-                    <div className="flex items-center space-x-1 bg-white shadow-lg rounded-md p-1 border border-gray-200">
-                      <button
-                        onClick={() => editor.chain().focus().toggleBold().run()}
-                        className={`p-2 rounded hover:bg-gray-100 ${editor.isActive('bold') ? 'bg-gray-200' : ''}`}
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"></path>
-                          <path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"></path>
-                        </svg>
-                      </button>
-                      <button
-                        onClick={() => editor.chain().focus().toggleItalic().run()}
-                        className={`p-2 rounded hover:bg-gray-100 ${editor.isActive('italic') ? 'bg-gray-200' : ''}`}
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <line x1="19" y1="4" x2="10" y2="4"></line>
-                          <line x1="14" y1="20" x2="5" y2="20"></line>
-                          <line x1="15" y1="4" x2="9" y2="20"></line>
-                        </svg>
-                      </button>
-                      <button
-                        onClick={() => editor.chain().focus().toggleUnderline().run()}
-                        className={`p-2 rounded hover:bg-gray-100 ${editor.isActive('underline') ? 'bg-gray-200' : ''}`}
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M6 3v7a6 6 0 0 0 6 6 6 6 0 0 0 6-6V3"></path>
-                          <line x1="4" y1="21" x2="20" y2="21"></line>
-                        </svg>
-                      </button>
-                      <button
-                        onClick={() => editor.chain().focus().toggleLink({ href: 'https://example.com' }).run()}
-                        className={`p-2 rounded hover:bg-gray-100 ${editor.isActive('link') ? 'bg-gray-200' : ''}`}
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
-                          <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
-                        </svg>
-                      </button>
-                    </div>
-                  </BubbleMenu>
-                )}
-                
-                {/* The actual editor content */}
-                <EditorContent 
-                  editor={editor} 
-                  className="prose max-w-none focus:outline-none min-h-[300px]"
-                />
+              {publishedBlogUrl && (
+                <div className="mb-6 p-3 bg-gray-100 dark:bg-gray-700 rounded break-all">
+                  <span className="font-medium">Blog URL:</span> 
+                  <a 
+                    href={publishedBlogUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-blue-600 dark:text-blue-400 hover:underline ml-2"
+                  >
+                    {window.location.origin}{publishedBlogUrl}
+                  </a>
+                </div>
+              )}
+              
+              <div className="flex justify-center space-x-4">
+                <button
+                  onClick={() => {
+                    window.open(publishedBlogUrl, "_blank");
+                    setShowSuccessModal(false);
+                  }}
+                  className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  View Blog
+                </button>
+                <button
+                  onClick={() => {
+                    setShowSuccessModal(false);
+                    window.location.reload();
+                  }}
+                  className={`px-4 py-2 rounded-lg ${darkMode ? "bg-gray-700 hover:bg-gray-600" : "bg-gray-200 hover:bg-gray-300"}`}
+                >
+                  Stay in Editor
+                </button>
               </div>
-            </>
-          ) : (
-            <PreviewPane 
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Tabs */}
+      <div className="sticky top-16 z-20 pt-4 px-4 bg-gradient-to-b from-white/80 to-transparent dark:from-gray-900/80">
+        <div className="max-w-6xl mx-auto relative">
+          <div className="pt-8">
+            <BlogEditorTabs activeTab={activeTab} setActiveTab={setActiveTab} />
+
+            {/* Action Buttons - Right Side */}
+            <div className="absolute right-4 top-8 flex items-center space-x-3">
+              {/* Cover Image Upload */}
+              <label
+                className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium border transition-all cursor-pointer ${
+                  isSaving || isPublishing
+                    ? darkMode
+                      ? "bg-indigo-900/70 text-indigo-300 border-indigo-800 cursor-not-allowed"
+                      : "bg-indigo-100 text-indigo-600 border-indigo-200 cursor-not-allowed"
+                    : darkMode
+                    ? "bg-indigo-900/50 text-indigo-300 hover:bg-indigo-800 border-indigo-700 hover:shadow-indigo-900/30 hover:shadow-md"
+                    : "bg-indigo-50 text-indigo-600 hover:bg-indigo-100 border-indigo-200 hover:shadow-indigo-200 hover:shadow-md"
+                }`}
+              >
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleCoverImageUpload}
+                  className="hidden"
+                  disabled={isSaving || isPublishing}
+                />
+                <FiUpload
+                  className={`h-5 w-5 ${isSaving || isPublishing ? "animate-pulse" : ""}`}
+                />
+                <span className="hidden sm:inline">Cover Image</span>
+              </label>
+
+              {/* Save Draft Button */}
+              <button
+                onClick={() => handleSave(false)}
+                disabled={isSaving || isPublishing || !blogData}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium border transition-all ${
+                  isSaving
+                    ? darkMode
+                      ? "bg-blue-900/70 text-blue-300 border-blue-800 cursor-not-allowed"
+                      : "bg-blue-100 text-blue-600 border-blue-200 cursor-not-allowed"
+                    : darkMode
+                    ? "bg-blue-900/50 text-blue-300 hover:bg-blue-800 border-blue-700 hover:shadow-blue-900/30 hover:shadow-md"
+                    : "bg-blue-50 text-blue-600 hover:bg-blue-100 border-blue-200 hover:shadow-blue-200 hover:shadow-md"
+                }`}
+              >
+                <FiSave
+                  className={`h-5 w-5 ${isSaving ? "animate-pulse" : ""}`}
+                />
+                <span className="hidden sm:inline">
+                  {isSaving ? "Saving..." : "Save Draft"}
+                </span>
+              </button>
+
+              {/* Publish Button */}
+              <button
+                onClick={() => handleSave(true)}
+                disabled={isPublishing || isSaving || !blogData}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium border transition-all ${
+                  isPublishing
+                    ? darkMode
+                      ? "bg-green-900/70 text-green-300 border-green-800 cursor-not-allowed"
+                      : "bg-green-100 text-green-600 border-green-200 cursor-not-allowed"
+                    : !blogData
+                    ? darkMode
+                      ? "bg-green-900/20 text-green-500 border-green-800 cursor-not-allowed"
+                      : "bg-green-50/50 text-green-400 border-green-200 cursor-not-allowed"
+                    : darkMode
+                    ? "bg-green-900/50 text-green-300 hover:bg-green-800 border-green-700 hover:shadow-green-900/30 hover:shadow-md"
+                    : "bg-green-50 text-green-600 hover:bg-green-100 border-green-200 hover:shadow-green-200 hover:shadow-md"
+                }`}
+              >
+                <FiUpload
+                  className={`h-5 w-5 ${isPublishing ? "animate-pulse" : ""}`}
+                />
+                <span className="hidden sm:inline">
+                  {isPublishing ? "Publishing..." : "Publish"}
+                </span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <main className="flex-1 overflow-y-auto mt-40 px-4 pb-8">
+        <div className="max-w-6xl mx-auto">
+          {activeTab === "contents" && (
+            <EditorSpace blogData={blogData} setBlogData={setBlogData} />
+          )}
+
+          {activeTab === "metadata" && (
+            <MetadataForm
               title={blogData.title}
               excerpt={blogData.excerpt}
-              content={blogData.content}
-              featuredImage={blogData.featuredImage}
-              author={blogData.author}
               genre={blogData.genre}
               tags={blogData.tags}
+              seoKeywords={blogData.seoKeywords}
+              setTitle={(val) =>
+                setBlogData((prev) => ({ ...prev, title: val }))
+              }
+              setExcerpt={(val) =>
+                setBlogData((prev) => ({ ...prev, excerpt: val }))
+              }
+              setGenre={(val) =>
+                setBlogData((prev) => ({ ...prev, genre: val }))
+              }
+              setTags={(val) => setBlogData((prev) => ({ ...prev, tags: val }))}
+              setSeoKeywords={(val) =>
+                setBlogData((prev) => ({ ...prev, seoKeywords: val }))
+              }
+              errors={formErrors}
+              onGenerateSuggestions={handleGenerateKeywords}
+              isGenerating={isGeneratingKeywords}
+            />
+          )}
+
+          {activeTab === "askLilly" && (
+            <AskLillyTab
+              blogData={blogData}
+              onApplySuggestions={(suggestions) => {
+                setBlogData((prev) => ({ ...prev, ...suggestions }));
+                toast.success("Suggestions applied successfully");
+              }}
             />
           )}
         </div>
-      </div>
-      
-      {/* Status Bar */}
-      <StatusBar 
-        wordCount={wordCount}
-        characterCount={editor.storage.characterCount?.characters() || 0}
-        lastSaved={lastSaved}
-        status={blogData.status}
-      />
-      
-      {/* Loading Overlay */}
-      {isLoading && <LoadingOverlay />}
-      
-      {/* Error Dialog */}
-      {error && (
-        <ErrorDialog 
-          message={error}
-          onClose={() => setError(null)}
-        />
-      )}
+      </main>
     </div>
   );
 };

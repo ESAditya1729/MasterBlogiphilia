@@ -12,8 +12,9 @@ import {
   Mail,
 } from "lucide-react";
 import loginIllustration from "../assets/Login-blogging.svg";
-import { useTheme } from "../contexts/ThemeContext";
+import { useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { useTheme } from "../contexts/ThemeContext"; // or wherever you define it
 
 const Login = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
@@ -26,8 +27,11 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { mode, toggleTheme } = useTheme();
   const { login } = useAuth();
+
+  const from = location.state?.from?.pathname || "/dashboard";
 
   const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -78,10 +82,10 @@ const Login = () => {
         setMessage({
           type: "success",
           text: "Welcome Back!",
-          details: "Redirecting you to your dashboard...",
+          details: "Redirecting...",
         });
 
-        setTimeout(() => navigate("/dashboard"), 1500);
+        setTimeout(() => navigate(from, { replace: true }), 1000);
       } else {
         throw new Error("Failed to initialize session");
       }
