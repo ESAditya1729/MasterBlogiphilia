@@ -7,23 +7,8 @@ html {
 .dark .preview-content img {
   filter: brightness(0.9) contrast(1.1);
 }
-.ProseMirror ul, 
-.ProseMirror ol {
-  padding-left: 1.5rem;
-  margin: 0.5rem 0;
-}
-
-.ProseMirror li {
-  margin: 0.25rem 0;
-  position: relative;
-}
-
-.ProseMirror .task-item {
-  display: flex;
-  align-items: center;
-}
-
-.ProseMirror .task-item input {
-  margin-right: 0.5rem;
-  margin-top: 0.2rem;
+.toolbar-btn {
+  @apply p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150;
+  @apply text-gray-700 dark:text-gray-200;
+  @apply flex items-center justify-center;
 }

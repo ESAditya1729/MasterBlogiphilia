@@ -314,14 +314,17 @@ const BlogEditor = () => {
         </div>
       )}
 
-      {/* Tabs */}
-      <div className="sticky top-16 z-20 pt-4 px-4 bg-gradient-to-b from-white/80 to-transparent dark:from-gray-900/80">
-        <div className="max-w-6xl mx-auto relative">
-          <div className="pt-8">
-            <BlogEditorTabs activeTab={activeTab} setActiveTab={setActiveTab} />
-
+      {/* Tabs and Action Buttons */}
+      <div className="sticky top-16 z-20 pt-2 bg-gradient-to-b from-white/80 to-transparent dark:from-gray-900/80">
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="flex flex-col">
+            {/* Tabs */}
+            <div className="pt-2">
+              <BlogEditorTabs activeTab={activeTab} setActiveTab={setActiveTab} />
+            </div>
+            
             {/* Action Buttons - Right Side */}
-            <div className="absolute right-4 top-8 flex items-center space-x-3">
+            <div className="flex justify-end items-center space-x-3 py-3">
               {/* Cover Image Upload */}
               <label
                 className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium border transition-all cursor-pointer ${
@@ -400,7 +403,7 @@ const BlogEditor = () => {
       </div>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto mt-40 px-4 pb-8">
+      <main className="flex-1 overflow-y-auto mt-28 px-4 pb-8">
         <div className="max-w-6xl mx-auto">
           {activeTab === "contents" && (
             <EditorSpace blogData={blogData} setBlogData={setBlogData} />
