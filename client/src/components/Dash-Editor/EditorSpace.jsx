@@ -4,6 +4,9 @@ import Underline from "@tiptap/extension-underline";
 import TextAlign from "@tiptap/extension-text-align";
 import Link from "@tiptap/extension-link";
 import Image from "@tiptap/extension-image";
+import Highlight from '@tiptap/extension-highlight';
+import { TextStyle } from '@tiptap/extension-text-style';
+import { Color } from '@tiptap/extension-color';
 import { useEffect } from "react";
 import Toolbar from "./Toolbar";
 import { motion } from "framer-motion";
@@ -21,6 +24,11 @@ const EditorSpace = ({ blogData = {}, setBlogData }) => {
         openOnClick: false,
       }),
       Image,
+      TextStyle,
+      Color,
+      Highlight.configure({
+        multicolor: true,
+      }),
     ],
     content: blogData?.content || "",
     onUpdate: ({ editor }) => {
@@ -41,10 +49,10 @@ const EditorSpace = ({ blogData = {}, setBlogData }) => {
   }, [blogData?.content, editor]);
 
   return (
-    <div className="p-4 bg-white dark:bg-gray-900 rounded-md border shadow-sm">
+    <div className="p-4 bg-white dark:bg-gray-900 rounded-md border shadow-sm relative">
       <div className="flex justify-between items-center mb-2">
         <motion.div
-          className="mx-auto max-w-max mb-4" // Centered with automatic margins
+          className="mx-auto max-w-max mb-4"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
@@ -73,14 +81,12 @@ const EditorSpace = ({ blogData = {}, setBlogData }) => {
       </div>
 
       <div className="border rounded-md bg-white dark:bg-gray-800 relative">
-        {/* Sticky toolbar container */}
-        <div className="sticky top-0 z-10 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+        <div className="sticky top-0 z-[100] bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
           <Toolbar editor={editor} />
         </div>
 
-        {/* Scrollable content area */}
         <div
-          className="overflow-y-auto"
+          className="overflow-y-auto relative z-0"
           style={{ maxHeight: "calc(100vh - 300px)" }}
         >
           <EditorContent editor={editor} className="pt-2" />

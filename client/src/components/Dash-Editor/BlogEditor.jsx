@@ -154,7 +154,9 @@ const BlogEditor = () => {
 
       console.error("Blog save error:", err);
       toast.error(
-        `Failed to ${isPublishingAction ? "publish" : "save"} blog: ${errorMessage}`
+        `Failed to ${
+          isPublishingAction ? "publish" : "save"
+        } blog: ${errorMessage}`
       );
       throw err;
     } finally {
@@ -234,10 +236,14 @@ const BlogEditor = () => {
       {/* Publish Confirmation Dialog */}
       {showPublishConfirm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className={`rounded-lg p-6 max-w-md w-full mx-4 ${darkMode ? "bg-gray-800" : "bg-white"}`}>
+          <div
+            className={`rounded-lg p-6 max-w-md w-full mx-4 ${
+              darkMode ? "bg-gray-800" : "bg-white"
+            }`}
+          >
             <div className="flex justify-between items-start mb-4">
               <h3 className="text-lg font-bold">Confirm Publication</h3>
-              <button 
+              <button
                 onClick={() => setShowPublishConfirm(false)}
                 className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
               >
@@ -245,12 +251,17 @@ const BlogEditor = () => {
               </button>
             </div>
             <p className="mb-6">
-              Are you sure you want to publish this blog? It will be visible to the public.
+              Are you sure you want to publish this blog? It will be visible to
+              the public.
             </p>
             <div className="flex justify-end space-x-3">
               <button
                 onClick={() => setShowPublishConfirm(false)}
-                className={`px-4 py-2 rounded-lg ${darkMode ? "bg-gray-700 hover:bg-gray-600" : "bg-gray-200 hover:bg-gray-300"}`}
+                className={`px-4 py-2 rounded-lg ${
+                  darkMode
+                    ? "bg-gray-700 hover:bg-gray-600"
+                    : "bg-gray-200 hover:bg-gray-300"
+                }`}
               >
                 Cancel
               </button>
@@ -269,26 +280,38 @@ const BlogEditor = () => {
       {/* Success Modal */}
       {showSuccessModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className={`rounded-lg p-6 max-w-md w-full mx-4 ${darkMode ? "bg-gray-800" : "bg-white"}`}>
+          <div
+            className={`rounded-lg p-6 max-w-md w-full mx-4 ${
+              darkMode ? "bg-gray-800" : "bg-white"
+            }`}
+          >
             <div className="text-center">
-              <FiCheckCircle className="mx-auto text-green-500 mb-4" size={48} />
-              <h3 className="text-xl font-bold mb-2">Blog Published Successfully!</h3>
-              <p className="mb-6">Your blog is now live and visible to the public.</p>
-              
+              <FiCheckCircle
+                className="mx-auto text-green-500 mb-4"
+                size={48}
+              />
+              <h3 className="text-xl font-bold mb-2">
+                Blog Published Successfully!
+              </h3>
+              <p className="mb-6">
+                Your blog is now live and visible to the public.
+              </p>
+
               {publishedBlogUrl && (
                 <div className="mb-6 p-3 bg-gray-100 dark:bg-gray-700 rounded break-all">
-                  <span className="font-medium">Blog URL:</span> 
-                  <a 
-                    href={publishedBlogUrl} 
-                    target="_blank" 
+                  <span className="font-medium">Blog URL:</span>
+                  <a
+                    href={publishedBlogUrl}
+                    target="_blank"
                     rel="noopener noreferrer"
                     className="text-blue-600 dark:text-blue-400 hover:underline ml-2"
                   >
-                    {window.location.origin}{publishedBlogUrl}
+                    {window.location.origin}
+                    {publishedBlogUrl}
                   </a>
                 </div>
               )}
-              
+
               <div className="flex justify-center space-x-4">
                 <button
                   onClick={() => {
@@ -304,7 +327,11 @@ const BlogEditor = () => {
                     setShowSuccessModal(false);
                     window.location.reload();
                   }}
-                  className={`px-4 py-2 rounded-lg ${darkMode ? "bg-gray-700 hover:bg-gray-600" : "bg-gray-200 hover:bg-gray-300"}`}
+                  className={`px-4 py-2 rounded-lg ${
+                    darkMode
+                      ? "bg-gray-700 hover:bg-gray-600"
+                      : "bg-gray-200 hover:bg-gray-300"
+                  }`}
                 >
                   Stay in Editor
                 </button>
@@ -320,9 +347,12 @@ const BlogEditor = () => {
           <div className="flex flex-col">
             {/* Tabs */}
             <div className="pt-2">
-              <BlogEditorTabs activeTab={activeTab} setActiveTab={setActiveTab} />
+              <BlogEditorTabs
+                activeTab={activeTab}
+                setActiveTab={setActiveTab}
+              />
             </div>
-            
+
             {/* Action Buttons - Right Side */}
             <div className="flex justify-end items-center space-x-3 py-3">
               {/* Cover Image Upload */}
@@ -345,7 +375,9 @@ const BlogEditor = () => {
                   disabled={isSaving || isPublishing}
                 />
                 <FiUpload
-                  className={`h-5 w-5 ${isSaving || isPublishing ? "animate-pulse" : ""}`}
+                  className={`h-5 w-5 ${
+                    isSaving || isPublishing ? "animate-pulse" : ""
+                  }`}
                 />
                 <span className="hidden sm:inline">Cover Image</span>
               </label>
