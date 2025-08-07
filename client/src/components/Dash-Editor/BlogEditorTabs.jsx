@@ -1,11 +1,8 @@
-// src/components/Dash-Editor/BlogEditorTabs.jsx
 import { 
   FiEdit2, 
   FiFileText, 
   FiMessageSquare, 
-  FiSearch, 
-  FiEye, 
-  FiSliders,
+  FiEye,
   FiBook,
   FiBookOpen 
 } from 'react-icons/fi';
@@ -16,62 +13,44 @@ import { useTheme } from '../../contexts/ThemeContext';
 const BlogEditorTabs = ({ activeTab, setActiveTab }) => {
   const { mode } = useTheme();
   const darkMode = mode === 'dark';
-  const [isCollapsed, setIsCollapsed] = useState(false); // Changed to false for expanded by default
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   const tabs = [
     {
       id: 'contents',
       label: 'Contents',
-      icon: <FiEdit2 size={20} />,
+      icon: <FiEdit2 size={16} />,
       activeColor: 'text-white',
       inactiveColor: 'text-blue-500',
-      bgColor: 'bg-blue-500',
-      darkBgColor: 'bg-blue-600'
+      bgColor: 'bg-gradient-to-r from-blue-500 to-blue-600',
+      darkBgColor: 'bg-gradient-to-r from-blue-600 to-blue-700'
     },
     {
       id: 'metadata',
       label: 'Metadata', 
-      icon: <FiFileText size={20} />,
+      icon: <FiFileText size={16} />,
       activeColor: 'text-white',
       inactiveColor: 'text-purple-500',
-      bgColor: 'bg-purple-500',
-      darkBgColor: 'bg-purple-600'
-    },
-    {
-      id: 'seo',
-      label: 'SEO',
-      icon: <FiSearch size={20} />,
-      activeColor: 'text-white',
-      inactiveColor: 'text-green-500',
-      bgColor: 'bg-green-500',
-      darkBgColor: 'bg-green-600'
-    },
-    {
-      id: 'style', 
-      label: 'Style',
-      icon: <FiSliders size={20} />,
-      activeColor: 'text-white',
-      inactiveColor: 'text-pink-500',
-      bgColor: 'bg-pink-500',
-      darkBgColor: 'bg-pink-600'
+      bgColor: 'bg-gradient-to-r from-purple-500 to-purple-600',
+      darkBgColor: 'bg-gradient-to-r from-purple-600 to-purple-700'
     },
     {
       id: 'askLilly',
       label: 'Ask Lilly',
-      icon: <FiMessageSquare size={20} />,
+      icon: <FiMessageSquare size={16} />,
       activeColor: 'text-white',
       inactiveColor: 'text-indigo-500',
-      bgColor: 'bg-indigo-500',
-      darkBgColor: 'bg-indigo-600'
+      bgColor: 'bg-gradient-to-r from-indigo-500 to-indigo-600',
+      darkBgColor: 'bg-gradient-to-r from-indigo-600 to-indigo-700'
     },
     {
       id: 'preview',
       label: 'Preview',
-      icon: <FiEye size={20} />,
+      icon: <FiEye size={16} />,
       activeColor: 'text-white',
       inactiveColor: 'text-orange-500',
-      bgColor: 'bg-orange-500',
-      darkBgColor: 'bg-orange-600'
+      bgColor: 'bg-gradient-to-r from-orange-500 to-orange-600',
+      darkBgColor: 'bg-gradient-to-r from-orange-600 to-orange-700'
     }
   ];
 
@@ -81,14 +60,14 @@ const BlogEditorTabs = ({ activeTab, setActiveTab }) => {
 
   return (
     <div className="relative -mt-6">
-      {/* Animated vine stem */}
+      {/* Extended hanging line with subtle shadow */}
       <motion.div
         className={`absolute top-0 left-1/2 transform -translate-x-1/2 w-0.5 z-10 ${
-          darkMode ? 'bg-gray-600' : 'bg-gray-300'
+          darkMode ? 'bg-gray-600 shadow-gray-800' : 'bg-gray-300 shadow-gray-200'
         }`}
-        initial={{ height: 44 }}
+        initial={{ height: 48 }}
         animate={{ 
-          height: isCollapsed ? 24 : 44,
+          height: isCollapsed ? 24 : 48,
           transition: { 
             type: "spring", 
             damping: 10, 
@@ -98,17 +77,17 @@ const BlogEditorTabs = ({ activeTab, setActiveTab }) => {
         }}
       />
 
-      {/* Toggle button with book icons */}
+      {/* Elegant toggle button */}
       <motion.button
         onClick={toggleCollapse}
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.95 }}
-        className={`absolute top-0 left-1/2 transform -translate-x-1/2 z-30 flex items-center justify-center w-10 h-10 rounded-full shadow-md ${
-          darkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-100 hover:bg-gray-200'
-        }`}
-        style={{ marginTop: '12px' }}
+        className={`absolute top-0 left-1/2 transform -translate-x-1/2 z-30 flex items-center justify-center w-10 h-10 rounded-full shadow-lg ${
+          darkMode ? 'bg-gray-800 hover:bg-gray-700' : 'bg-white hover:bg-gray-50'
+        } transition-all duration-200`}
+        style={{ marginTop: '24px' }}
         animate={{ 
-          y: isCollapsed ? 0 : 20,
+          y: isCollapsed ? 0 : 24,
           transition: { 
             type: "spring", 
             damping: 10, 
@@ -122,21 +101,23 @@ const BlogEditorTabs = ({ activeTab, setActiveTab }) => {
             scale: isCollapsed ? 1 : [1, 1.2, 1]
           }}
           transition={{ duration: 0.4 }}
-          className={`text-lg ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}
+          className={`text-lg ${
+            darkMode ? 'text-gray-300' : 'text-gray-600'
+          } transition-transform duration-200`}
         >
           {isCollapsed ? (
-            <FiBook size={20} className="stroke-[2.5px]" /> // Closed book icon
+            <FiBook size={20} className="stroke-[2.5px]" />
           ) : (
-            <FiBookOpen size={20} className="stroke-[2.5px]" /> // Open book icon
+            <FiBookOpen size={20} className="stroke-[2.5px]" />
           )}
         </motion.div>
       </motion.button>
 
-      {/* Tabs container - now visible by default */}
+      {/* Modern tabs container */}
       <AnimatePresence>
         {!isCollapsed && (
           <motion.div
-            initial={{ opacity: 1, y: 0, scale: 1 }} // Changed to start visible
+            initial={{ opacity: 1, y: 0, scale: 1 }}
             animate={{ 
               opacity: 1, 
               y: 0,
@@ -160,12 +141,12 @@ const BlogEditorTabs = ({ activeTab, setActiveTab }) => {
                 staggerDirection: -1
               }
             }}
-            className="flex justify-center gap-3 pt-20 pb-2"
+            className="flex justify-center gap-3 pt-20 pb-3"
           >
             {tabs.map((tab, index) => (
               <motion.div
                 key={tab.id}
-                initial={{ y: 0, opacity: 1, scale: 1 }} // Changed to start visible
+                initial={{ y: 0, opacity: 1, scale: 1 }}
                 animate={{ 
                   y: 0, 
                   opacity: 1,
@@ -193,30 +174,28 @@ const BlogEditorTabs = ({ activeTab, setActiveTab }) => {
                     setIsCollapsed(true);
                   }}
                   whileHover={{ 
-                    y: -5,
+                    y: -4,
                     scale: 1.05,
                     boxShadow: darkMode 
-                      ? '0 5px 15px rgba(0, 0, 0, 0.3)' 
-                      : '0 5px 15px rgba(0, 0, 0, 0.1)'
+                      ? '0 4px 20px rgba(0, 0, 0, 0.25)' 
+                      : '0 4px 20px rgba(0, 0, 0, 0.1)'
                   }}
                   whileTap={{ scale: 0.95 }}
-                  className={`relative flex flex-col items-center px-4 py-3 rounded-2xl transition-all ${
+                  className={`relative flex items-center px-4 py-2.5 rounded-lg transition-all ${
                     activeTab === tab.id
-                      ? darkMode
-                        ? `${tab.darkBgColor} shadow-lg`
-                        : `${tab.bgColor} shadow-md`
+                      ? `${darkMode ? tab.darkBgColor : tab.bgColor} shadow-lg`
                       : darkMode
-                      ? 'bg-gray-700/70 hover:bg-gray-600/80'
-                      : 'bg-white hover:bg-gray-50'
+                      ? 'bg-gray-700/70 hover:bg-gray-600/80 border border-gray-600/50'
+                      : 'bg-white hover:bg-gray-50 border border-gray-200'
                   }`}
                 >
                   <motion.div
                     animate={{
-                      scale: activeTab === tab.id ? [1, 1.2, 1] : 1,
+                      scale: activeTab === tab.id ? [1, 1.1, 1] : 1,
                       rotate: activeTab === tab.id ? [0, 5, -5, 0] : 0
                     }}
                     transition={{ duration: 0.6 }}
-                    className="p-3 rounded-full mb-2"
+                    className="mr-2"
                   >
                     <span className={
                       activeTab === tab.id 
@@ -226,7 +205,7 @@ const BlogEditorTabs = ({ activeTab, setActiveTab }) => {
                       {tab.icon}
                     </span>
                   </motion.div>
-                  <span className={`text-xs font-medium ${
+                  <span className={`text-sm font-medium ${
                     activeTab === tab.id
                       ? 'text-white'
                       : darkMode
@@ -235,20 +214,6 @@ const BlogEditorTabs = ({ activeTab, setActiveTab }) => {
                   }`}>
                     {tab.label}
                   </span>
-                  
-                  {index < tabs.length - 1 && (
-                    <motion.div 
-                      className={`absolute -right-4 top-1/2 w-4 h-0.5 ${
-                        darkMode ? 'bg-gray-600' : 'bg-gray-300'
-                      }`}
-                      initial={{ scaleX: 1 }} // Changed to start visible
-                      animate={{ 
-                        scaleX: 1,
-                        transition: { delay: 0.2 + (index * 0.05) }
-                      }}
-                      exit={{ scaleX: 0 }}
-                    />
-                  )}
                 </motion.button>
               </motion.div>
             ))}
