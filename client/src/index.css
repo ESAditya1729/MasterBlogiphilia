@@ -39,30 +39,3 @@ html {
 .animate-slideIn {
   animation: slideIn 0.3s ease-out;
 }
-
-/* Smooth scrollbar for toolbar */
-.toolbar-scroll::-webkit-scrollbar {
-  height: 4px;
-}
-
-.toolbar-scroll::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.toolbar-scroll::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 2px;
-}
-
-.toolbar-scroll::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
-}
-
-/* Dark mode scrollbar */
-.dark .toolbar-scroll::-webkit-scrollbar-thumb {
-  background: #4b5563;
-}
-
-.dark .toolbar-scroll::-webkit-scrollbar-thumb:hover {
-  background: #6b7280;
-}

@@ -30,35 +30,23 @@ const Divider = () => (
 
 /**
  * ButtonGroup component to group related toolbar buttons
- * @param {Object} props - Component props
- * @param {React.ReactNode} props.children - Child elements
  */
 const ButtonGroup = ({ children }) => (
   <div className="flex items-center space-x-1">{children}</div>
 );
 
 /**
- * ModalButton component for consistent modal buttons
- * @param {Object} props - Component props
- * @param {Function} props.onClick - Click handler
- * @param {React.ReactNode} props.children - Button content
- * @param {boolean} [props.disabled=false] - Disabled state
- * @param {string} [props.variant="primary"] - Button variant (primary/secondary)
+ * Toolbar button component
  */
-const ModalButton = ({
-  onClick,
-  children,
-  disabled = false,
-  variant = "primary",
-}) => (
+const ToolbarButton = ({ active, onClick, children, ariaLabel }) => (
   <button
     onClick={onClick}
-    disabled={disabled}
-    className={`px-4 py-2 rounded-md flex items-center ${
-      variant === "primary"
-        ? "bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
-        : "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+    className={`p-2 rounded-md flex items-center justify-center transition-colors ${
+      active
+        ? "bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300"
+        : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
     }`}
+    aria-label={ariaLabel}
   >
     {children}
   </button>
@@ -66,8 +54,6 @@ const ModalButton = ({
 
 /**
  * Main Toolbar component for the editor
- * @param {Object} props - Component props
- * @param {Object} props.editor - Tiptap editor instance
  */
 const Toolbar = ({ editor }) => {
   // State for modal visibility and input values
@@ -86,7 +72,7 @@ const Toolbar = ({ editor }) => {
   const colorPickerRef = useRef(null);
   const highlightPickerRef = useRef(null);
 
-  // Effect to handle click outside of pickers and modals
+  // Handle click outside of pickers and modals
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -113,57 +99,34 @@ const Toolbar = ({ editor }) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Return null if editor is not available
   if (!editor) return null;
 
-  /**
-   * Toggle text mark (bold, italic, underline)
-   * @param {string} mark - Mark type to toggle
-   */
+  // Text formatting actions
   const toggleMark = (mark) => editor.chain().focus().toggleMark(mark).run();
-
-  /**
-   * Set text alignment
-   * @param {string} align - Alignment value (left, center, right, justify)
-   */
   const setAlignment = (align) =>
     editor.chain().focus().setTextAlign(align).run();
-
-  /**
-   * Toggle list type
-   * @param {string} type - List type (bullet or ordered)
-   */
   const toggleList = (type) =>
     editor
       .chain()
       .focus()
       [`toggle${type === "bullet" ? "Bullet" : "Ordered"}List`]()
       .run();
-
-  /**
-   * Add horizontal rule to the editor
-   */
   const addHorizontalRule = () =>
     editor.chain().focus().setHorizontalRule().run();
-
-  /**
-   * Toggle code block
-   */
   const addCodeBlock = () => editor.chain().focus().toggleCodeBlock().run();
 
-  /**
-   * Toggle heading level
-   * @param {number} level - Heading level (1-6)
-   */
-  const addHeading = (level) =>
-    editor.chain().focus().toggleHeading({ level }).run();
+  // Heading actions
+  const setHeading = (level) => {
+    if (editor.isActive("heading", { level })) {
+      editor.chain().focus().setParagraph().run();
+    } else {
+      editor.chain().focus().setHeading({ level }).run();
+    }
+  };
 
-  /**
-   * Add link to selected text
-   */
+  // Link actions
   const addLink = () => {
     if (linkUrl) {
-      // If text is selected, set link to that text
       if (editor.view.state.selection.empty) {
         editor
           .chain()
@@ -178,9 +141,7 @@ const Toolbar = ({ editor }) => {
     }
   };
 
-  /**
-   * Add image by URL
-   */
+  // Image actions
   const addImageByUrl = () => {
     if (imageUrl) {
       editor
@@ -193,37 +154,17 @@ const Toolbar = ({ editor }) => {
     }
   };
 
-  /**
-   * Add emoji at current cursor position
-   * @param {Object} emojiData - Emoji data from picker
-   */
-  const addEmoji = (emojiData) => {
-    editor.chain().focus().insertContent(emojiData.emoji).run();
-    setIsEmojiPickerOpen(false);
-  };
-
-  /**
-   * Set text color
-   * @param {string} color - Hex color value
-   */
+  // Color actions
   const setTextColor = (color) => {
     setCurrentColor(color);
     editor.chain().focus().setColor(color).run();
   };
 
-  /**
-   * Set highlight color
-   * @param {string} color - Hex color value
-   */
   const setHighlightColor = (color) => {
     setCurrentHighlight(color);
     editor.chain().focus().setHighlight({ color }).run();
   };
 
-  /**
-   * Reset text or highlight color
-   * @param {string} type - Type to reset ('text' or 'highlight')
-   */
   const resetColor = (type) => {
     if (type === "text") {
       editor.chain().focus().unsetColor().run();
@@ -234,179 +175,167 @@ const Toolbar = ({ editor }) => {
     }
   };
 
+  // Emoji actions
+  const addEmoji = (emojiData) => {
+    editor.chain().focus().insertContent(emojiData.emoji).run();
+    setIsEmojiPickerOpen(false);
+  };
+
   return (
     <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm sticky top-0 z-10">
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex flex-wrap items-center gap-1 py-2">
-          {/* TEXT FORMATTING BUTTONS */}
+          {/* TEXT FORMATTING */}
           <ButtonGroup>
-            <button
+            <ToolbarButton
+              active={editor.isActive("bold")}
               onClick={() => toggleMark("bold")}
-              className={`toolbar-btn ${
-                editor.isActive("bold")
-                  ? "bg-gray-100 dark:bg-gray-700 text-blue-600 dark:text-blue-400"
-                  : ""
-              }`}
-              aria-label="Bold"
+              ariaLabel="Bold"
             >
               <FiBold className="w-4 h-4" />
-            </button>
-            <button
+            </ToolbarButton>
+            <ToolbarButton
+              active={editor.isActive("italic")}
               onClick={() => toggleMark("italic")}
-              className={`toolbar-btn ${
-                editor.isActive("italic")
-                  ? "bg-gray-100 dark:bg-gray-700 text-blue-600 dark:text-blue-400"
-                  : ""
-              }`}
-              aria-label="Italic"
+              ariaLabel="Italic"
             >
               <FiItalic className="w-4 h-4" />
-            </button>
-            <button
+            </ToolbarButton>
+            <ToolbarButton
+              active={editor.isActive("underline")}
               onClick={() => toggleMark("underline")}
-              className={`toolbar-btn ${
-                editor.isActive("underline")
-                  ? "bg-gray-100 dark:bg-gray-700 text-blue-600 dark:text-blue-400"
-                  : ""
-              }`}
-              aria-label="Underline"
+              ariaLabel="Underline"
             >
               <FiUnderline className="w-4 h-4" />
-            </button>
+            </ToolbarButton>
           </ButtonGroup>
 
           <Divider />
 
-          {/* HEADING BUTTONS */}
+          {/* HEADINGS */}
           <ButtonGroup>
-            {[1, 2, 3].map((level) => (
-              <button
+            {[
+              { level: 1, size: "text-2xl" },
+              { level: 2, size: "text-xl" },
+              { level: 3, size: "text-lg" },
+            ].map(({ level, size }) => (
+              <ToolbarButton
                 key={level}
-                onClick={() => addHeading(level)}
-                className={`toolbar-btn ${
-                  editor.isActive("heading", { level })
-                    ? "bg-gray-100 dark:bg-gray-700 text-blue-600 dark:text-blue-400"
-                    : ""
-                }`}
-                aria-label={`Heading ${level}`}
+                active={editor.isActive("heading", { level })}
+                onClick={() => {
+                  // Toggle between heading and paragraph
+                  if (editor.isActive("heading", { level })) {
+                    editor.chain().focus().setParagraph().run();
+                  } else {
+                    editor.chain().focus().setHeading({ level }).run();
+                  }
+                }}
+                ariaLabel={`Heading ${level}`}
               >
-                <span className="font-semibold">H{level}</span>
-              </button>
+                <span className={`font-bold ${size}`}>H{level}</span>
+              </ToolbarButton>
             ))}
           </ButtonGroup>
 
           <Divider />
 
-          {/* ALIGNMENT BUTTONS */}
+          {/* ALIGNMENT */}
           <ButtonGroup>
-            <button
+            <ToolbarButton
+              active={editor.isActive({ textAlign: "left" })}
               onClick={() => setAlignment("left")}
-              className={`toolbar-btn ${
-                editor.isActive({ textAlign: "left" })
-                  ? "bg-gray-100 dark:bg-gray-700 text-blue-600 dark:text-blue-400"
-                  : ""
-              }`}
-              aria-label="Align left"
+              ariaLabel="Align left"
             >
               <FiAlignLeft className="w-4 h-4" />
-            </button>
-            <button
+            </ToolbarButton>
+            <ToolbarButton
+              active={editor.isActive({ textAlign: "center" })}
               onClick={() => setAlignment("center")}
-              className={`toolbar-btn ${
-                editor.isActive({ textAlign: "center" })
-                  ? "bg-gray-100 dark:bg-gray-700 text-blue-600 dark:text-blue-400"
-                  : ""
-              }`}
-              aria-label="Align center"
+              ariaLabel="Align center"
             >
               <FiAlignCenter className="w-4 h-4" />
-            </button>
-            <button
+            </ToolbarButton>
+            <ToolbarButton
+              active={editor.isActive({ textAlign: "right" })}
               onClick={() => setAlignment("right")}
-              className={`toolbar-btn ${
-                editor.isActive({ textAlign: "right" })
-                  ? "bg-gray-100 dark:bg-gray-700 text-blue-600 dark:text-blue-400"
-                  : ""
-              }`}
-              aria-label="Align right"
+              ariaLabel="Align right"
             >
               <FiAlignRight className="w-4 h-4" />
-            </button>
-            <button
+            </ToolbarButton>
+            <ToolbarButton
+              active={editor.isActive({ textAlign: "justify" })}
               onClick={() => setAlignment("justify")}
-              className={`toolbar-btn ${
-                editor.isActive({ textAlign: "justify" })
-                  ? "bg-gray-100 dark:bg-gray-700 text-blue-600 dark:text-blue-400"
-                  : ""
-              }`}
-              aria-label="Justify"
+              ariaLabel="Justify"
             >
               <FiAlignJustify className="w-4 h-4" />
-            </button>
+            </ToolbarButton>
           </ButtonGroup>
 
           <Divider />
 
-          {/* LIST & BLOCK BUTTONS */}
-          <ButtonGroup>
-            <button
-              onClick={() => toggleList("bullet")}
-              className={`toolbar-btn ${
-                editor.isActive("bulletList")
-                  ? "bg-gray-100 dark:bg-gray-700 text-blue-600 dark:text-blue-400"
-                  : ""
-              }`}
-              aria-label="Bullet list"
-            >
-              <FiList className="w-4 h-4" />
-            </button>
-            <button
-              onClick={addHorizontalRule}
-              className="toolbar-btn"
-              aria-label="Horizontal rule"
-            >
-              <FiMinus className="w-4 h-4" />
-            </button>
-            <button
-              onClick={addCodeBlock}
-              className={`toolbar-btn ${
-                editor.isActive("codeBlock")
-                  ? "bg-gray-100 dark:bg-gray-700 text-blue-600 dark:text-blue-400"
-                  : ""
-              }`}
-              aria-label="Code block"
-            >
-              <FiCode className="w-4 h-4" />
-            </button>
-          </ButtonGroup>
+          {/* LISTS & BLOCKS */}
+<ButtonGroup>
+  {/* Bullet List */}
+  <ToolbarButton
+    active={editor.isActive("bulletList")}
+    onClick={() => editor.chain().focus().toggleBulletList().run()}
+    ariaLabel="Bullet list"
+    className={editor.isActive("bulletList") ? "bg-blue-100 dark:bg-blue-900" : ""}
+  >
+    <FiList className="w-4 h-4" />
+  </ToolbarButton>
+
+  {/* Ordered List */}
+  <ToolbarButton
+    active={editor.isActive("orderedList")}
+    onClick={() => editor.chain().focus().toggleOrderedList().run()}
+    ariaLabel="Numbered list"
+    className={editor.isActive("orderedList") ? "bg-blue-100 dark:bg-blue-900" : ""}
+  >
+    <span className="text-sm font-bold">1.</span>
+  </ToolbarButton>
+
+  {/* Horizontal Rule */}
+  <ToolbarButton
+    onClick={() => editor.chain().focus().setHorizontalRule().run()}
+    ariaLabel="Horizontal rule"
+  >
+    <FiMinus className="w-4 h-4" />
+  </ToolbarButton>
+
+  {/* Code Block */}
+  <ToolbarButton
+    active={editor.isActive("codeBlock")}
+    onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+    ariaLabel="Code block"
+    className={editor.isActive("codeBlock") ? "bg-blue-100 dark:bg-blue-900" : ""}
+  >
+    <FiCode className="w-4 h-4" />
+  </ToolbarButton>
+</ButtonGroup>
 
           <Divider />
 
-          {/* COLOR PICKERS */}
+          {/* COLORS */}
           <ButtonGroup>
-            {/* TEXT COLOR PICKER */}
+            {/* TEXT COLOR */}
             <div className="relative">
-              <button
+              <ToolbarButton
+                active={editor.isActive("textStyle")}
                 onClick={(e) => {
                   e.stopPropagation();
                   setIsColorPickerOpen(!isColorPickerOpen);
                   setIsHighlightPickerOpen(false);
-                  // Get current color if text is selected
                   if (editor.isActive("textStyle")) {
                     setCurrentColor(
                       editor.getAttributes("textStyle").color || "#000000"
                     );
                   }
                 }}
-                className={`toolbar-btn ${
-                  editor.isActive("textStyle")
-                    ? "bg-gray-100 dark:bg-gray-700 text-blue-600 dark:text-blue-400"
-                    : ""
-                }`}
-                aria-label="Text color"
+                ariaLabel="Text color"
               >
                 <FiDroplet className="w-4 h-4" />
-              </button>
+              </ToolbarButton>
               {isColorPickerOpen && (
                 <div
                   ref={colorPickerRef}
@@ -441,29 +370,24 @@ const Toolbar = ({ editor }) => {
               )}
             </div>
 
-            {/* HIGHLIGHT COLOR PICKER */}
+            {/* HIGHLIGHT COLOR */}
             <div className="relative">
-              <button
+              <ToolbarButton
+                active={editor.isActive("highlight")}
                 onClick={(e) => {
                   e.stopPropagation();
                   setIsHighlightPickerOpen(!isHighlightPickerOpen);
                   setIsColorPickerOpen(false);
-                  // Get current highlight if text is selected
                   if (editor.isActive("highlight")) {
                     setCurrentHighlight(
                       editor.getAttributes("highlight").color || "#FFFF00"
                     );
                   }
                 }}
-                className={`toolbar-btn ${
-                  editor.isActive("highlight")
-                    ? "bg-gray-100 dark:bg-gray-700 text-blue-600 dark:text-blue-400"
-                    : ""
-                }`}
-                aria-label="Text highlight"
+                ariaLabel="Text highlight"
               >
                 <FiPenTool className="w-4 h-4" />
-              </button>
+              </ToolbarButton>
               {isHighlightPickerOpen && (
                 <div
                   ref={highlightPickerRef}
@@ -501,34 +425,28 @@ const Toolbar = ({ editor }) => {
 
           <Divider />
 
-          {/* MEDIA BUTTONS */}
+          {/* MEDIA */}
           <ButtonGroup>
-            <button
+            <ToolbarButton
+              active={editor.isActive("link")}
               onClick={() => setIsLinkModalOpen(true)}
-              className={`toolbar-btn ${
-                editor.isActive("link")
-                  ? "bg-gray-100 dark:bg-gray-700 text-blue-600 dark:text-blue-400"
-                  : ""
-              }`}
-              aria-label="Add link"
+              ariaLabel="Add link"
             >
               <FiLink className="w-4 h-4" />
-            </button>
-            <button
+            </ToolbarButton>
+            <ToolbarButton
               onClick={() => setIsImageModalOpen(true)}
-              className="toolbar-btn"
-              aria-label="Add image"
+              ariaLabel="Add image"
             >
               <FiImage className="w-4 h-4" />
-            </button>
+            </ToolbarButton>
             <div className="relative">
-              <button
+              <ToolbarButton
                 onClick={() => setIsEmojiPickerOpen(!isEmojiPickerOpen)}
-                className="toolbar-btn"
-                aria-label="Add emoji"
+                ariaLabel="Add emoji"
               >
                 <span className="text-sm">😊</span>
-              </button>
+              </ToolbarButton>
               {isEmojiPickerOpen && (
                 <div
                   ref={emojiPickerRef}
@@ -566,15 +484,19 @@ const Toolbar = ({ editor }) => {
               }}
             />
             <div className="flex justify-end space-x-2 mt-4">
-              <ModalButton
+              <button
                 onClick={() => setIsLinkModalOpen(false)}
-                variant="secondary"
+                className="px-4 py-2 rounded-md flex items-center text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
               >
                 <FiX className="mr-1" /> Cancel
-              </ModalButton>
-              <ModalButton onClick={addLink} disabled={!linkUrl}>
+              </button>
+              <button
+                onClick={addLink}
+                disabled={!linkUrl}
+                className="px-4 py-2 rounded-md flex items-center bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+              >
                 <FiCheck className="mr-1" /> Add
-              </ModalButton>
+              </button>
             </div>
           </div>
         </div>
@@ -600,15 +522,19 @@ const Toolbar = ({ editor }) => {
               }}
             />
             <div className="flex justify-end space-x-2 mt-4">
-              <ModalButton
+              <button
                 onClick={() => setIsImageModalOpen(false)}
-                variant="secondary"
+                className="px-4 py-2 rounded-md flex items-center text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
               >
                 <FiX className="mr-1" /> Cancel
-              </ModalButton>
-              <ModalButton onClick={addImageByUrl} disabled={!imageUrl}>
+              </button>
+              <button
+                onClick={addImageByUrl}
+                disabled={!imageUrl}
+                className="px-4 py-2 rounded-md flex items-center bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+              >
                 <FiCheck className="mr-1" /> Add
-              </ModalButton>
+              </button>
             </div>
           </div>
         </div>

@@ -9,6 +9,7 @@ import BlogEditorTabs from "./BlogEditorTabs";
 import EditorSpace from "./EditorSpace";
 import MetadataForm from "./MetadataForm";
 import AskLillyTab from "./AskLillyTab";
+import "./Styles.css"
 
 const BlogEditor = () => {
   const { id } = useParams();

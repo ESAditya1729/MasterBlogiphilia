@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiX, FiHeart, FiEye, FiClock, FiUserPlus, FiUserCheck, FiShare2, FiBookmark } from 'react-icons/fi';
 import DOMPurify from 'dompurify';
+import "./Styles.css"
 
 const BlogPreviewModal = ({ blog, isOpen, onClose, darkMode, onLike, onFollow, isLiked, isFollowing }) => {
   const [isCopied, setIsCopied] = useState(false);
@@ -159,20 +160,11 @@ const BlogPreviewModal = ({ blog, isOpen, onClose, darkMode, onLike, onFollow, i
                 {/* Content Preview */}
                 <div
                   className={`
-                    prose 
-                    prose-sm
+                    blog-content-preview
                     max-h-64 
                     overflow-y-auto 
-                    ${darkMode ? 'prose-invert' : ''}
+                    ${darkMode ? 'dark-mode' : ''}
                     ${darkMode ? 'text-gray-300' : 'text-gray-800'}
-                    prose-headings:${darkMode ? 'text-white' : 'text-black'}
-                    prose-p:${darkMode ? 'text-gray-300' : 'text-gray-800'}
-                    prose-strong:${darkMode ? 'text-white' : 'text-black'}
-                    prose-a:text-blue-600
-                    dark:prose-a:text-blue-400
-                    prose-img:rounded-lg
-                    prose-img:shadow-md
-                    prose-img:mx-auto
                   `}
                   dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(blog.content.substring(0, 1000) + '...') }}
                 />

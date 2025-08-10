@@ -33,7 +33,7 @@ const Footer = () => {
           <div className="flex justify-center md:justify-start gap-4 text-xl">
             {/* <a href="#" aria-label="Twitter" className="hover:text-violet-600"><FaTwitter /></a> */}
             {/* <a href="#" aria-label="GitHub" className="hover:text-violet-600"><FaGithub /></a> */}
-            <a href="https://www.linkedin.com/" aria-label="LinkedIn" className="hover:text-violet-600"><FaLinkedin /></a>
+            <a href="https://www.linkedin.com/company/blogiphilia" aria-label="LinkedIn" className="hover:text-violet-600"><FaLinkedin /></a>
           </div>
         </div>
       </div>
