@@ -10,19 +10,33 @@ cloudinary.config({
 });
 
 // -------------------
-// Multer Config
+// Multer Config (use memory storage)
 // -------------------
-const storage = multer.diskStorage({});
+const storage = multer.memoryStorage();
 export const upload = multer({
   storage,
   fileFilter: (req, file, cb) => {
     const ext = path.extname(file.originalname).toLowerCase();
-    if (ext !== ".jpg" && ext !== ".jpeg" && ext !== ".png" && ext !== ".webp") {
+    if (![".jpg", ".jpeg", ".png", ".webp"].includes(ext)) {
       return cb(new Error("Only images are allowed"), false);
     }
     cb(null, true);
   },
 });
+
+// Helper to upload buffer to Cloudinary
+const streamUpload = (fileBuffer, folder) => {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      { folder, resource_type: "image" },
+      (error, result) => {
+        if (result) resolve(result);
+        else reject(error);
+      }
+    );
+    stream.end(fileBuffer);
+  });
+};
 
 // -------------------
 // Upload Cover Image (with replacement)
@@ -33,25 +47,12 @@ export const uploadCoverImage = async (req, res) => {
       return res.status(400).json({ success: false, message: "No file uploaded" });
     }
 
-    // Check if there's an existing public_id to replace
-    const oldPublicId = req.body.public_id; // Assuming you send the old public_id in the request
+    const oldPublicId = req.body.public_id;
+    const result = await streamUpload(req.file.buffer, "blog_covers");
 
-    let result;
+    // Delete old image if provided
     if (oldPublicId) {
-      // First upload the new image
-      result = await cloudinary.uploader.upload(req.file.path, {
-        folder: "blog_covers",
-        resource_type: "image",
-      });
-      
-      // Then delete the old image
       await cloudinary.uploader.destroy(oldPublicId);
-    } else {
-      // No existing image, just upload
-      result = await cloudinary.uploader.upload(req.file.path, {
-        folder: "blog_covers",
-        resource_type: "image",
-      });
     }
 
     res.status(201).json({
