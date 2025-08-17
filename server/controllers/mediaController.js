@@ -1,30 +1,69 @@
-// controllers/mediaController.js
-import { v2 as cloudinary } from 'cloudinary';
+import { v2 as cloudinary } from "cloudinary";
+import multer from "multer";
+import path from "path";
 
-// Ensure Cloudinary is configured (if not already in a central file)
+// Cloudinary Config
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// @desc    Get a Cloudinary image by folder and filename
-// @route   GET /api/media/image/:folder/:filename
-// @access  Public
+// -------------------
+// Multer Config
+// -------------------
+const storage = multer.diskStorage({});
+export const upload = multer({
+  storage,
+  fileFilter: (req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (ext !== ".jpg" && ext !== ".jpeg" && ext !== ".png" && ext !== ".webp") {
+      return cb(new Error("Only images are allowed"), false);
+    }
+    cb(null, true);
+  },
+});
 
+// -------------------
+// Upload Cover Image
+// -------------------
+export const uploadCoverImage = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: "No file uploaded" });
+    }
+
+    const result = await cloudinary.uploader.upload(req.file.path, {
+      folder: "blog_covers", // All blog cover images go here
+      resource_type: "image",
+    });
+
+    res.status(201).json({
+      success: true,
+      message: "Cover image uploaded successfully",
+      url: result.secure_url,
+      public_id: result.public_id,
+    });
+  } catch (error) {
+    console.error("Cloudinary upload error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to upload cover image",
+      error: error.message,
+    });
+  }
+};
+
+// -------------------
+// Get Cloudinary Image (already exists)
+// -------------------
 export const getCloudinaryImage = async (req, res) => {
   const { folder, filename } = req.params;
 
   try {
-    // Option 1: Search by exact public_id (must match exactly including extension)
-    // const result = await cloudinary.search
-    //   .expression(`public_id:${folder}/${filename}`)
-    //   .execute();
-
-    // Option 2: More flexible search (matches files containing the filename)
     const result = await cloudinary.search
       .expression(`resource_type:image AND folder:${folder} AND filename:${filename}*`)
-      .sort_by('created_at', 'desc')
+      .sort_by("created_at", "desc")
       .max_results(1)
       .execute();
 
@@ -33,26 +72,23 @@ export const getCloudinaryImage = async (req, res) => {
     }
 
     const image = result.resources[0];
-    
+
     res.status(200).json({
       success: true,
       imageUrl: image.secure_url,
-      // You might want to return additional info
       imageInfo: {
         public_id: image.public_id,
         format: image.format,
         width: image.width,
-        height: image.height
-      }
+        height: image.height,
+      },
     });
   } catch (error) {
     console.error("Cloudinary fetch error:", error);
-    res.status(500).json({ 
-      success: false, 
+    res.status(500).json({
+      success: false,
       message: "Failed to fetch image from Cloudinary",
-      error: error.message 
+      error: error.message,
     });
   }
 };
-
-

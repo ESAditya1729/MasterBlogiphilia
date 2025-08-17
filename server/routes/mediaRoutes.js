@@ -1,10 +1,12 @@
-// routes/mediaRoutes.js
-import express from 'express';
-import { getCloudinaryImage } from '../controllers/mediaController.js';
+import express from "express";
+import { upload, uploadCoverImage, getCloudinaryImage } from "../controllers/mediaController.js";
 
 const router = express.Router();
 
-// GET /api/media/image/:folder/:filename
-router.get('/image/:folder/:filename', getCloudinaryImage);
+// Upload cover image
+router.post("/upload", upload.single("image"), uploadCoverImage);
+
+// Get image from Cloudinary
+router.get("/image/:folder/:filename", getCloudinaryImage);
 
 export default router;
