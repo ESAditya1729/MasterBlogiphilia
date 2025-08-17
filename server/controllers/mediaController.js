@@ -1,15 +1,19 @@
 import { v2 as cloudinary } from "cloudinary";
 import multer from "multer";
-import ErrorResponse from "../utils/errorResponse.js"; 
-import Blog from "../models/Blog.js"; 
+import ErrorResponse from "../utils/errorResponse.js";
+import Blog from "../models/Blog.js";
 
 // -------------------
 // Cloudinary Config with validation
 // -------------------
-if (!process.env.CLOUDINARY_CLOUD_NAME || 
-    !process.env.CLOUDINARY_API_KEY || 
-    !process.env.CLOUDINARY_API_SECRET) {
-  throw new Error("Cloudinary credentials are missing in environment variables");
+if (
+  !process.env.CLOUDINARY_CLOUD_NAME ||
+  !process.env.CLOUDINARY_API_KEY ||
+  !process.env.CLOUDINARY_API_SECRET
+) {
+  throw new Error(
+    "Cloudinary credentials are missing in environment variables"
+  );
 }
 
 cloudinary.config({
@@ -26,24 +30,30 @@ export const upload = multer({
   storage,
   limits: {
     fileSize: 5 * 1024 * 1024, // 5MB limit
-    files: 1 // Limit to single file
+    files: 1, // Limit to single file
   },
   fileFilter: (req, file, cb) => {
     // Check MIME type
-    const allowedMimes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-    
+    const allowedMimes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+
     if (!allowedMimes.includes(file.mimetype)) {
-      return cb(new ErrorResponse('Only JPEG, PNG, WEBP, or GIF images are allowed', 400), false);
+      return cb(
+        new ErrorResponse(
+          "Only JPEG, PNG, WEBP, or GIF images are allowed",
+          400
+        ),
+        false
+      );
     }
-    
+
     // Check file extension
-    const fileExt = file.originalname.split('.').pop().toLowerCase();
-    if (!['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(fileExt)) {
-      return cb(new ErrorResponse('Invalid file extension', 400), false);
+    const fileExt = file.originalname.split(".").pop().toLowerCase();
+    if (!["jpg", "jpeg", "png", "webp", "gif"].includes(fileExt)) {
+      return cb(new ErrorResponse("Invalid file extension", 400), false);
     }
-    
+
     cb(null, true);
-  }
+  },
 });
 
 // -------------------
@@ -56,19 +66,24 @@ const uploadToCloudinary = async (buffer, options) => {
         options,
         (error, result) => {
           if (error) {
-            console.error('Cloudinary upload error:', error);
-            reject(new ErrorResponse(`Cloudinary upload failed: ${error.message}`, 500));
+            console.error("Cloudinary upload error:", error);
+            reject(
+              new ErrorResponse(
+                `Cloudinary upload failed: ${error.message}`,
+                500
+              )
+            );
           } else {
-            console.log('Cloudinary upload success:', result);
+            console.log("Cloudinary upload success:", result);
             resolve(result);
           }
         }
       );
-      
+
       uploadStream.end(buffer);
     });
   } catch (error) {
-    console.error('Upload to Cloudinary failed:', error);
+    console.error("Upload to Cloudinary failed:", error);
     throw error; // Re-throw for controller to handle
   }
 };
@@ -80,21 +95,23 @@ const uploadToCloudinary = async (buffer, options) => {
 // -------------------
 export const uploadCoverImage = async (req, res, next) => {
   try {
-    console.log('Upload request received:', {
-      file: req.file ? `${req.file.originalname} (${req.file.size} bytes)` : 'none',
-      body: req.body
+    console.log("Upload request received:", {
+      file: req.file
+        ? `${req.file.originalname} (${req.file.size} bytes)`
+        : "none",
+      body: req.body,
     });
 
     // Validate file exists
     if (!req.file) {
-      console.error('No file uploaded');
+      console.error("No file uploaded");
       return next(new ErrorResponse("Please upload an image file", 400));
     }
 
     // Validate blogId
     const { blogId } = req.body;
     if (!blogId) {
-      console.error('Missing blogId');
+      console.error("Missing blogId");
       return next(new ErrorResponse("Blog ID is required", 400));
     }
 
@@ -113,43 +130,59 @@ export const uploadCoverImage = async (req, res, next) => {
         public_id: blogId.toString(),
         overwrite: true,
         transformation: [
-          { width: 1200, height: 628, crop: "fill" },
-          { quality: "auto" },
+          { width: 1200, height: 628, crop: "fill" }, // Standard blog cover size
+          { quality: "auto" }, // Automatic quality optimization
         ],
-        format: 'auto', // Let Cloudinary determine best format
+        // Removed format: 'auto' since it's not supported in upload API
+        allowed_formats: ["jpg", "jpeg", "png", "webp"], // Explicitly allowed formats
+        format: "jpg", // Default format if conversion needed
       });
     } catch (uploadError) {
-      console.error('Cloudinary upload failed:', uploadError);
-      return next(new ErrorResponse("Failed to upload image to Cloudinary", 500));
+      console.error("Cloudinary upload failed:", {
+        error: uploadError,
+        fileInfo: {
+          originalname: req.file?.originalname,
+          mimetype: req.file?.mimetype,
+          size: req.file?.size,
+        },
+      });
+      return next(
+        new ErrorResponse(
+          uploadError.message.includes("File size too large")
+            ? "Image must be smaller than 10MB"
+            : "Failed to process image. Please try another image",
+          500
+        )
+      );
     }
-
     // Update blog with new image URL
     const updatedBlog = await Blog.findByIdAndUpdate(
       blogId,
-      { 
+      {
         coverImage: cloudinaryResult.secure_url,
-        coverImagePublicId: cloudinaryResult.public_id 
+        coverImagePublicId: cloudinaryResult.public_id,
       },
       { new: true, runValidators: true }
     );
 
     if (!updatedBlog) {
-      console.error('Blog update failed after successful upload');
-      return next(new ErrorResponse("Failed to update blog with new image", 500));
+      console.error("Blog update failed after successful upload");
+      return next(
+        new ErrorResponse("Failed to update blog with new image", 500)
+      );
     }
 
-    console.log('Upload successful for blog:', blogId);
+    console.log("Upload successful for blog:", blogId);
     return res.status(200).json({
       success: true,
       url: updatedBlog.coverImage,
       public_id: cloudinaryResult.public_id,
       format: cloudinaryResult.format,
       width: cloudinaryResult.width,
-      height: cloudinaryResult.height
+      height: cloudinaryResult.height,
     });
-
   } catch (err) {
-    console.error('Unexpected error in uploadCoverImage:', err);
+    console.error("Unexpected error in uploadCoverImage:", err);
     next(err);
   }
 };
@@ -168,8 +201,8 @@ export const getCloudinaryImage = async (req, res, next) => {
     }
 
     // Sanitize inputs to prevent Cloudinary search injection
-    const safeFolder = folder.replace(/[^a-zA-Z0-9\-_]/g, '');
-    const safeFilename = filename.replace(/[^a-zA-Z0-9\-_.]/g, '');
+    const safeFolder = folder.replace(/[^a-zA-Z0-9\-_]/g, "");
+    const safeFilename = filename.replace(/[^a-zA-Z0-9\-_.]/g, "");
 
     const result = await cloudinary.search
       .expression(
@@ -180,12 +213,12 @@ export const getCloudinaryImage = async (req, res, next) => {
       .execute();
 
     if (!result?.resources?.length) {
-      console.error('Image not found in Cloudinary');
+      console.error("Image not found in Cloudinary");
       return next(new ErrorResponse("Image not found", 404));
     }
 
     const image = result.resources[0];
-    console.log('Found image:', image.secure_url);
+    console.log("Found image:", image.secure_url);
 
     res.status(200).json({
       success: true,
@@ -196,7 +229,7 @@ export const getCloudinaryImage = async (req, res, next) => {
         width: image.width,
         height: image.height,
         bytes: image.bytes,
-        created_at: image.created_at
+        created_at: image.created_at,
       },
     });
   } catch (error) {
