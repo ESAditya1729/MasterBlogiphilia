@@ -25,7 +25,7 @@ export const upload = multer({
 });
 
 // -------------------
-// Upload Cover Image
+// Upload Cover Image (with replacement)
 // -------------------
 export const uploadCoverImage = async (req, res) => {
   try {
@@ -33,10 +33,26 @@ export const uploadCoverImage = async (req, res) => {
       return res.status(400).json({ success: false, message: "No file uploaded" });
     }
 
-    const result = await cloudinary.uploader.upload(req.file.path, {
-      folder: "blog_covers", // All blog cover images go here
-      resource_type: "image",
-    });
+    // Check if there's an existing public_id to replace
+    const oldPublicId = req.body.public_id; // Assuming you send the old public_id in the request
+
+    let result;
+    if (oldPublicId) {
+      // First upload the new image
+      result = await cloudinary.uploader.upload(req.file.path, {
+        folder: "blog_covers",
+        resource_type: "image",
+      });
+      
+      // Then delete the old image
+      await cloudinary.uploader.destroy(oldPublicId);
+    } else {
+      // No existing image, just upload
+      result = await cloudinary.uploader.upload(req.file.path, {
+        folder: "blog_covers",
+        resource_type: "image",
+      });
+    }
 
     res.status(201).json({
       success: true,
