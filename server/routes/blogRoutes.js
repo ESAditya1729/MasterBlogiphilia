@@ -26,7 +26,7 @@ router.get('/trending', asyncHandler(getTrendingBlogs));
 router.get('/author/:userId', asyncHandler(getBlogsByAuthor));
 router.get('/:id', asyncHandler(getBlogById));
 router.get('/:id/related', asyncHandler(getRelatedBlogs));
-router.get('/post-counts', asyncHandler(getPostCounts));
+router.get('/post-counts/:id', asyncHandler(getPostCounts));
 
 // Protected routes
 router.use(protect);
