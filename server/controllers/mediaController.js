@@ -1,6 +1,5 @@
 import { v2 as cloudinary } from "cloudinary";
 import multer from "multer";
-import path from "path";
 
 // Cloudinary Config
 cloudinary.config({
@@ -10,36 +9,21 @@ cloudinary.config({
 });
 
 // -------------------
-// Multer Config (use memory storage)
+// Multer (Memory Storage)
 // -------------------
 const storage = multer.memoryStorage();
 export const upload = multer({
   storage,
   fileFilter: (req, file, cb) => {
-    const ext = path.extname(file.originalname).toLowerCase();
-    if (![".jpg", ".jpeg", ".png", ".webp"].includes(ext)) {
+    if (!file.mimetype.startsWith("image/")) {
       return cb(new Error("Only images are allowed"), false);
     }
     cb(null, true);
   },
 });
 
-// Helper to upload buffer to Cloudinary
-const streamUpload = (fileBuffer, folder) => {
-  return new Promise((resolve, reject) => {
-    const stream = cloudinary.uploader.upload_stream(
-      { folder, resource_type: "image" },
-      (error, result) => {
-        if (result) resolve(result);
-        else reject(error);
-      }
-    );
-    stream.end(fileBuffer);
-  });
-};
-
 // -------------------
-// Upload Cover Image (with replacement)
+// Upload Cover Image (overwrite by blogId)
 // -------------------
 export const uploadCoverImage = async (req, res) => {
   try {
@@ -47,27 +31,39 @@ export const uploadCoverImage = async (req, res) => {
       return res.status(400).json({ success: false, message: "No file uploaded" });
     }
 
-    const oldPublicId = req.body.public_id;
-    const result = await streamUpload(req.file.buffer, "blog_covers");
-
-    // Delete old image if provided
-    if (oldPublicId) {
-      await cloudinary.uploader.destroy(oldPublicId);
+    const { blogId } = req.body; // send from frontend
+    if (!blogId) {
+      return res.status(400).json({ success: false, message: "blogId required" });
     }
 
-    res.status(201).json({
-      success: true,
-      message: "Cover image uploaded successfully",
-      url: result.secure_url,
-      public_id: result.public_id,
-    });
+    const result = await cloudinary.uploader.upload_stream(
+      {
+        folder: "blog_covers",
+        public_id: blogId,  // overwrite if same blog
+        overwrite: true,
+        resource_type: "image",
+      },
+      (error, result) => {
+        if (error) {
+          console.error("Cloudinary upload error:", error);
+          return res.status(500).json({ success: false, message: "Upload failed", error });
+        }
+
+        return res.status(201).json({
+          success: true,
+          message: "Cover image uploaded successfully",
+          url: result.secure_url,
+          public_id: result.public_id,
+        });
+      }
+    );
+
+    // Pipe buffer to Cloudinary stream
+    require("streamifier").createReadStream(req.file.buffer).pipe(result);
+
   } catch (error) {
-    console.error("Cloudinary upload error:", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to upload cover image",
-      error: error.message,
-    });
+    console.error("Upload error:", error);
+    res.status(500).json({ success: false, message: "Server error", error: error.message });
   }
 };
 
