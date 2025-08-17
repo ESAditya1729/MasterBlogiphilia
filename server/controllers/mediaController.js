@@ -11,59 +11,62 @@ cloudinary.config({
 // -------------------
 // Multer (Memory Storage)
 // -------------------
-const storage = multer.memoryStorage();
-export const upload = multer({
-  storage,
-  fileFilter: (req, file, cb) => {
-    if (!file.mimetype.startsWith("image/")) {
-      return cb(new Error("Only images are allowed"), false);
-    }
-    cb(null, true);
-  },
-});
+// const storage = multer.memoryStorage();
+// export const upload = multer({
+//   storage,
+//   fileFilter: (req, file, cb) => {
+//     if (!file.mimetype.startsWith("image/")) {
+//       return cb(new Error("Only images are allowed"), false);
+//     }
+//     cb(null, true);
+//   },
+// });
 
-// -------------------
-// Upload Cover Image (overwrite by blogId)
-// -------------------
-export const uploadCoverImage = async (req, res) => {
+// @desc    Upload/Replace blog cover image
+// @route   POST /api/media/upload
+// @access  Private
+export const uploadCoverImage = async (req, res, next) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ success: false, message: "No file uploaded" });
+      return next(new ErrorResponse("Please upload a file", 400));
     }
 
-    const { blogId } = req.body; // send from frontend
+    const { blogId } = req.body;
     if (!blogId) {
-      return res.status(400).json({ success: false, message: "blogId required" });
+      return next(new ErrorResponse("Blog ID is required", 400));
     }
 
-    const result = await cloudinary.uploader.upload_stream(
-      {
-        folder: "blog_covers",
-        public_id: blogId,  // overwrite if same blog
-        overwrite: true,
-        resource_type: "image",
-      },
-      (error, result) => {
-        if (error) {
-          console.error("Cloudinary upload error:", error);
-          return res.status(500).json({ success: false, message: "Upload failed", error });
-        }
+    // ✅ Upload to Cloudinary with blogId as public_id (overwrites old image)
+    const cloudinaryResult = await uploadToCloudinary(req.file.buffer, {
+      folder: "blog-covers",
+      public_id: blogId.toString(), // overwrite for same blog
+      overwrite: true,
+      transformation: [
+        { width: 1200, height: 628, crop: "fill" }, // standard blog cover aspect ratio
+        { quality: "auto" },
+      ],
+    });
 
-        return res.status(201).json({
-          success: true,
-          message: "Cover image uploaded successfully",
-          url: result.secure_url,
-          public_id: result.public_id,
-        });
-      }
+    // ✅ Save URL to MongoDB
+    const blog = await Blog.findByIdAndUpdate(
+      blogId,
+      { coverImage: cloudinaryResult.secure_url },
+      { new: true }
     );
 
-    // Pipe buffer to Cloudinary stream
-    require("streamifier").createReadStream(req.file.buffer).pipe(result);
+    if (!blog) {
+      return next(new ErrorResponse("Blog not found", 404));
+    }
 
-  } catch (error) {
-    console.error("Upload error:", error);
-    res.status(500).json({ success: false, message: "Server error", error: error.message });
+    // ✅ Return URL to frontend
+    return res.status(200).json({
+      success: true,
+      url: blog.coverImage,
+      public_id: cloudinaryResult.public_id,
+    });
+  } catch (err) {
+    console.error("Upload Error:", err);
+    next(err);
   }
 };
 
