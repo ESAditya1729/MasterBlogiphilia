@@ -1,7 +1,7 @@
 import { v2 as cloudinary } from "cloudinary";
 import multer from "multer";
-import ErrorResponse from "../utils/errorResponse.js"; // ✅ Make sure you have this
-import Blog from "../models/blogModel.js"; // ✅ Import your Blog model
+import ErrorResponse from "../utils/errorResponse.js"; 
+import Blog from "../models/Blog.js"; 
 
 // -------------------
 // Cloudinary Config
