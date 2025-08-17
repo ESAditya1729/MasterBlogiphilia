@@ -521,3 +521,50 @@ export const getBlogStats = asyncHandler(async (req, res) => {
     data: stats 
   });
 });
+
+// @desc    Get post counts by status for any user
+// @route   GET /api/posts/count/:userId
+// @access  Public (or Private if needed)
+export const getPostCounts = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
+  
+  // Validate user ID format
+  if (!userId.match(/^[0-9a-fA-F]{24}$/)) {
+    return errorResponse(res, 400, 'Invalid user ID format');
+  }
+
+  const counts = await Blog.aggregate([
+    {
+      $match: { author: mongoose.Types.ObjectId(userId) }
+    },
+    {
+      $group: {
+        _id: '$status',
+        count: { $sum: 1 }
+      }
+    },
+    {
+      $project: {
+        status: '$_id',
+        count: 1,
+        _id: 0
+      }
+    }
+  ]);
+
+  // Convert array to object for easier access
+  const result = {
+    published: 0,
+    draft: 0,
+    archived: 0
+  };
+
+  counts.forEach(item => {
+    result[item.status] = item.count;
+  });
+
+  res.status(200).json({
+    success: true,
+    data: result
+  });
+});

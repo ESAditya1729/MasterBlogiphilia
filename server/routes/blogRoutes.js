@@ -12,7 +12,8 @@ import {
   getBlogsByStatus,
   toggleLike,
   getRelatedBlogs,
-  getBlogStats
+  getBlogStats,
+  getPostCounts
 } from '../controllers/blogController.js';
 import { protect } from '../middleware/auth.js';
 
@@ -25,6 +26,7 @@ router.get('/trending', asyncHandler(getTrendingBlogs));
 router.get('/author/:userId', asyncHandler(getBlogsByAuthor));
 router.get('/:id', asyncHandler(getBlogById));
 router.get('/:id/related', asyncHandler(getRelatedBlogs));
+router.get('/post-counts', asyncHandler(getPostCounts));
 
 // Protected routes
 router.use(protect);
