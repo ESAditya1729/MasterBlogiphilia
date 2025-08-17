@@ -81,6 +81,7 @@ function AuthWrapper() {
         <Route path="/profile" element={<PrivateRoute><ProfilePage /></PrivateRoute>} />
         <Route path="/profile/:userId" element={<PrivateRoute><ProfilePage /></PrivateRoute>} />
         <Route path="/editor" element={<PrivateRoute><BlogEditor /></PrivateRoute>} />
+        <Route path="/editor/:id" element={<PrivateRoute><BlogEditor /></PrivateRoute>} />
         <Route path="/blog/:id" element={<PrivateRoute><BlogPostPage /></PrivateRoute>} />
       </Routes>
       

@@ -18,42 +18,40 @@ const ProfileDrafts = () => {
     fetchDrafts();
   }, [user]);
 
-const fetchDrafts = async () => {
-  try {
-    setLoading(true);
-    const token = localStorage.getItem("token");
-    
-    if (!token) {
-      throw new Error("Authentication required");
-    }
-
-    const response = await axios.get(
-      `${process.env.REACT_APP_API_BASE_URL}/api/blogs/drafts`,
-      {
-        headers: { 
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+  const fetchDrafts = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem("token");
+      
+      if (!token) {
+        throw new Error("Authentication required");
       }
-    );
-    
-    // Filter drafts client-side as additional security
-    const userDrafts = response.data.filter(draft => 
-      draft.author && 
-      draft.author._id === user?._id
-    );
-    
-    setDrafts(userDrafts);
-  } catch (err) {
-    setError(err.response?.data?.message || "Failed to fetch drafts");
-    console.error("Drafts fetch error:", err);
-    if (err.response?.status === 401) {
-      // Handle unauthorized (e.g., redirect to login)
+
+      const response = await axios.get(
+        `${process.env.REACT_APP_API_BASE_URL}/api/blogs/status/draft`,
+        {
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          params: {
+            limit: 100 // Get all drafts without pagination for simplicity
+          }
+        }
+      );
+      
+      // The API already filters by current user's drafts, so no need for additional filtering
+      setDrafts(response.data.data || []);
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to fetch drafts");
+      console.error("Drafts fetch error:", err);
+      if (err.response?.status === 401) {
+        // Handle unauthorized (e.g., redirect to login)
+      }
+    } finally {
+      setLoading(false);
     }
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   const handleEditDraft = (draftId) => {
     navigate(`/editor/${draftId}`);
@@ -77,7 +75,7 @@ const fetchDrafts = async () => {
   };
 
   const handleCreateNew = () => {
-    navigate("/editor/new");
+    navigate("/editor");
   };
 
   if (loading) {
@@ -117,10 +115,10 @@ const fetchDrafts = async () => {
                   <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 flex-wrap gap-x-3">
                     <span className="flex items-center">
                       <FiClock className="mr-1" />
-                      {new Date(draft.updatedAt).toLocaleDateString()}
+                      Last updated: {new Date(draft.updatedAt).toLocaleDateString()}
                     </span>
                     <span>
-                      {draft.content.split(/\s+/).length} words
+                      {draft.content ? draft.content.split(/\s+/).length : 0} words
                     </span>
                     {draft.genre && (
                       <span className="bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-300 px-2 py-0.5 rounded-full text-xs">

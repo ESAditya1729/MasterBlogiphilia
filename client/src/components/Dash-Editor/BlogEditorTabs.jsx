@@ -43,15 +43,15 @@ const BlogEditorTabs = ({ activeTab, setActiveTab }) => {
       bgColor: 'bg-gradient-to-r from-indigo-500 to-indigo-600',
       darkBgColor: 'bg-gradient-to-r from-indigo-600 to-indigo-700'
     },
-    {
-      id: 'preview',
-      label: 'Preview',
-      icon: <FiEye size={16} />,
-      activeColor: 'text-white',
-      inactiveColor: 'text-orange-500',
-      bgColor: 'bg-gradient-to-r from-orange-500 to-orange-600',
-      darkBgColor: 'bg-gradient-to-r from-orange-600 to-orange-700'
-    }
+    // {
+    //   id: 'preview',
+    //   label: 'Preview',
+    //   icon: <FiEye size={16} />,
+    //   activeColor: 'text-white',
+    //   inactiveColor: 'text-orange-500',
+    //   bgColor: 'bg-gradient-to-r from-orange-500 to-orange-600',
+    //   darkBgColor: 'bg-gradient-to-r from-orange-600 to-orange-700'
+    // }
   ];
 
   const toggleCollapse = () => {

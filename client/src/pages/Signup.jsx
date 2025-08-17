@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import signupIllustration from "../assets/Signup-blogging.png";
 import { useTheme } from "../contexts/ThemeContext";
-import { useAuth } from "../contexts/AuthContext"; // Added AuthContext import
+import { useAuth } from "../contexts/AuthContext"; 
 
 const Signup = () => {
   const [formData, setFormData] = useState({

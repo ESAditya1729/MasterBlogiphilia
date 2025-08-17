@@ -11,6 +11,7 @@ import {
   Zap,
   Sparkles,
 } from "lucide-react";
+import { Linkedin, Twitter } from "lucide-react";
 import OurMission from "../assets/OurMission-img.png";
 const SectionHeader = ({ text }) => (
   <motion.h2
@@ -433,57 +434,132 @@ const AboutUs = () => {
         </motion.div>
       </section>
 
-      {/* Our Team */}
+      {/* Our Team - Professional Redesign */}
       <section className="max-w-7xl mx-auto px-4 py-20 bg-slate-50 dark:bg-slate-800/30 rounded-3xl">
-        <SectionHeader text="Meet the Team" />
+        <SectionHeader
+          text="Meet Our Leadership"
+          subtext="The visionary minds driving our success"
+          className="mb-16"
+        />
 
         <motion.div
           variants={staggerContainer}
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true }}
-          className="grid sm:grid-cols-2 md:grid-cols-3 gap-8 mt-12"
+          className="flex flex-col md:flex-row items-center justify-center gap-8 mt-12"
         >
           {[
             {
-              name: "Aditya Mukherjee",
-              role: "CEO & Founder",
-              avatar: "/assets/adoenix.jpg",
-              bio: "Passionate about democratizing content creation and building inclusive platforms.",
+              name: "Prabhat Yadav",
+              role: "COO",
+              initials: "PY",
+              bio: "Drives operational excellence and strategic growth initiatives across the organization.",
+              color:
+                "from-purple-100 to-pink-200 dark:from-purple-900 dark:to-pink-800",
+              textColor: "text-purple-600 dark:text-purple-300",
+              size: "w-32 h-32",
+              textSize: "text-4xl",
+              isExecutive: true,
+              executiveTitle: "OPERATIONS",
             },
             {
-              name: "Barnali Banerjee",
-              role: "Design Lead",
-              avatar: "/assets/Maa.jpg",
-              bio: "Creates intuitive experiences that bridge technology and human needs.",
+              name: "Aditya Mukherjee",
+              role: "CEO & Founder",
+              initials: "AM",
+              bio: "Visionary leader passionate about democratizing content creation and building inclusive platforms that empower creators worldwide.",
+              color:
+                "from-emerald-100 to-cyan-200 dark:from-emerald-900 dark:to-cyan-800",
+              textColor: "text-emerald-600 dark:text-emerald-300",
+              size: "w-40 h-40",
+              textSize: "text-5xl",
+              isLeader: true,
+              executiveTitle: "LEADER",
             },
             {
               name: "Bidisha Dutta",
-              role: "Backend Engineer",
-              avatar: "/assets/jayant.jpg",
-              bio: "Builds robust systems that scale with our growing community.",
+              role: "CTO",
+              initials: "BD",
+              bio: "Technology strategist building scalable architectures and leading our engineering teams to deliver innovative solutions.",
+              color:
+                "from-cyan-100 to-blue-200 dark:from-cyan-900 dark:to-blue-800",
+              textColor: "text-cyan-600 dark:text-cyan-300",
+              size: "w-32 h-32",
+              textSize: "text-4xl",
+              isExecutive: true,
+              executiveTitle: "TECHNOLOGY",
             },
-          ].map((member, i) => (
+          ].map((member, index) => (
             <motion.div
-              key={i}
+              key={member.name}
               variants={fadeInUp}
-              whileHover={{ scale: 1.03 }}
-              className="bg-white dark:bg-slate-800 rounded-2xl overflow-hidden shadow-lg"
+              whileHover={{ y: -8 }}
+              className={`w-full ${
+                member.isLeader ? "md:w-2/5" : "md:w-1/4"
+              } relative ${
+                member.isLeader
+                  ? "bg-gradient-to-br from-emerald-50 to-slate-50 dark:from-emerald-900/30 dark:to-slate-800 border border-emerald-100 dark:border-emerald-800/50 p-8"
+                  : member.isExecutive
+                  ? "bg-gradient-to-br from-slate-50 to-white dark:from-slate-800/30 dark:to-slate-800 border border-slate-100 dark:border-slate-700 p-6"
+                  : "bg-white dark:bg-slate-800 p-6"
+              } rounded-2xl shadow-lg transition-all`}
             >
-              <div className="relative h-48 overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-emerald-400/20 to-violet-500/20"></div>
-                <img
-                  src={member.avatar}
-                  alt={member.name}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                />
-              </div>
-              <div className="p-6 text-center">
-                <h4 className="text-xl font-bold">{member.name}</h4>
-                <p className="text-sm text-emerald-500 mb-3">{member.role}</p>
-                <p className="text-sm text-slate-600 dark:text-slate-300">
+              {(member.isLeader || member.isExecutive) && (
+                <div
+                  className={`absolute -top-4 left-1/2 transform -translate-x-1/2 ${
+                    member.isLeader ? "bg-emerald-500" : "bg-purple-500"
+                  } text-white text-xs font-bold px-3 py-1 rounded-full`}
+                >
+                  {member.executiveTitle}
+                </div>
+              )}
+              <div className="flex flex-col items-center">
+                <div
+                  className={`${member.size} rounded-full bg-gradient-to-br ${
+                    member.color
+                  } mb-4 ${
+                    member.isLeader
+                      ? "border-4 border-white dark:border-slate-700"
+                      : ""
+                  } flex items-center justify-center`}
+                >
+                  <span
+                    className={`${member.textSize} font-bold ${member.textColor}`}
+                  >
+                    {member.initials}
+                  </span>
+                </div>
+                <h4
+                  className={`font-bold text-center ${
+                    member.isLeader ? "text-2xl" : "text-xl"
+                  }`}
+                >
+                  {member.name}
+                </h4>
+                <p
+                  className={`text-sm ${
+                    member.isLeader
+                      ? "text-emerald-500 font-semibold mb-4"
+                      : member.isExecutive
+                      ? "text-purple-500 mb-3"
+                      : "text-emerald-500 mb-3"
+                  }`}
+                >
+                  {member.role}
+                </p>
+                <p className="text-sm text-slate-600 dark:text-slate-300 text-center max-w-md">
                   {member.bio}
                 </p>
+                {member.isLeader && (
+                  <div className="mt-4 flex space-x-3">
+                    <button className="text-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400">
+                      <Linkedin className="w-5 h-5" />
+                    </button>
+                    <button className="text-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400">
+                      <Twitter className="w-5 h-5" />
+                    </button>
+                  </div>
+                )}
               </div>
             </motion.div>
           ))}

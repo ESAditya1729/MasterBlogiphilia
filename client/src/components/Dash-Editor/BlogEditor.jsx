@@ -9,12 +9,13 @@ import BlogEditorTabs from "./BlogEditorTabs";
 import EditorSpace from "./EditorSpace";
 import MetadataForm from "./MetadataForm";
 import AskLillyTab from "./AskLillyTab";
-import "./Styles.css"
+import "./Styles.css";
 
 const BlogEditor = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
+  const [isUploading, setIsUploading] = useState(false);
   const [isGeneratingKeywords, setIsGeneratingKeywords] = useState(false);
   const [formErrors, setFormErrors] = useState({});
   const [activeTab, setActiveTab] = useState("contents");
@@ -26,7 +27,9 @@ const BlogEditor = () => {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [publishedBlogUrl, setPublishedBlogUrl] = useState("");
 
+  // Enhanced initial state with all required fields
   const [blogData, setBlogData] = useState({
+    _id: id || null,
     title: "",
     content: "",
     genre: "",
@@ -36,53 +39,96 @@ const BlogEditor = () => {
     coverImage: "",
     status: "draft",
     author: "",
+    isFeatured: false,
+    views: 0,
+    likes: 0,
+    isLiked: false,
+    wordCount: 0,
+    createdAt: "",
+    updatedAt: "",
   });
 
-  // Set author only if creating a new blog
+  // Initialize editor and fetch data if needed
   useEffect(() => {
-    if (!id) {
-      const storedUser = localStorage.getItem("user");
-      if (storedUser) {
-        try {
-          const parsedUser = JSON.parse(storedUser);
-          if (parsedUser?.username) {
-            setBlogData((prev) => ({
-              ...prev,
-              author: parsedUser.username,
-            }));
-          }
-        } catch (err) {
-          console.error("Failed to parse user from localStorage", err);
-        }
-      }
-      setIsLoading(false);
-    }
-  }, [id]);
-
-  // Fetch blog data if editing existing post
-  useEffect(() => {
-    const fetchBlog = async () => {
-      if (!id) return;
-
+    const initializeEditor = async () => {
       try {
-        const { data } = await api.get(`/blogs/${id}`);
+        // Set author for new posts
+        if (!id) {
+          const storedUser = localStorage.getItem("user");
+          if (storedUser) {
+            try {
+              const parsedUser = JSON.parse(storedUser);
+              if (parsedUser?.username) {
+                setBlogData((prev) => ({
+                  ...prev,
+                  author: parsedUser.username,
+                }));
+              }
+            } catch (err) {
+              console.error("Failed to parse user from localStorage", err);
+            }
+          }
+          setIsLoading(false);
+          return;
+        }
+
+        // Fetch existing post data
+        setIsLoading(true);
+        console.log("Fetching blog with ID:", id);
+
+        const response = await api.get(
+          `${process.env.REACT_APP_API_BASE_URL}/api/blogs/${id}`
+        );
+        console.log("API Response:", response);
+
+        if (!response.data?.success) {
+          throw new Error(
+            response.data?.message || "No data received from server"
+          );
+        }
+
+        const blog = response.data.data;
+        console.log("Blog data:", blog);
+
         setBlogData({
-          ...data,
-          tags: data.tags || [],
-          seoKeywords: data.seoKeywords || [],
-          coverImage: data.coverImage || "",
+          _id: blog._id,
+          title: blog.title || "",
+          content: blog.content || "",
+          genre: blog.genre || "",
+          tags: blog.tags || [],
+          excerpt: blog.excerpt || "",
+          seoKeywords: blog.seoKeywords || [],
+          coverImage: blog.coverImage || "",
+          status: blog.status || "draft",
+          author: blog.author?.username || blog.author || "", // Handle both object and string author
+          isFeatured: blog.isFeatured || false,
+          views: blog.views || 0,
+          likes: blog.likes || 0,
+          isLiked: blog.isLiked || false,
+          wordCount: blog.wordCount || 0,
+          createdAt: blog.createdAt || "",
+          updatedAt: blog.updatedAt || "",
         });
       } catch (err) {
-        toast.error("Failed to load blog post");
-        console.error(err);
+        console.error("Error initializing editor:", err);
+        toast.error(
+          err.response?.data?.message ||
+            err.message ||
+            "Failed to load blog post"
+        );
         navigate("/dashboard");
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchBlog();
+    initializeEditor();
   }, [id, navigate]);
+
+  // Debug effect to log state changes
+  useEffect(() => {
+    console.log("Current blogData state:", blogData);
+  }, [blogData]);
 
   const validateForm = () => {
     const errors = {};
@@ -102,22 +148,15 @@ const BlogEditor = () => {
       return;
     }
 
-    // For publish action, show confirmation first
     if (isPublishingAction && !showPublishConfirm) {
       setShowPublishConfirm(true);
       return;
     }
 
-    // Prevent duplicate submissions
     if (isSaving || isPublishing) return;
 
-    // Set the appropriate loading state
-    if (isPublishingAction) {
-      setIsPublishing(true);
-      setShowPublishConfirm(false);
-    } else {
-      setIsSaving(true);
-    }
+    isPublishingAction ? setIsPublishing(true) : setIsSaving(true);
+    if (isPublishingAction) setShowPublishConfirm(false);
 
     try {
       const payload = {
@@ -126,40 +165,62 @@ const BlogEditor = () => {
         lastUpdated: new Date().toISOString(),
       };
 
-      const blogId = blogData._id;
-      const response = blogId
-        ? await api.put(`/api/blogs/${blogId}`, payload)
-        : await api.post("/api/blogs", payload);
+      // Remove unnecessary fields before sending
+      delete payload.views;
+      delete payload.likes;
+      delete payload.isLiked;
+      delete payload.createdAt;
+      delete payload.updatedAt;
 
-      if (!response.data?.success || !response.data?.data) {
-        throw new Error("Invalid response from server");
+      const response = blogData._id
+        ? await api.put(
+            `${process.env.REACT_APP_API_BASE_URL}/api/blogs/${blogData._id}`,
+            payload
+          )
+        : await api.post(
+            `${process.env.REACT_APP_API_BASE_URL}/api/blogs`,
+            payload
+          );
+
+      if (!response.data?.success) {
+        throw new Error(
+          response.data?.message || "Invalid response from server"
+        );
       }
 
       const savedBlog = response.data.data;
-      setBlogData(savedBlog);
+      console.log("Saved blog:", savedBlog);
+
+      // Update state with full response including server-generated fields
+      setBlogData((prev) => ({
+        ...prev,
+        ...savedBlog,
+        author: savedBlog.author?.username || savedBlog.author || prev.author,
+      }));
 
       if (isPublishingAction) {
-        setPublishedBlogUrl(`/blog/${savedBlog.slug || savedBlog._id}`);
+        setPublishedBlogUrl(
+          `/blog/${
+            savedBlog.slug || savedBlog._id
+          }`
+        );
         setShowSuccessModal(true);
       } else {
         toast.success("Draft saved successfully");
+        if (!blogData._id) {
+          window.history.replaceState(null, "", `/editor/${savedBlog._id}`);
+          setBlogData((prev) => ({ ...prev, _id: savedBlog._id }));
+        }
       }
 
-      if (!blogId) navigate(`/editor`);
       return savedBlog;
     } catch (err) {
-      const errorMessage =
-        err?.response?.data?.message ||
-        err?.message ||
-        "An unexpected error occurred";
-
-      console.error("Blog save error:", err);
+      console.error("Save error:", err);
       toast.error(
-        `Failed to ${
-          isPublishingAction ? "publish" : "save"
-        } blog: ${errorMessage}`
+        `Failed to ${isPublishingAction ? "publish" : "save"}: ${
+          err.response?.data?.message || err.message || "Please try again"
+        }`
       );
-      throw err;
     } finally {
       setIsSaving(false);
       setIsPublishing(false);
@@ -188,7 +249,7 @@ const BlogEditor = () => {
       }));
     } catch (err) {
       console.error(err);
-      toast.error("Failed to generate keywords");
+      toast.error(err.response?.data?.message || "Failed to generate keywords");
     } finally {
       setIsGeneratingKeywords(false);
     }
@@ -196,20 +257,73 @@ const BlogEditor = () => {
 
   const handleCoverImageUpload = async (file) => {
     try {
-      const formData = new FormData();
-      formData.append("image", file);
+      if (isUploading) return;
+      setIsUploading(true);
 
-      const { data } = await api.post("/upload", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
+      console.log("handleCoverImageUpload called with:", file);
+
+      // --- File Extraction ---
+      const actualFile =
+        (file instanceof File && file) ||
+        (file?.file instanceof File && file.file) ||
+        (Array.isArray(file) && file[0] instanceof File && file[0]) ||
+        file?.originFileObj || // Ant Design
+        null;
+
+      if (!actualFile) {
+        toast.error("Invalid file selected");
+        return;
+      }
+
+      // --- Validation ---
+      const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+      const maxSize = 5 * 1024 * 1024; // 5MB
+
+      if (!allowedTypes.includes(actualFile.type)) {
+        toast.error("Only JPEG, PNG, WEBP, or GIF images are allowed");
+        return;
+      }
+
+      if (actualFile.size > maxSize) {
+        toast.error("Image must be smaller than 5MB");
+        return;
+      }
+
+      // --- Prepare Request ---
+      const formData = new FormData();
+      formData.append("image", actualFile);
+      formData.append("blogId", blogData._id);
+
+      console.log("FormData:", {
+        image: { name: actualFile.name, size: actualFile.size, type: actualFile.type },
+        blogId: blogData._id
       });
 
-      setBlogData((prev) => ({ ...prev, coverImage: data.url }));
+      // --- Upload ---
+      const { data } = await api.post(
+        `${process.env.REACT_APP_API_BASE_URL}/api/media/upload`,
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } }
+      );
+
+      // --- Update State ---
+      setBlogData((prev) => ({
+        ...prev,
+        coverImage: data.url,
+        coverImagePublicId: data.public_id,
+      }));
+
       toast.success("Cover image uploaded successfully");
     } catch (err) {
-      console.error(err);
-      toast.error("Failed to upload cover image");
+      console.error("Upload error:", err);
+      console.error("Error response:", err.response?.data);
+      toast.error(
+        err.response?.data?.message ||
+        err.message ||
+        "Failed to upload cover image"
+      );
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -221,8 +335,13 @@ const BlogEditor = () => {
             <FiZap className="text-4xl text-blue-600 dark:text-blue-400" />
           </div>
           <div className="text-lg font-medium text-gray-600 dark:text-gray-300">
-            Preparing your writing space...
+            Loading your draft...
           </div>
+          {id && (
+            <div className="text-sm text-gray-500 mt-2">
+              Loading blog ID: {id}
+            </div>
+          )}
         </div>
       </div>
     );
@@ -262,7 +381,8 @@ const BlogEditor = () => {
               </button>
             </div>
             <p className="mb-6 text-gray-600 dark:text-gray-300">
-              Your blog will be visible to the public. Are you sure you want to publish?
+              Your blog will be visible to the public. Are you sure you want to
+              publish?
             </p>
             <div className="flex justify-end space-x-3">
               <button
@@ -297,10 +417,7 @@ const BlogEditor = () => {
           >
             <div className="text-center">
               <div className="relative inline-block mb-4">
-                <FiCheckCircle
-                  className="mx-auto text-green-500"
-                  size={60}
-                />
+                <FiCheckCircle className="mx-auto text-green-500" size={60} />
               </div>
               <h3 className="text-2xl font-bold mb-2">
                 Blog Published Successfully!
@@ -357,7 +474,11 @@ const BlogEditor = () => {
       <div className="flex-1 pt-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Tabs and Action Buttons */}
-          <div className={`sticky top-16 z-10 ${darkMode ? 'bg-gray-900' : 'bg-white'} border-b border-gray-200 dark:border-gray-800`}>
+          <div
+            className={`sticky top-16 z-10 ${
+              darkMode ? "bg-gray-900" : "bg-white"
+            } border-b border-gray-200 dark:border-gray-800`}
+          >
             <div className="flex flex-col">
               {/* Tabs */}
               <div className="pt-2">
@@ -366,14 +487,14 @@ const BlogEditor = () => {
                   setActiveTab={setActiveTab}
                 />
               </div>
-              <br/>
+              <br />
               {/* Action Buttons */}
               <div className="flex justify-center px-4 py-3">
                 <div className="flex items-center gap-3">
                   {/* Cover Image Upload */}
                   <label
                     className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium border transition-all cursor-pointer ${
-                      isSaving || isPublishing
+                      isSaving || isPublishing || isUploading
                         ? "opacity-50 cursor-not-allowed"
                         : darkMode
                         ? "bg-gray-800 text-gray-300 border-gray-700 hover:bg-gray-700"
@@ -383,12 +504,12 @@ const BlogEditor = () => {
                     <input
                       type="file"
                       accept="image/*"
-                      onChange={handleCoverImageUpload}
+                      onChange={(e) => handleCoverImageUpload(e.target.files[0])}
                       className="hidden"
-                      disabled={isSaving || isPublishing}
+                      disabled={isSaving || isPublishing || isUploading}
                     />
                     <FiUpload className="h-4 w-4" />
-                    <span>Cover Image</span>
+                    <span>{isUploading ? "Uploading..." : "Cover Image"}</span>
                   </label>
 
                   {/* Save Draft Button */}
@@ -429,7 +550,11 @@ const BlogEditor = () => {
           <main className="py-6">
             {activeTab === "contents" && (
               <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
-                <EditorSpace blogData={blogData} setBlogData={setBlogData} />
+                <EditorSpace
+                  blogData={blogData}
+                  setBlogData={setBlogData}
+                  key={blogData._id} // Force re-render when blog changes
+                />
               </div>
             )}
 
@@ -450,7 +575,9 @@ const BlogEditor = () => {
                   setGenre={(val) =>
                     setBlogData((prev) => ({ ...prev, genre: val }))
                   }
-                  setTags={(val) => setBlogData((prev) => ({ ...prev, tags: val }))}
+                  setTags={(val) =>
+                    setBlogData((prev) => ({ ...prev, tags: val }))
+                  }
                   setSeoKeywords={(val) =>
                     setBlogData((prev) => ({ ...prev, seoKeywords: val }))
                   }
