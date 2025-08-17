@@ -1,7 +1,11 @@
 import { v2 as cloudinary } from "cloudinary";
 import multer from "multer";
+import ErrorResponse from "../utils/errorResponse.js"; // ✅ Make sure you have this
+import Blog from "../models/blogModel.js"; // ✅ Import your Blog model
 
+// -------------------
 // Cloudinary Config
+// -------------------
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
@@ -9,22 +13,37 @@ cloudinary.config({
 });
 
 // -------------------
-// Multer (Memory Storage)
+// Multer (Memory Storage for buffer uploads)
 // -------------------
-// const storage = multer.memoryStorage();
-// export const upload = multer({
-//   storage,
-//   fileFilter: (req, file, cb) => {
-//     if (!file.mimetype.startsWith("image/")) {
-//       return cb(new Error("Only images are allowed"), false);
-//     }
-//     cb(null, true);
-//   },
-// });
+const storage = multer.memoryStorage();
+export const upload = multer({
+  storage,
+  fileFilter: (req, file, cb) => {
+    if (!file.mimetype.startsWith("image/")) {
+      return cb(new Error("Only images are allowed"), false);
+    }
+    cb(null, true);
+  },
+});
 
+// -------------------
+// Utility: Upload to Cloudinary
+// -------------------
+const uploadToCloudinary = (buffer, options) => {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(options, (err, result) => {
+      if (err) return reject(err);
+      resolve(result);
+    });
+    stream.end(buffer);
+  });
+};
+
+// -------------------
 // @desc    Upload/Replace blog cover image
 // @route   POST /api/media/upload
 // @access  Private
+// -------------------
 export const uploadCoverImage = async (req, res, next) => {
   try {
     if (!req.file) {
@@ -71,7 +90,7 @@ export const uploadCoverImage = async (req, res, next) => {
 };
 
 // -------------------
-// Get Cloudinary Image (already exists)
+// Get Cloudinary Image
 // -------------------
 export const getCloudinaryImage = async (req, res) => {
   const { folder, filename } = req.params;
