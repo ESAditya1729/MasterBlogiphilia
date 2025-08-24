@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Sidebar from "../components/Sidebar";
 import Overview from "./DashboardTabs/Overview";
 import EditorStudio from "./DashboardTabs/EditorStudio";
+import ContentManagement from "./DashboardTabs/ContentManagement";
 import {
   FiHelpCircle,
   FiEdit,
@@ -121,6 +122,8 @@ const Dashboard = () => {
                 <Overview />
               ) : activeTab === "studio" ? (
                 <EditorStudio />
+              ) : activeTab === "content" ? ( // Add this condition
+                <ContentManagement />
               ) : (
                 <motion.div
                   initial={{ opacity: 0 }}

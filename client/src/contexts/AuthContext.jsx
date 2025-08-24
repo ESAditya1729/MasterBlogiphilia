@@ -110,6 +110,69 @@ export function AuthProvider({ children }) {
     initializeAuth();
   }, [initializeAuth]);
 
+  const signup = async (userData, remember = true) => {
+    try {
+      setAuthState(prev => ({ ...prev, loading: true, error: null }));
+
+      const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/auth/signup`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(userData)
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        let errorMessage = 'Signup failed';
+        
+        try {
+          const errorData = JSON.parse(errorText);
+          errorMessage = errorData.error || errorMessage;
+        } catch {
+          errorMessage = errorText || errorMessage;
+        }
+        
+        throw new Error(errorMessage);
+      }
+
+      const data = await response.json();
+      
+      if (data.success && data.token && data.user) {
+        const user = {
+          ...data.user,
+          token: data.token,
+          isAuthenticated: true
+        };
+
+        if (remember) {
+          localStorage.setItem('token', data.token);
+          localStorage.setItem('user', JSON.stringify(user));
+        }
+
+        setAuthState({
+          user,
+          loading: false,
+          error: null
+        });
+
+        return { success: true };
+      } else {
+        throw new Error('Signup response was not in the expected format');
+      }
+
+    } catch (err) {
+      const errorState = {
+        user: null,
+        loading: false,
+        error: err.message
+      };
+      
+      setAuthState(errorState);
+      return { success: false, error: err.message };
+    }
+  };
+
   const login = async (email, password, remember = true) => {
     try {
       setAuthState(prev => ({ ...prev, loading: true, error: null }));
@@ -123,35 +186,53 @@ export function AuthProvider({ children }) {
       });
 
       if (!response.ok) {
-        throw new Error(await response.text());
+        const errorText = await response.text();
+        let errorMessage = 'Login failed';
+        
+        try {
+          const errorData = JSON.parse(errorText);
+          errorMessage = errorData.error || errorMessage;
+        } catch {
+          errorMessage = errorText || errorMessage;
+        }
+        
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
-      const user = {
-        ...data.user,
-        token: data.token,
-        isAuthenticated: true
-      };
+      
+      if (data.success && data.token && data.user) {
+        const user = {
+          ...data.user,
+          token: data.token,
+          isAuthenticated: true
+        };
 
-      if (remember) {
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('user', JSON.stringify(user));
+        if (remember) {
+          localStorage.setItem('token', data.token);
+          localStorage.setItem('user', JSON.stringify(user));
+        }
+
+        setAuthState({
+          user,
+          loading: false,
+          error: null
+        });
+
+        return { success: true };
+      } else {
+        throw new Error('Login response was not in the expected format');
       }
 
-      setAuthState({
-        user,
-        loading: false,
-        error: null
-      });
-
-      return true;
     } catch (err) {
-      setAuthState({
+      const errorState = {
         user: null,
         loading: false,
         error: err.message
-      });
-      return false;
+      };
+      
+      setAuthState(errorState);
+      return { success: false, error: err.message };
     }
   };
 
@@ -159,6 +240,7 @@ export function AuthProvider({ children }) {
     <AuthContext.Provider value={{
       ...authState,
       login,
+      signup,
       logout,
       isAuthenticated: authState.user?.isAuthenticated || false
     }}>
