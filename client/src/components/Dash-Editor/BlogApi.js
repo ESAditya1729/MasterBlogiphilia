@@ -2,7 +2,7 @@ import axios from 'axios';
 import DOMPurify from 'dompurify';
 
 // Configure API base URL with fallback
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api';
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:1000';
 if (!API_BASE_URL) {
   console.error('API base URL not configured!');
 }
@@ -328,7 +328,7 @@ export const loadBlogApi = async (blogId) => {
   }
 
   try {
-    const response = await apiClient.get(`/blogs/${blogId}`);
+    const response = await apiClient.get(`/api/blogs/${blogId}`);
 
     // Validate response structure
     if (!response.data?.data?._id || !response.data?.data?.title) {
@@ -350,7 +350,7 @@ export const loadBlogApi = async (blogId) => {
  */
 export const getTrendingBlogs = async () => {
   try {
-    const response = await apiClient.get('/blogs/trending');
+    const response = await apiClient.get('/api/blogs/trending');
     
     // Handle response format
     if (response.data?.data) {
@@ -404,7 +404,7 @@ export const formatApiError = (error) => {
  */
 export const deleteBlogApi = async (blogId) => {
   try {
-    const response = await apiClient.delete(`/blogs/${blogId}`);
+    const response = await apiClient.delete(`/api/blogs/${blogId}`);
     return response.data;
   } catch (error) {
     throw handleApiError(error);
@@ -418,7 +418,7 @@ export const deleteBlogApi = async (blogId) => {
  */
 export const toggleLikeApi = async (blogId) => {
   try {
-    const response = await apiClient.put(`/blogs/${blogId}/like`);
+    const response = await apiClient.put(`/api/blogs/${blogId}/like`);
     return response.data;
   } catch (error) {
     throw handleApiError(error);
@@ -432,7 +432,7 @@ export const toggleLikeApi = async (blogId) => {
  */
 export const getRelatedBlogsApi = async (blogId) => {
   try {
-    const response = await apiClient.get(`/blogs/${blogId}/related`);
+    const response = await apiClient.get(`/api/blogs/${blogId}/related`);
     return response.data?.data || [];
   } catch (error) {
     throw handleApiError(error);
@@ -445,7 +445,7 @@ export const getRelatedBlogsApi = async (blogId) => {
  */
 export const getBlogStatsApi = async () => {
   try {
-    const response = await apiClient.get('/blogs/stats');
+    const response = await apiClient.get('/api/blogs/stats');
     return response.data?.data || {};
   } catch (error) {
     throw handleApiError(error);
