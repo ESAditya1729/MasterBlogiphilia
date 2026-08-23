@@ -1,21 +1,44 @@
-# Node.js with React
-# Build a Node.js project that uses React.
-# Add steps that analyze code, save build artifacts, deploy, and more:
-# https://docs.microsoft.com/azure/devops/pipelines/languages/javascript
+# CI for Blogiphilia — builds the React client (CRA) on every push to main.
+# NOTE: This is a monorepo (client/ + server/). The client owns package.json,
+# so all npm steps MUST run inside client/.
 
 trigger:
-- main
+  branches:
+    include:
+      - main
+  paths:
+    exclude:
+      - README.md
+
+pr:
+  branches:
+    include:
+      - main
 
 pool:
   vmImage: ubuntu-latest
 
 steps:
-- task: NodeTool@0
-  inputs:
-    versionSpec: '20.x'
-  displayName: 'Install Node.js'
+  - checkout: self
+    fetchDepth: 1
 
-- script: |
-    npm install
-    npm run build
-  displayName: 'npm install and build'
+  - task: NodeTool@0
+    inputs:
+      versionSpec: '20.x'
+    displayName: 'Install Node.js'
+
+  - script: npm install --no-audit --no-fund
+    workingDirectory: '$(Build.SourcesDirectory)/client'
+    displayName: 'Install client dependencies'
+
+  - script: npm run build
+    workingDirectory: '$(Build.SourcesDirectory)/client'
+    env:
+      CI: true
+    displayName: 'Build client (CI=true: warnings are errors)'
+
+  - task: PublishPipelineArtifact@1
+    inputs:
+      targetPath: '$(Build.SourcesDirectory)/client/build'
+      artifact: 'client-build'
+    displayName: 'Publish build artifact'
