@@ -1,5 +1,6 @@
 import express from "express";
 import { upload, uploadCoverImage, getCloudinaryImage } from "../controllers/mediaController.js";
+import { protect } from "../middleware/auth.js";
 
 const router = express.Router();
 
@@ -13,16 +14,18 @@ const router = express.Router();
  */
 router.post(
   "/upload", 
+  protect,
   upload.single("image"), // Middleware to handle single file upload
-  (err, req, res, next) => { // Error handling middleware for Multer
-    if (err) {
+  (err, req, res, next) => { // Only intercept multer-specific errors, forward the rest
+    if (!err) return next();
+    if (err.name === "MulterError" || err.code === "LIMIT_FILE_SIZE") {
       return res.status(400).json({ 
         success: false,
         message: err.message || "File upload failed",
         code: err.code 
       });
     }
-    next();
+    next(err);
   },
   uploadCoverImage // Controller
 );

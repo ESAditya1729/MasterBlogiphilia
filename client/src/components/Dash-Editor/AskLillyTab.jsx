@@ -64,10 +64,14 @@ const AskLillyTab = ({ blogData }) => {
         requestBody.fileContent = fileContent;
       }
 
-      // Call backend API
-      const response = await fetch('/api/assistant/generate', {
+      // Call backend API (auth-protected)
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/assistant/generate`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { Authorization: `Bearer ${token}` })
+        },
         body: JSON.stringify(requestBody)
       });
 

@@ -5,6 +5,7 @@ import {
   getFeedback,
   getMessageHistory
 } from '../controllers/feedbackController.js';
+import { protect } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -19,9 +20,9 @@ const feedbackValidationRules = [
 router.post('/', feedbackValidationRules, submitFeedback);
 
 // Get all feedback (with pagination)
-router.get('/', getFeedback);
+router.get('/', protect, getFeedback);
 
 // Get message history for a specific email
-router.get('/history/:email', getMessageHistory);
+router.get('/history/:email', protect, getMessageHistory);
 
 export default router;

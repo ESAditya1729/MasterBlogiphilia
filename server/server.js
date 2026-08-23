@@ -14,11 +14,28 @@ import assistantRoutes from "./routes/assistantRoutes.js";
 
 const app = express();
 
+// CORS allowlist - extend via CORS_ORIGINS env var (comma-separated)
+const allowedOrigins = (
+  process.env.CORS_ORIGINS ||
+  'http://localhost:3000,https://masterblogiphilia.onrender.com'
+)
+  .split(',')
+  .map((o) => o.trim())
+  .filter(Boolean);
+
 // Middleware
-app.use(cors({
-  origin: "*", 
-  credentials: true
-}));
+app.use(
+  cors({
+    origin(origin, callback) {
+      // Allow non-browser clients (curl, health checks) and allowlisted origins
+      if (!origin || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      callback(new ErrorResponse(`Origin ${origin} is not allowed by CORS`, 403));
+    },
+    credentials: true,
+  })
+);
 app.use(express.json());
 app.use('/uploads', express.static('uploads'));
 app.use('/avatars', express.static('avatars'));

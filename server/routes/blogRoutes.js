@@ -24,6 +24,8 @@ router.get('/', asyncHandler(getAllBlogs));
 router.get('/trending-genres', asyncHandler(getTrendingGenres));
 router.get('/trending', asyncHandler(getTrendingBlogs));
 router.get('/author/:userId', asyncHandler(getBlogsByAuthor));
+// Must be registered before GET /:id or it gets shadowed (matched as id="stats")
+router.get('/stats', protect, asyncHandler(getBlogStats));
 router.get('/:id', asyncHandler(getBlogById));
 router.get('/:id/related', asyncHandler(getRelatedBlogs));
 router.get('/post-counts/:userId', asyncHandler(getPostCounts));
@@ -34,9 +36,6 @@ router.use(protect);
 // Blog operations
 router.get('/status/:status', asyncHandler(getBlogsByStatus));
 router.put('/:id/like', asyncHandler(toggleLike));
-
-// Dashboard stats
-router.get('/stats', asyncHandler(getBlogStats));
 
 // CRUD operations
 router.route('/')

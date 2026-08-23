@@ -1,7 +1,7 @@
 // controllers/userController.js
 import User from "../models/User.js";
 import ErrorResponse from "../utils/errorResponse.js";
-import { uploadToCloudinary } from "../utils/cloudinary.js";
+import { uploadToCloudinary, deleteFromCloudinary } from "../utils/cloudinary.js";
 import asyncHandler from "express-async-handler";
 
 // @desc    Get user profile
@@ -100,6 +100,31 @@ export const uploadProfilePicture = async (req, res, next) => {
     });
   } catch (err) {
     console.error("Upload Error:", err);
+    next(err);
+  }
+};
+
+// @desc    Remove profile picture
+// @route   DELETE /api/users/remove-profile-picture
+// @access  Private
+export const removeProfilePicture = async (req, res, next) => {
+  try {
+    // Best-effort cleanup of the Cloudinary asset (public_id mirrors uploadProfilePicture)
+    await deleteFromCloudinary(`profile-pictures/${req.user._id.toString()}`);
+
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
+      { profilePicture: null },
+      { new: true }
+    ).select("-password");
+
+    return res.status(200).json({
+      success: true,
+      message: "Profile picture removed",
+      url: null,
+    });
+  } catch (err) {
+    console.error("Remove Picture Error:", err);
     next(err);
   }
 };

@@ -5,6 +5,7 @@ import {
   getUserProfile,
   updateUserProfile,
   uploadProfilePicture,
+  removeProfilePicture,
   searchUsers,
   toggleFollow,
   getFollowStats,
@@ -38,6 +39,7 @@ router.post(
   upload.single('profilePicture'),
   uploadProfilePicture
 );
+router.delete('/remove-profile-picture', protect, removeProfilePicture);
 
 // Parameterized routes come after specific routes
 router.get('/:userId/full-profile', protect, getUserProfile);

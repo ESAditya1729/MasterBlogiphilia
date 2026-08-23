@@ -37,3 +37,12 @@ export const getImageUrlFromCloudinary = async (folder, filename) => {
     throw new Error("Image not found or error fetching from Cloudinary");
   }
 };
+
+// Best-effort delete - resolves even if the asset doesn't exist
+export const deleteFromCloudinary = async (publicId) => {
+  try {
+    await cloudinary.uploader.destroy(publicId);
+  } catch (error) {
+    console.error("Cloudinary delete failed:", error?.message || error);
+  }
+};
