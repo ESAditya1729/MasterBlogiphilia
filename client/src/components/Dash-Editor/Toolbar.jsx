@@ -17,9 +17,11 @@ import {
   FiDroplet,
   FiPenTool,
   FiUpload,
+  FiYoutube,
 } from "react-icons/fi";
 import EmojiPicker from "emoji-picker-react";
 import { HexColorPicker } from "react-colorful";
+import { uploadMediaFile } from "./BlogApi";
 
 /**
  * Divider component for separating toolbar button groups
@@ -38,7 +40,7 @@ const ButtonGroup = ({ children }) => (
 /**
  * Toolbar button component
  */
-const ToolbarButton = ({ active, onClick, children, ariaLabel }) => (
+export const ToolbarButton = ({ active, onClick, children, ariaLabel }) => (
   <button
     onClick={onClick}
     className={`p-2 rounded-md flex items-center justify-center transition-colors ${
@@ -52,22 +54,6 @@ const ToolbarButton = ({ active, onClick, children, ariaLabel }) => (
   </button>
 );
 
-// Mock API function for image upload (replace with actual API call later)
-const mockUploadImage = (file) => {
-  return new Promise((resolve) => {
-    // Simulate API call delay
-    setTimeout(() => {
-      // Create a mock URL for the uploaded image
-      const mockImageUrl = URL.createObjectURL(file);
-      resolve({
-        success: true,
-        imageUrl: mockImageUrl,
-        message: "Image uploaded successfully (mock)"
-      });
-    }, 1500);
-  });
-};
-
 /**
  * Main Toolbar component for the editor
  */
@@ -77,6 +63,10 @@ const Toolbar = ({ editor }) => {
   const [linkUrl, setLinkUrl] = useState("");
   const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const [imageTab, setImageTab] = useState("upload");
+  const [imageUrl, setImageUrl] = useState("");
+  const [isYoutubeModalOpen, setIsYoutubeModalOpen] = useState(false);
+  const [youtubeUrl, setYoutubeUrl] = useState("");
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
   const [isHighlightPickerOpen, setIsHighlightPickerOpen] = useState(false);
   const [currentColor, setCurrentColor] = useState("#000000");
@@ -165,7 +155,7 @@ const Toolbar = ({ editor }) => {
     }
   };
 
-  // New function to upload the selected file
+  // Uploads the selected file and inserts it into the editor
   const uploadImage = async () => {
     if (!selectedFile) {
       setUploadStatus("Please select an image first");
@@ -176,33 +166,41 @@ const Toolbar = ({ editor }) => {
     setUploadStatus("Uploading image...");
     
     try {
-      const result = await mockUploadImage(selectedFile);
+      const data = await uploadMediaFile(selectedFile);
       
-      if (result.success) {
-        // Insert the image into the editor
-        editor
-          .chain()
-          .focus()
-          .setImage({ src: result.imageUrl, alt: "Uploaded image" })
-          .run();
-        
-        setUploadStatus("Image uploaded successfully!");
-        
-        // Close the modal after a short delay
-        setTimeout(() => {
-          setIsImageModalOpen(false);
-          setSelectedFile(null);
-          setUploadStatus("");
-        }, 1000);
-      } else {
-        setUploadStatus("Upload failed. Please try again.");
-      }
+      editor
+        .chain()
+        .focus()
+        .setImage({ src: data.url, alt: selectedFile.name })
+        .run();
+      
+      setIsImageModalOpen(false);
+      setSelectedFile(null);
+      setImageTab("upload");
     } catch (error) {
       console.error("Error uploading image:", error);
-      setUploadStatus("Upload failed. Please try again.");
+      setUploadStatus(
+        error.message || "Upload failed. Please try again."
+      );
     } finally {
       setIsUploading(false);
     }
+  };
+
+  // Inserts an image from a URL
+  const addImageByUrl = () => {
+    if (!imageUrl.trim()) return;
+    editor.chain().focus().setImage({ src: imageUrl, alt: "Image" }).run();
+    setIsImageModalOpen(false);
+    setImageUrl("");
+  };
+
+  // Inserts a YouTube embed
+  const addYoutubeVideo = () => {
+    if (!youtubeUrl.trim()) return;
+    editor.chain().focus().setYoutubeVideo({ src: youtubeUrl }).run();
+    setIsYoutubeModalOpen(false);
+    setYoutubeUrl("");
   };
 
   // Color actions
@@ -491,6 +489,12 @@ const Toolbar = ({ editor }) => {
             >
               <FiImage className="w-4 h-4" />
             </ToolbarButton>
+            <ToolbarButton
+              onClick={() => setIsYoutubeModalOpen(true)}
+              ariaLabel="Embed YouTube video"
+            >
+              <FiYoutube className="w-4 h-4" />
+            </ToolbarButton>
             <div className="relative">
               <ToolbarButton
                 onClick={() => setIsEmojiPickerOpen(!isEmojiPickerOpen)}
@@ -564,21 +568,47 @@ const Toolbar = ({ editor }) => {
             {/* Tabs for URL vs Upload */}
             <div className="flex border-b border-gray-200 dark:border-gray-700 mb-4">
               <button 
-                className="px-4 py-2 font-medium text-blue-600 border-b-2 border-blue-600 dark:text-blue-400 dark:border-blue-400"
+                className={`px-4 py-2 font-medium ${
+                  imageTab === "upload"
+                    ? "text-blue-600 border-b-2 border-blue-600 dark:text-blue-400 dark:border-blue-400"
+                    : "text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400"
+                }`}
+                onClick={() => setImageTab("upload")}
               >
                 Upload from Computer
               </button>
               <button 
-                className="px-4 py-2 font-medium text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400"
-                onClick={() => {
-                  // This would switch to URL tab in a real implementation
-                  alert("URL upload option would be here");
-                }}
+                className={`px-4 py-2 font-medium ${
+                  imageTab === "url"
+                    ? "text-blue-600 border-b-2 border-blue-600 dark:text-blue-400 dark:border-blue-400"
+                    : "text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400"
+                }`}
+                onClick={() => setImageTab("url")}
               >
                 From URL
               </button>
             </div>
-            
+
+            {imageTab === "url" ? (
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-2 dark:text-gray-300">
+                  Image URL
+                </label>
+                <input
+                  type="url"
+                  value={imageUrl}
+                  onChange={(e) => setImageUrl(e.target.value)}
+                  placeholder="https://example.com/image.jpg"
+                  className="w-full px-3 py-2 border rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") addImageByUrl();
+                    if (e.key === "Escape") setIsImageModalOpen(false);
+                  }}
+                />
+              </div>
+            ) : (
+              <>
             {/* File upload section */}
             <div className="mb-4">
               <label className="block text-sm font-medium mb-2 dark:text-gray-300">
@@ -629,7 +659,9 @@ const Toolbar = ({ editor }) => {
                 </div>
               )}
             </div>
-            
+              </>
+            )}
+
             <div className="flex justify-end space-x-2 mt-4">
               <button
                 onClick={() => {
@@ -642,11 +674,20 @@ const Toolbar = ({ editor }) => {
               >
                 <FiX className="mr-1" /> Cancel
               </button>
-              <button
-                onClick={uploadImage}
-                disabled={!selectedFile || isUploading}
-                className="px-4 py-2 rounded-md flex items-center bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
-              >
+              {imageTab === "url" ? (
+                <button
+                  onClick={addImageByUrl}
+                  disabled={!imageUrl.trim()}
+                  className="px-4 py-2 rounded-md flex items-center bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+                >
+                  <FiCheck className="mr-1" /> Add Image
+                </button>
+              ) : (
+                <button
+                  onClick={uploadImage}
+                  disabled={!selectedFile || isUploading}
+                  className="px-4 py-2 rounded-md flex items-center bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+                >
                 {isUploading ? (
                   <>
                     <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -660,6 +701,45 @@ const Toolbar = ({ editor }) => {
                     <FiUpload className="mr-1" /> Upload
                   </>
                 )}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* YOUTUBE MODAL */}
+      {isYoutubeModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-xl max-w-md w-full mx-4">
+            <h3 className="font-bold text-lg mb-3 dark:text-white">
+              Embed YouTube Video
+            </h3>
+            <input
+              type="url"
+              value={youtubeUrl}
+              onChange={(e) => setYoutubeUrl(e.target.value)}
+              placeholder="https://www.youtube.com/watch?v=..."
+              className="w-full px-3 py-2 border rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+              autoFocus
+              onKeyDown={(e) => {
+                if (e.key === "Enter") addYoutubeVideo();
+                if (e.key === "Escape") setIsYoutubeModalOpen(false);
+              }}
+            />
+            <div className="flex justify-end space-x-2 mt-4">
+              <button
+                onClick={() => setIsYoutubeModalOpen(false)}
+                className="px-4 py-2 rounded-md flex items-center text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+              >
+                <FiX className="mr-1" /> Cancel
+              </button>
+              <button
+                onClick={addYoutubeVideo}
+                disabled={!youtubeUrl.trim()}
+                className="px-4 py-2 rounded-md flex items-center bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+              >
+                <FiCheck className="mr-1" /> Embed
               </button>
             </div>
           </div>

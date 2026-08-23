@@ -10,10 +10,17 @@ import {
 import { useTheme } from '../../contexts/ThemeContext';
 import Logo from '../../utils/Logo';
 
-const BlogEditorNavbar = () => {
+const BlogEditorNavbar = ({ onNavigate, isDirty = false }) => {
   const { mode, toggleTheme } = useTheme();
   const darkMode = mode === 'dark';
   const navigate = useNavigate();
+  const guardedNavigate = (path) => {
+    if (onNavigate) {
+      onNavigate(path);
+      return;
+    }
+    navigate(path);
+  };
 
   return (
     <nav className={`border-b ${darkMode ? 'border-gray-700 bg-gray-900' : 'border-gray-200 bg-white'} px-4 py-3 shadow-sm transition-colors duration-200 sticky top-0 z-50`}>
@@ -24,7 +31,7 @@ const BlogEditorNavbar = () => {
           
           <div className="hidden md:flex items-center space-x-1">
             <button 
-              onClick={() => navigate('/')}
+              onClick={() => guardedNavigate('/')}
               className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${darkMode ? 'text-gray-300 hover:bg-gray-800 hover:text-white' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'} group`}
             >
               <FiHome className={`h-5 w-5 transition-transform group-hover:scale-110 ${darkMode ? 'text-blue-400' : 'text-blue-500'}`} />
@@ -32,7 +39,7 @@ const BlogEditorNavbar = () => {
             </button>
             
             <button 
-              onClick={() => navigate('/dashboard')}
+              onClick={() => guardedNavigate('/dashboard')}
               className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${darkMode ? 'text-gray-300 hover:bg-gray-800 hover:text-white' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'} group`}
             >
               <FiGrid className={`h-5 w-5 transition-transform group-hover:scale-110 ${darkMode ? 'text-purple-400' : 'text-purple-500'}`} />
@@ -52,14 +59,14 @@ const BlogEditorNavbar = () => {
           </button>
           
           <button 
-            onClick={() => navigate('/settings')}
+            onClick={() => guardedNavigate('/settings')}
             className={`p-2 rounded-full transition-all ${darkMode ? 'text-gray-200 hover:bg-gray-800 hover:text-blue-400' : 'text-gray-700 hover:bg-gray-100 hover:text-blue-600'} hover:rotate-12 hover:scale-110`}
           >
             <FiSettings className="h-5 w-5" />
           </button>
           
           <button 
-            onClick={() => navigate('/profile')}
+            onClick={() => guardedNavigate('/profile')}
             className={`relative h-10 w-10 rounded-full flex items-center justify-center text-white font-medium cursor-pointer transition-all ${darkMode ? 'bg-blue-600 hover:bg-blue-500' : 'bg-blue-500 hover:bg-blue-600'} hover:shadow-lg group`}
           >
             <FiUser className="h-5 w-5" />

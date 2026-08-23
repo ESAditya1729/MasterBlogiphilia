@@ -81,6 +81,7 @@ const ProfilePage = () => {
   const [followUpdate, setFollowUpdate] = useState({});
   const [publishedPostsCount, setPublishedPostsCount] = useState(0);
   const [postsCountLoading, setPostsCountLoading] = useState(true);
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
 
   // Derived state
   const isOwnProfile =
@@ -478,6 +479,8 @@ const ProfilePage = () => {
         <ProfileHeader
           profile={profile}
           isOwnProfile={isOwnProfile}
+          isEditing={isEditingProfile}
+          onEditToggle={() => setIsEditingProfile((prev) => !prev)}
           onUpdate={handleProfileUpdate}
           isMobile={isMobile}
         />

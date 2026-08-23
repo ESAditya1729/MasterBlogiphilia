@@ -17,7 +17,7 @@ const app = express();
 // CORS allowlist - extend via CORS_ORIGINS env var (comma-separated)
 const allowedOrigins = (
   process.env.CORS_ORIGINS ||
-  'http://localhost:3000,https://masterblogiphilia.onrender.com'
+  'http://localhost:3000,https://masterblogiphilia.onrender.com,https://blogiphilia.netlify.app'
 )
   .split(',')
   .map((o) => o.trim())

@@ -392,3 +392,114 @@
   opacity: 0;
   transform: translateY(20px);
 }
+/* TipTap Placeholder */
+.tiptap p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+  color: #9ca3af;
+}
+
+.dark .tiptap p.is-editor-empty:first-child::before {
+  color: #6b7280;
+}
+
+/* Code blocks with lowlight syntax highlighting */
+.tiptap pre {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  overflow-x: auto;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+.dark .tiptap pre {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+.tiptap pre code {
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: #334155;
+}
+
+.dark .tiptap pre code {
+  color: #e2e8f0;
+}
+
+/* Minimal highlight.js palette (dark-aware) */
+.hljs-comment,
+.hljs-quote {
+  color: #94a3b8;
+  font-style: italic;
+}
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-literal,
+.hljs-doctag,
+.hljs-name {
+  color: #7c3aed;
+}
+.dark .hljs-keyword,
+.dark .hljs-selector-tag,
+.dark .hljs-literal,
+.dark .hljs-doctag,
+.dark .hljs-name {
+  color: #a78bfa;
+}
+.hljs-string,
+.hljs-regexp,
+.hljs-addition,
+.hljs-attribute,
+.hljs-meta .hljs-string {
+  color: #16a34a;
+}
+.dark .hljs-string,
+.dark .hljs-regexp,
+.dark .hljs-addition,
+.dark .hljs-attribute,
+.dark .hljs-meta .hljs-string {
+  color: #4ade80;
+}
+.hljs-number,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-variable,
+.hljs-template-variable,
+.hljs-type {
+  color: #ea580c;
+}
+.dark .hljs-number,
+.dark .hljs-symbol,
+.dark .hljs-bullet,
+.dark .hljs-variable,
+.dark .hljs-template-variable,
+.dark .hljs-type {
+  color: #fb923c;
+}
+.hljs-title,
+.hljs-section,
+.hljs-title.function_ {
+  color: #2563eb;
+}
+.dark .hljs-title,
+.dark .hljs-section,
+.dark .hljs-title.function_ {
+  color: #60a5fa;
+}
+.hljs-built_in,
+.hljs-class .hljs-title {
+  color: #0891b2;
+}
+.dark .hljs-built_in,
+.dark .hljs-class .hljs-title {
+  color: #22d3ee;
+}
+.hljs-deletion {
+  color: #dc2626;
+}

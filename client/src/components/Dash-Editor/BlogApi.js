@@ -357,6 +357,32 @@ export const getTrendingBlogs = async () => {
 };
 
 /**
+ * Uploads an image file to the media endpoint
+ * @param {File} file - Image file to upload
+ * @returns {Promise<{url: string, public_id?: string}>} - Uploaded image data
+ * @throws {Error} - API error
+ */
+export const uploadMediaFile = async (file) => {
+  const formData = new FormData();
+  formData.append('image', file);
+
+  try {
+    const response = await apiClient.post('/api/media/upload', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: LONG_REQUEST_TIMEOUT
+    });
+
+    if (!response.data?.url) {
+      throw createApiError('InvalidResponse', 'Invalid response from media upload');
+    }
+
+    return response.data;
+  } catch (error) {
+    throw handleApiError(error);
+  }
+};
+
+/**
  * Formats API errors for user display
  * @param {Error} error - Error object
  * @returns {string} - User-friendly error message

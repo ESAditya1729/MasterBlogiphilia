@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { FiSave, FiUpload, FiCheckCircle, FiX, FiZap } from "react-icons/fi";
 import { useTheme } from "../../contexts/ThemeContext";
@@ -10,6 +10,26 @@ import EditorSpace from "./EditorSpace";
 import MetadataForm from "./MetadataForm";
 import AskLillyTab from "./AskLillyTab";
 import "./Styles.css";
+
+const WORD_MIN = 100;
+const WORD_MAX = 3000;
+const AUTOSAVE_DELAY_MS = 5000;
+
+const stripHtml = (html) => (html || "").replace(/<[^>]+>/g, " ");
+
+const getWordCount = (html) =>
+  stripHtml(html).split(/\s+/).filter(Boolean).length;
+
+const serializeDraft = (data) =>
+  JSON.stringify({
+    title: data.title || "",
+    content: data.content || "",
+    genre: data.genre || "",
+    tags: data.tags || [],
+    excerpt: data.excerpt || "",
+    seoKeywords: data.seoKeywords || [],
+    coverImage: data.coverImage || "",
+  });
 
 const BlogEditor = () => {
   const { id } = useParams();
@@ -26,6 +46,11 @@ const BlogEditor = () => {
   const [showPublishConfirm, setShowPublishConfirm] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [publishedBlogUrl, setPublishedBlogUrl] = useState("");
+  const [isDirty, setIsDirty] = useState(false);
+
+  const savedSnapshotRef = useRef("");
+  const saveFnRef = useRef(null);
+  const [initialId] = useState(id);
 
   // Enhanced initial state with all required fields
   const [blogData, setBlogData] = useState({
@@ -109,6 +134,7 @@ const BlogEditor = () => {
           createdAt: blog.createdAt || "",
           updatedAt: blog.updatedAt || "",
         });
+        savedSnapshotRef.current = serializeDraft(blog);
       } catch (err) {
         console.error("Error initializing editor:", err);
         toast.error(
@@ -130,6 +156,55 @@ const BlogEditor = () => {
     console.log("Current blogData state:", blogData);
   }, [blogData]);
 
+  // Track dirty state and autosave drafts
+  useEffect(() => {
+    if (isLoading) return undefined;
+    const snapshot = serializeDraft(blogData);
+    const dirty = snapshot !== savedSnapshotRef.current;
+    setIsDirty(dirty);
+    if (!dirty || isSaving || isPublishing) return undefined;
+    const hasContent =
+      blogData.title.trim() ||
+      blogData.excerpt.trim() ||
+      getWordCount(blogData.content) > 0;
+    if (!blogData._id && !hasContent) return undefined;
+
+    const timer = setTimeout(async () => {
+      const result = await saveFnRef.current?.(false, { silent: true });
+      if (result) {
+        savedSnapshotRef.current = serializeDraft(result);
+        setIsDirty(false);
+      }
+    }, AUTOSAVE_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [blogData, isLoading, isSaving, isPublishing]);
+
+  // Warn before leaving with unsaved changes (refresh/close)
+  useEffect(() => {
+    if (!isDirty) return undefined;
+    const handler = (e) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [isDirty]);
+
+  const requestNavigate = useCallback(
+    (path) => {
+      if (
+        isDirty &&
+        !window.confirm(
+          "You have unsaved changes that may be lost. Leave anyway?"
+        )
+      ) {
+        return;
+      }
+      navigate(path);
+    },
+    [isDirty, navigate]
+  );
+
   const validateForm = () => {
     const errors = {};
     if (!blogData.title.trim()) errors.title = "Title is required";
@@ -142,18 +217,36 @@ const BlogEditor = () => {
     return Object.keys(errors).length === 0;
   };
 
-  const handleSave = async (isPublishingAction = false) => {
+  const handleSave = async (isPublishingAction = false, options = {}) => {
+    const { silent = false } = options;
+
+    if (isPublishingAction) {
+      const words = getWordCount(blogData.content);
+      if (words < WORD_MIN) {
+        toast.error(
+          `Your post needs at least ${WORD_MIN} words to publish (currently ${words}).`
+        );
+        return undefined;
+      }
+      if (words > WORD_MAX) {
+        toast.error(
+          `Your post exceeds the ${WORD_MAX} word limit (currently ${words}).`
+        );
+        return undefined;
+      }
+    }
+
     if (!validateForm()) {
-      toast.error("Please fix form errors before saving");
-      return;
+      if (!silent) toast.error("Please fix form errors before saving");
+      return undefined;
     }
 
     if (isPublishingAction && !showPublishConfirm) {
       setShowPublishConfirm(true);
-      return;
+      return undefined;
     }
 
-    if (isSaving || isPublishing) return;
+    if (isSaving || isPublishing) return undefined;
 
     isPublishingAction ? setIsPublishing(true) : setIsSaving(true);
     if (isPublishingAction) setShowPublishConfirm(false);
@@ -206,12 +299,15 @@ const BlogEditor = () => {
         );
         setShowSuccessModal(true);
       } else {
-        toast.success("Draft saved successfully");
+        if (!silent) toast.success("Draft saved successfully");
         if (!blogData._id) {
           window.history.replaceState(null, "", `/editor/${savedBlog._id}`);
           setBlogData((prev) => ({ ...prev, _id: savedBlog._id }));
         }
       }
+
+      savedSnapshotRef.current = serializeDraft(payload);
+      setIsDirty(false);
 
       return savedBlog;
     } catch (err) {
@@ -226,6 +322,8 @@ const BlogEditor = () => {
       setIsPublishing(false);
     }
   };
+
+  saveFnRef.current = handleSave;
 
   const handleGenerateKeywords = async () => {
     if (!blogData.title.trim()) {
@@ -357,6 +455,8 @@ const BlogEditor = () => {
           onPublish={() => handleSave(true)}
           isSubmitting={isSaving || isPublishing}
           onCoverImageUpload={handleCoverImageUpload}
+          onNavigate={requestNavigate}
+          isDirty={isDirty}
         />
       </header>
 
@@ -553,7 +653,8 @@ const BlogEditor = () => {
                 <EditorSpace
                   blogData={blogData}
                   setBlogData={setBlogData}
-                  key={blogData._id} // Force re-render when blog changes
+                  onSave={() => handleSave(false)}
+                  key={initialId || "new-post"}
                 />
               </div>
             )}

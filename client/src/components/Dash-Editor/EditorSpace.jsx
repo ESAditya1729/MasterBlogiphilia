@@ -1,4 +1,5 @@
 import { useEditor, EditorContent } from "@tiptap/react";
+import { BubbleMenu } from "@tiptap/react/menus";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
 import TextAlign from "@tiptap/extension-text-align";
@@ -15,8 +16,19 @@ import Youtube from "@tiptap/extension-youtube";
 import TaskList from "@tiptap/extension-task-list";
 import TaskItem from "@tiptap/extension-task-item";
 import { ListItem } from "@tiptap/extension-list-item";
+import Placeholder from "@tiptap/extension-placeholder";
+import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
+import { CharacterCount } from "@tiptap/extension-character-count";
+import { createLowlight, common } from "lowlight";
 import { useEffect, useState, useCallback } from "react";
-import Toolbar from "./Toolbar";
+import Toolbar, { ToolbarButton } from "./Toolbar";
+import {
+  FiBold,
+  FiItalic,
+  FiUnderline,
+  FiDroplet,
+} from "react-icons/fi";
+import { uploadMediaFile } from "./BlogApi";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Feather,
@@ -28,12 +40,40 @@ import {
   X,
 } from "lucide-react";
 
-const EditorSpace = ({ blogData = {}, setBlogData }) => {
+const lowlight = createLowlight(common);
+
+const WORD_MIN = 100;
+const WORD_MAX = 3000;
+
+const EditorSpace = ({ blogData = {}, setBlogData, onSave }) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isPreviewMode] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploadingMedia, setIsUploadingMedia] = useState(false);
   const [showSaveIndicator, setShowSaveIndicator] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [wordCount, setWordCount] = useState(0);
+  const [charCount, setCharCount] = useState(0);
+
+  const uploadAndInsertImage = useCallback(async (view, file) => {
+    if (!file || !file.type.startsWith("image/")) return false;
+    if (file.size > 5 * 1024 * 1024) return false;
+    setIsUploadingMedia(true);
+    try {
+      const data = await uploadMediaFile(file);
+      const node = view.state.schema.nodes.image.create({
+        src: data.url,
+        alt: file.name,
+      });
+      view.dispatch(view.state.tr.replaceSelectionWith(node));
+      return true;
+    } catch (err) {
+      console.error("Image upload failed:", err);
+      return false;
+    } finally {
+      setIsUploadingMedia(false);
+    }
+  }, []);
 
   const editor = useEditor({
     extensions: [
@@ -88,6 +128,11 @@ const EditorSpace = ({ blogData = {}, setBlogData }) => {
         },
       }),
       ListItem,
+      Placeholder.configure({
+        placeholder: "Start writing your story...",
+      }),
+      CodeBlockLowlight.configure({ lowlight }),
+      CharacterCount,
     ],
     content: blogData?.content || "",
     onUpdate: ({ editor }) => {
@@ -98,6 +143,32 @@ const EditorSpace = ({ blogData = {}, setBlogData }) => {
         class: `min-h-[300px] p-4 focus:outline-none prose dark:prose-invert prose-headings:font-medium prose-img:mx-auto max-w-none ${
           isPreviewMode ? "pointer-events-none" : ""
         }`,
+      },
+      handlePaste: (view, event) => {
+        const items = Array.from(event.clipboardData?.items || []);
+        const imageItem = items.find((item) =>
+          item.type.startsWith("image/")
+        );
+        if (imageItem) {
+          const file = imageItem.getAsFile();
+          if (file) {
+            uploadAndInsertImage(view, file);
+            return true;
+          }
+        }
+        return false;
+      },
+      handleDrop: (view, event, slice, moved) => {
+        if (moved) return false;
+        const files = Array.from(event.dataTransfer?.files || []);
+        const imageFiles = files.filter((file) =>
+          file.type.startsWith("image/")
+        );
+        if (imageFiles.length > 0) {
+          imageFiles.forEach((file) => uploadAndInsertImage(view, file));
+          return true;
+        }
+        return false;
       },
     },
   });
@@ -111,18 +182,32 @@ const EditorSpace = ({ blogData = {}, setBlogData }) => {
   }, [showPreviewModal]);
 
   const handleSave = useCallback(async () => {
-    if (editor) {
-      setIsSaving(true);
-      try {
-        await new Promise((resolve) => setTimeout(resolve, 800)); // Simulate save delay
-        setBlogData((prev) => ({ ...prev, content: editor.getHTML() }));
+    if (!onSave) return undefined;
+    setIsSaving(true);
+    try {
+      const result = await onSave();
+      if (result) {
         setShowSaveIndicator(true);
         setTimeout(() => setShowSaveIndicator(false), 2000);
-      } finally {
-        setIsSaving(false);
       }
+      return result;
+    } finally {
+      setIsSaving(false);
     }
-  }, [editor, setBlogData]);
+  }, [onSave]);
+
+  useEffect(() => {
+    if (!editor) return undefined;
+    const updateCounts = () => {
+      setWordCount(editor.storage.characterCount?.words() ?? 0);
+      setCharCount(editor.storage.characterCount?.characters() ?? 0);
+    };
+    updateCounts();
+    editor.on("update", updateCounts);
+    return () => {
+      editor.off("update", updateCounts);
+    };
+  }, [editor]);
 
   useEffect(() => {
     if (editor && blogData?.content !== editor.getHTML()) {
@@ -411,9 +496,82 @@ const EditorSpace = ({ blogData = {}, setBlogData }) => {
               isFullscreen ? "h-[calc(100%-56px)]" : "max-h-[calc(100vh-300px)]"
             }`}
           >
-            <EditorContent editor={editor} className="pt-4 pb-8" />
+            <input
+              type="text"
+              value={blogData.title || ""}
+              onChange={(e) =>
+                setBlogData((prev) => ({ ...prev, title: e.target.value }))
+              }
+              placeholder="Title"
+              aria-label="Blog title"
+              className="w-full px-6 pt-4 pb-1 text-3xl sm:text-4xl font-bold bg-transparent border-none outline-none text-gray-900 dark:text-white placeholder-gray-300 dark:placeholder-gray-600"
+            />
+            <EditorContent editor={editor} className="pt-2 pb-8" />
           </div>
         </div>
+
+        {/* Editor Status Bar */}
+        <div className="flex items-center justify-between gap-3 px-4 py-2 border-t border-gray-200 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400">
+          <span>
+            {wordCount} words · {charCount} characters
+          </span>
+          {isUploadingMedia ? (
+            <motion.span
+              animate={{ opacity: [0.6, 1] }}
+              transition={{ repeat: Infinity, duration: 1 }}
+              className="text-indigo-500 dark:text-indigo-400"
+            >
+              Uploading image...
+            </motion.span>
+          ) : wordCount === 0 ? null : wordCount < WORD_MIN ? (
+            <span className="text-red-500 dark:text-red-400">
+              {WORD_MIN - wordCount} more words until publishable
+            </span>
+          ) : wordCount > WORD_MAX ? (
+            <span className="text-amber-500 dark:text-amber-400">
+              {wordCount - WORD_MAX} words over the {WORD_MAX}-word limit
+            </span>
+          ) : (
+            <span className="text-emerald-600 dark:text-emerald-400 font-medium">
+              Ready to publish
+            </span>
+          )}
+        </div>
+
+        {/* Bubble Menu for Text Selection */}
+        <BubbleMenu
+          editor={editor}
+          className="flex items-center gap-1 p-1 rounded-lg bg-white dark:bg-gray-800 shadow-xl border border-gray-200 dark:border-gray-700"
+        >
+          <ToolbarButton
+            active={editor.isActive("bold")}
+            onClick={() => editor.chain().focus().toggleBold().run()}
+            ariaLabel="Bold"
+          >
+            <FiBold size={14} />
+          </ToolbarButton>
+          <ToolbarButton
+            active={editor.isActive("italic")}
+            onClick={() => editor.chain().focus().toggleItalic().run()}
+            ariaLabel="Italic"
+          >
+            <FiItalic size={14} />
+          </ToolbarButton>
+          <ToolbarButton
+            active={editor.isActive("underline")}
+            onClick={() => editor.chain().focus().toggleUnderline().run()}
+            ariaLabel="Underline"
+          >
+            <FiUnderline size={14} />
+          </ToolbarButton>
+          <ToolbarButton
+            active={editor.isActive("highlight")}
+            onClick={() => editor.chain().focus().toggleHighlight().run()}
+            ariaLabel="Highlight"
+          >
+            <FiDroplet size={14} />
+          </ToolbarButton>
+        </BubbleMenu>
 
         {/* Floating Actions */}
         {isFullscreen && (
