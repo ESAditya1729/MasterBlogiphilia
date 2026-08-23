@@ -1,6 +1,6 @@
+import './config/env.js';
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 
 import authRoutes from './routes/authRoutes.js';
@@ -12,7 +12,6 @@ import statsRoutes from "./routes/statsRoutes.js";
 import feedbackRoutes from './routes/feedbackRoutes.js';
 import assistantRoutes from "./routes/assistantRoutes.js";
 
-dotenv.config();
 const app = express();
 
 // Middleware
