@@ -17,6 +17,7 @@ import {
   FiCheck,
   FiDroplet,
   FiPenTool,
+  FiUpload,
 } from "react-icons/fi";
 import EmojiPicker from "emoji-picker-react";
 import { HexColorPicker } from "react-colorful";
@@ -52,6 +53,22 @@ const ToolbarButton = ({ active, onClick, children, ariaLabel }) => (
   </button>
 );
 
+// Mock API function for image upload (replace with actual API call later)
+const mockUploadImage = (file) => {
+  return new Promise((resolve) => {
+    // Simulate API call delay
+    setTimeout(() => {
+      // Create a mock URL for the uploaded image
+      const mockImageUrl = URL.createObjectURL(file);
+      resolve({
+        success: true,
+        imageUrl: mockImageUrl,
+        message: "Image uploaded successfully (mock)"
+      });
+    }, 1500);
+  });
+};
+
 /**
  * Main Toolbar component for the editor
  */
@@ -66,11 +83,17 @@ const Toolbar = ({ editor }) => {
   const [isHighlightPickerOpen, setIsHighlightPickerOpen] = useState(false);
   const [currentColor, setCurrentColor] = useState("#000000");
   const [currentHighlight, setCurrentHighlight] = useState("#FFFF00");
+  
+  // New state for file upload
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState("");
 
   // Refs for handling click outside
   const emojiPickerRef = useRef(null);
   const colorPickerRef = useRef(null);
   const highlightPickerRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   // Handle click outside of pickers and modals
   useEffect(() => {
@@ -151,6 +174,67 @@ const Toolbar = ({ editor }) => {
         .run();
       setIsImageModalOpen(false);
       setImageUrl("");
+    }
+  };
+
+  // New function to handle file selection
+  const handleFileSelect = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      // Check if file is an image
+      if (!file.type.match('image.*')) {
+        setUploadStatus("Please select an image file");
+        return;
+      }
+      
+      // Check file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        setUploadStatus("Image must be less than 5MB");
+        return;
+      }
+      
+      setSelectedFile(file);
+      setUploadStatus(`Selected: ${file.name}`);
+    }
+  };
+
+  // New function to upload the selected file
+  const uploadImage = async () => {
+    if (!selectedFile) {
+      setUploadStatus("Please select an image first");
+      return;
+    }
+    
+    setIsUploading(true);
+    setUploadStatus("Uploading image...");
+    
+    try {
+      const result = await mockUploadImage(selectedFile);
+      
+      if (result.success) {
+        // Insert the image into the editor
+        editor
+          .chain()
+          .focus()
+          .setImage({ src: result.imageUrl, alt: "Uploaded image" })
+          .run();
+        
+        setUploadStatus("Image uploaded successfully!");
+        
+        // Close the modal after a short delay
+        setTimeout(() => {
+          setIsImageModalOpen(false);
+          setSelectedFile(null);
+          setUploadStatus("");
+        }, 1000);
+      } else {
+        setUploadStatus("Upload failed. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      setUploadStatus("Upload failed. Please try again.");
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -274,45 +358,45 @@ const Toolbar = ({ editor }) => {
           <Divider />
 
           {/* LISTS & BLOCKS */}
-<ButtonGroup>
-  {/* Bullet List */}
-  <ToolbarButton
-    active={editor.isActive("bulletList")}
-    onClick={() => editor.chain().focus().toggleBulletList().run()}
-    ariaLabel="Bullet list"
-    className={editor.isActive("bulletList") ? "bg-blue-100 dark:bg-blue-900" : ""}
-  >
-    <FiList className="w-4 h-4" />
-  </ToolbarButton>
+          <ButtonGroup>
+            {/* Bullet List */}
+            <ToolbarButton
+              active={editor.isActive("bulletList")}
+              onClick={() => editor.chain().focus().toggleBulletList().run()}
+              ariaLabel="Bullet list"
+              className={editor.isActive("bulletList") ? "bg-blue-100 dark:bg-blue-900" : ""}
+            >
+              <FiList className="w-4 h-4" />
+            </ToolbarButton>
 
-  {/* Ordered List */}
-  <ToolbarButton
-    active={editor.isActive("orderedList")}
-    onClick={() => editor.chain().focus().toggleOrderedList().run()}
-    ariaLabel="Numbered list"
-    className={editor.isActive("orderedList") ? "bg-blue-100 dark:bg-blue-900" : ""}
-  >
-    <span className="text-sm font-bold">1.</span>
-  </ToolbarButton>
+            {/* Ordered List */}
+            <ToolbarButton
+              active={editor.isActive("orderedList")}
+              onClick={() => editor.chain().focus().toggleOrderedList().run()}
+              ariaLabel="Numbered list"
+              className={editor.isActive("orderedList") ? "bg-blue-100 dark:bg-blue-900" : ""}
+            >
+              <span className="text-sm font-bold">1.</span>
+            </ToolbarButton>
 
-  {/* Horizontal Rule */}
-  <ToolbarButton
-    onClick={() => editor.chain().focus().setHorizontalRule().run()}
-    ariaLabel="Horizontal rule"
-  >
-    <FiMinus className="w-4 h-4" />
-  </ToolbarButton>
+            {/* Horizontal Rule */}
+            <ToolbarButton
+              onClick={() => editor.chain().focus().setHorizontalRule().run()}
+              ariaLabel="Horizontal rule"
+            >
+              <FiMinus className="w-4 h-4" />
+            </ToolbarButton>
 
-  {/* Code Block */}
-  <ToolbarButton
-    active={editor.isActive("codeBlock")}
-    onClick={() => editor.chain().focus().toggleCodeBlock().run()}
-    ariaLabel="Code block"
-    className={editor.isActive("codeBlock") ? "bg-blue-100 dark:bg-blue-900" : ""}
-  >
-    <FiCode className="w-4 h-4" />
-  </ToolbarButton>
-</ButtonGroup>
+            {/* Code Block */}
+            <ToolbarButton
+              active={editor.isActive("codeBlock")}
+              onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+              ariaLabel="Code block"
+              className={editor.isActive("codeBlock") ? "bg-blue-100 dark:bg-blue-900" : ""}
+            >
+              <FiCode className="w-4 h-4" />
+            </ToolbarButton>
+          </ButtonGroup>
 
           <Divider />
 
@@ -509,31 +593,106 @@ const Toolbar = ({ editor }) => {
             <h3 className="font-bold text-lg mb-3 dark:text-white">
               Add Image
             </h3>
-            <input
-              type="url"
-              value={imageUrl}
-              onChange={(e) => setImageUrl(e.target.value)}
-              placeholder="https://example.com/image.jpg"
-              className="w-full px-3 py-2 border rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-              autoFocus
-              onKeyDown={(e) => {
-                if (e.key === "Enter") addImageByUrl();
-                if (e.key === "Escape") setIsImageModalOpen(false);
-              }}
-            />
+            
+            {/* Tabs for URL vs Upload */}
+            <div className="flex border-b border-gray-200 dark:border-gray-700 mb-4">
+              <button 
+                className="px-4 py-2 font-medium text-blue-600 border-b-2 border-blue-600 dark:text-blue-400 dark:border-blue-400"
+              >
+                Upload from Computer
+              </button>
+              <button 
+                className="px-4 py-2 font-medium text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400"
+                onClick={() => {
+                  // This would switch to URL tab in a real implementation
+                  alert("URL upload option would be here");
+                }}
+              >
+                From URL
+              </button>
+            </div>
+            
+            {/* File upload section */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-2 dark:text-gray-300">
+                Select an image to upload
+              </label>
+              <div 
+                className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-blue-400 transition-colors"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <FiUpload className="mx-auto text-gray-400 text-2xl mb-2" />
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Click to browse or drag and drop
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                  PNG, JPG, GIF up to 5MB
+                </p>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileSelect}
+                  accept="image/*"
+                  className="hidden"
+                />
+              </div>
+              
+              {selectedFile && (
+                <div className="mt-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm truncate dark:text-gray-300">
+                      {selectedFile.name}
+                    </span>
+                    <button 
+                      onClick={() => setSelectedFile(null)}
+                      className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                    >
+                      <FiX />
+                    </button>
+                  </div>
+                  <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                    {Math.round(selectedFile.size / 1024)} KB
+                  </div>
+                </div>
+              )}
+              
+              {uploadStatus && (
+                <div className={`mt-3 text-sm ${isUploading ? 'text-blue-600' : uploadStatus.includes('success') ? 'text-green-600' : 'text-red-600'}`}>
+                  {uploadStatus}
+                </div>
+              )}
+            </div>
+            
             <div className="flex justify-end space-x-2 mt-4">
               <button
-                onClick={() => setIsImageModalOpen(false)}
+                onClick={() => {
+                  setIsImageModalOpen(false);
+                  setSelectedFile(null);
+                  setUploadStatus("");
+                }}
                 className="px-4 py-2 rounded-md flex items-center text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                disabled={isUploading}
               >
                 <FiX className="mr-1" /> Cancel
               </button>
               <button
-                onClick={addImageByUrl}
-                disabled={!imageUrl}
+                onClick={uploadImage}
+                disabled={!selectedFile || isUploading}
                 className="px-4 py-2 rounded-md flex items-center bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
               >
-                <FiCheck className="mr-1" /> Add
+                {isUploading ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Uploading...
+                  </>
+                ) : (
+                  <>
+                    <FiUpload className="mr-1" /> Upload
+                  </>
+                )}
               </button>
             </div>
           </div>
