@@ -70,8 +70,8 @@ const ProfilePage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState("posts");
-  const [postCounts, setPostCounts] = useState({ published: 0, draft: 0, archived: 0 });
-  const [postsCountError, setPostsCountError] = useState(null);
+  const [, setPostCounts] = useState({ published: 0, draft: 0, archived: 0 });
+  const [, setPostsCountError] = useState(null);
   const [isFollowing, setIsFollowing] = useState(false);
   const [profileUrl, setProfileUrl] = useState("");
   const [isFollowLoading, setIsFollowLoading] = useState(false);
@@ -130,7 +130,7 @@ const ProfilePage = () => {
         ? encodeURIComponent(
             response.data.username
               .replace(/\s+/g, "-")
-              .replace(/[^\w\-]+/g, "")
+              .replace(/[^\w-]+/g, "")
               .toLowerCase()
           )
         : "user";
@@ -326,7 +326,7 @@ const ProfilePage = () => {
     if (user || userId) {
       loadData();
     }
-  }, [userId, user?._id, fetchProfile, fetchPublishedPostsCount, getProfileId]);
+  }, [userId, user, fetchProfile, fetchPublishedPostsCount, getProfileId]);
 
   // Effect to refresh profile after follow updates
   useEffect(() => {

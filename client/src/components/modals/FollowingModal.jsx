@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FiX, FiEye } from "react-icons/fi";
 import UserRow from "../UserRow";
@@ -10,12 +10,7 @@ const FollowingModal = ({ isOpen, onClose, userId, onFollowChange }) => {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (!isOpen) return;
-    fetchFollowing();
-  }, [isOpen, userId]);
-
-  const fetchFollowing = async () => {
+  const fetchFollowing = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -39,7 +34,12 @@ const FollowingModal = ({ isOpen, onClose, userId, onFollowChange }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    fetchFollowing();
+  }, [isOpen, userId, fetchFollowing]);
 
   const handleViewProfile = (userId) => {
     onClose(); // Close the modal first

@@ -5,7 +5,6 @@ import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import Logo from "../../utils/Logo";
 const MAX_BIO_LENGTH = 200;
 
 const ProfileHeader = ({ profile, isOwnProfile, isEditing, onEditToggle, onUpdate }) => {

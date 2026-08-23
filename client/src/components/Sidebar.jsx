@@ -9,7 +9,6 @@ import {
   FiMenu,
   FiSun,
   FiMoon,
-  FiUser,
   FiLogOut,
   FiExternalLink,
   FiLayers

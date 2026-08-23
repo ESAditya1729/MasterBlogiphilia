@@ -2,11 +2,9 @@ import { useAuth } from "../contexts/AuthContext";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { FiUserPlus, FiUserMinus, FiEye } from "react-icons/fi";
-import { useNavigate } from "react-router-dom";
 
-const UserRow = ({ userData, onFollowChange,onViewProfile, className = "", onCloseModal }) => {
+const UserRow = ({ userData, onFollowChange,onViewProfile, className = "" }) => {
   const { user } = useAuth();
-  const navigate = useNavigate();
   const [isFollowing, setIsFollowing] = useState(userData.isFollowing);
   const [isProcessing, setIsProcessing] = useState(false);
   const isSelf = user?._id === userData._id;
@@ -39,12 +37,6 @@ const UserRow = ({ userData, onFollowChange,onViewProfile, className = "", onClo
     } finally {
       setIsProcessing(false);
     }
-  };
-
-  const handleViewProfile = (e) => {
-    e.stopPropagation();
-    onCloseModal?.(); // Close the modal first
-    navigate(`/profile/${userData._id}`);
   };
 
   return (

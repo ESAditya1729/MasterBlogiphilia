@@ -12,7 +12,6 @@ import {
   FiAlignJustify,
   FiCode,
   FiMinus,
-  FiType,
   FiX,
   FiCheck,
   FiDroplet,
@@ -78,7 +77,6 @@ const Toolbar = ({ editor }) => {
   const [linkUrl, setLinkUrl] = useState("");
   const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
-  const [imageUrl, setImageUrl] = useState("");
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
   const [isHighlightPickerOpen, setIsHighlightPickerOpen] = useState(false);
   const [currentColor, setCurrentColor] = useState("#000000");
@@ -128,24 +126,6 @@ const Toolbar = ({ editor }) => {
   const toggleMark = (mark) => editor.chain().focus().toggleMark(mark).run();
   const setAlignment = (align) =>
     editor.chain().focus().setTextAlign(align).run();
-  const toggleList = (type) =>
-    editor
-      .chain()
-      .focus()
-      [`toggle${type === "bullet" ? "Bullet" : "Ordered"}List`]()
-      .run();
-  const addHorizontalRule = () =>
-    editor.chain().focus().setHorizontalRule().run();
-  const addCodeBlock = () => editor.chain().focus().toggleCodeBlock().run();
-
-  // Heading actions
-  const setHeading = (level) => {
-    if (editor.isActive("heading", { level })) {
-      editor.chain().focus().setParagraph().run();
-    } else {
-      editor.chain().focus().setHeading({ level }).run();
-    }
-  };
 
   // Link actions
   const addLink = () => {
@@ -161,19 +141,6 @@ const Toolbar = ({ editor }) => {
       }
       setIsLinkModalOpen(false);
       setLinkUrl("");
-    }
-  };
-
-  // Image actions
-  const addImageByUrl = () => {
-    if (imageUrl) {
-      editor
-        .chain()
-        .focus()
-        .setImage({ src: imageUrl, alt: "User uploaded image" })
-        .run();
-      setIsImageModalOpen(false);
-      setImageUrl("");
     }
   };
 

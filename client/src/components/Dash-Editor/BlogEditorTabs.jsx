@@ -2,7 +2,6 @@ import {
   FiEdit2, 
   FiFileText, 
   FiMessageSquare, 
-  FiEye,
   FiBook,
   FiBookOpen 
 } from 'react-icons/fi';

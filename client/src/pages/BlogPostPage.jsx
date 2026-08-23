@@ -15,7 +15,7 @@ import {
   FiBookmark,
   FiMessageSquare
 } from 'react-icons/fi';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import PostNavbar from './BlogPostNavbar';
 import LoadingSpinner from '../utils/LoadingSpinner';
 import ErrorMessage from '../utils/ErrorMessage';

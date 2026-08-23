@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { FiHash, FiArrowRight } from "react-icons/fi";
 

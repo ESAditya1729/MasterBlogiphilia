@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import debounce from "lodash.debounce";
-import { FiSearch, FiX, FiUserPlus, FiUser } from "react-icons/fi";
+import { FiSearch, FiX, FiUserPlus } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 
 const SearchBar = ({ onClose }) => {
@@ -13,7 +13,7 @@ const SearchBar = ({ onClose }) => {
   const resultsRef = useRef(null);
   const navigate = useNavigate();
 
-  const fetchUsers = async (searchTerm) => {
+  const fetchUsers = useCallback(async (searchTerm) => {
     if (!searchTerm.trim()) {
       setResults([]);
       setIsLoading(false);
@@ -45,14 +45,13 @@ const SearchBar = ({ onClose }) => {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const debouncedFetch = debounce(fetchUsers, 500);
+  }, []);
 
   useEffect(() => {
+    const debouncedFetch = debounce(fetchUsers, 500);
     debouncedFetch(query);
-    return debouncedFetch.cancel;
-  }, [query]);
+    return () => debouncedFetch.cancel();
+  }, [query, fetchUsers]);
 
   const handleFollow = async (userId, isCurrentlyFollowing, e) => {
     e.stopPropagation(); // Prevent triggering profile navigation
@@ -195,8 +194,10 @@ const SearchBar = ({ onClose }) => {
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => setIsFocused(true)}
           onKeyDown={handleKeyDown}
+          role="combobox"
           aria-haspopup="listbox"
           aria-expanded={isFocused && (isLoading || results.length > 0)}
+          aria-controls="search-results-listbox"
         />
         {query && (
           <button
@@ -213,6 +214,7 @@ const SearchBar = ({ onClose }) => {
         <div
           className="absolute left-0 right-0 mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 overflow-hidden"
           role="listbox"
+          id="search-results-listbox"
           ref={resultsRef}
         >
           {isLoading ? (

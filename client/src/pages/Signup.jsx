@@ -106,15 +106,10 @@ const Signup = () => {
       if (!res.ok) {
         const serverMessage = data.error || data.message;
         if (res.status === 400 && serverMessage?.toLowerCase().includes("email")) {
-          throw {
-            message: "Email already in use",
-            details:
-              "This email is already registered. Would you like to log in instead?",
-            action: {
-              text: "Go to Login",
-              path: "/login",
-            },
-          };
+          const emailError = new Error("Email already in use");
+          emailError.details = "This email is already registered. Would you like to log in instead?";
+          emailError.action = { text: "Go to Login", path: "/login" };
+          throw emailError;
         }
         throw new Error(serverMessage || "Registration failed");
       }

@@ -24,14 +24,13 @@ import {
   Maximize2,
   Minimize2,
   Eye,
-  EyeOff,
   Save,
   X,
 } from "lucide-react";
 
 const EditorSpace = ({ blogData = {}, setBlogData }) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [isPreviewMode, setIsPreviewMode] = useState(false);
+  const [isPreviewMode] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [showSaveIndicator, setShowSaveIndicator] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { XCircle, HelpCircle, ChevronDown, ChevronUp, Sparkles } from 'lucide-react';
+import { XCircle, HelpCircle } from 'lucide-react';
 
 // ============================================================================
 // COMPONENT: FloatingLabelInput 

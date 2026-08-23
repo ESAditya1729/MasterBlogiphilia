@@ -3,11 +3,9 @@ import { FiBookOpen, FiFeather, FiClock } from "react-icons/fi";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
-import { useAuth } from "../../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 
 const ProfilePostsGrid = ({ userId, showDrafts = false }) => {
-  const { user } = useAuth();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);

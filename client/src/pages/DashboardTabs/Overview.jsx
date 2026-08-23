@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
 import BlogViewModal from "../../components/modals/BlogViewModal";
 import ViewAllPostsModal from "../../components/modals/ViewAllPostsModal";
 import ViewAllGenresModal from "../../components/modals/ViewAllGenresModal";

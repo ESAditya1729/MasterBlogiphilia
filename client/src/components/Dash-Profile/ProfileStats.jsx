@@ -1,6 +1,5 @@
 import { motion } from "framer-motion";
 import { FiBookOpen, FiUsers, FiClock } from "react-icons/fi";
-import { useState } from "react";
 
 const StatItem = ({ icon, value, label, color, onClick }) => (
   <motion.button 

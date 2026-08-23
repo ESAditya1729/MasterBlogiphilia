@@ -62,17 +62,16 @@ const Login = () => {
             "Account not found. Would you like to sign up instead?";
         }
 
-        throw {
-          message: "Login Failed",
-          details: data.error || data.message || errorDetails,
-          action:
-            res.status === 404
-              ? {
-                  text: "Create Account",
-                  path: "/signup",
-                }
-              : null,
-        };
+        const loginError = new Error("Login Failed");
+        loginError.details = data.error || data.message || errorDetails;
+        loginError.action =
+          res.status === 404
+            ? {
+                text: "Create Account",
+                path: "/signup",
+              }
+            : null;
+        throw loginError;
       }
 
       // Use AuthContext's completeAuth with the response we already have (single request)

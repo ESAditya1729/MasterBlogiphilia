@@ -11,6 +11,12 @@ if (!API_BASE_URL) {
 const REQUEST_TIMEOUT = 30000;
 const LONG_REQUEST_TIMEOUT = 30000; // For content-heavy requests
 
+const createApiError = (name, message, extra = {}) => {
+  const error = new Error(message);
+  error.name = name;
+  return Object.assign(error, extra);
+};
+
 // Create axios instance with default config
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -172,11 +178,7 @@ const sanitizeBlogData = (data) => {
   });
 
   if (Object.keys(errors).length > 0) {
-    throw {
-      name: 'ValidationError',
-      message: 'Blog data validation failed',
-      errors
-    };
+    throw createApiError('ValidationError', 'Blog data validation failed', { errors });
   }
 
   return result;
@@ -301,10 +303,7 @@ export const saveBlogApi = async (blogData, blogId, publish = false) => {
 
     // Validate response structure
     if (!response.data?.data?._id) {
-      throw {
-        name: 'InvalidResponse',
-        message: 'Invalid response structure from server'
-      };
+      throw createApiError('InvalidResponse', 'Invalid response structure from server');
     }
 
     return response.data.data;
@@ -321,10 +320,7 @@ export const saveBlogApi = async (blogData, blogId, publish = false) => {
  */
 export const loadBlogApi = async (blogId) => {
   if (!blogId) {
-    throw {
-      name: 'ValidationError',
-      message: 'Blog ID is required'
-    };
+    throw createApiError('ValidationError', 'Blog ID is required');
   }
 
   try {
@@ -332,10 +328,7 @@ export const loadBlogApi = async (blogId) => {
 
     // Validate response structure
     if (!response.data?.data?._id || !response.data?.data?.title) {
-      throw {
-        name: 'InvalidResponse',
-        message: 'Invalid blog data received from server'
-      };
+      throw createApiError('InvalidResponse', 'Invalid blog data received from server');
     }
 
     return response.data.data;
@@ -357,10 +350,7 @@ export const getTrendingBlogs = async () => {
       return response.data.data;
     }
     
-    throw {
-      name: 'InvalidResponse',
-      message: 'Invalid response format for trending blogs'
-    };
+    throw createApiError('InvalidResponse', 'Invalid response format for trending blogs');
   } catch (error) {
     throw handleApiError(error);
   }

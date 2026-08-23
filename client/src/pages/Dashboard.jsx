@@ -6,7 +6,6 @@ import EditorStudio from "./DashboardTabs/EditorStudio";
 import ContentManagement from "./DashboardTabs/ContentManagement";
 import {
   FiHelpCircle,
-  FiEdit,
   FiPieChart,
   FiFileText,
   FiUsers,
