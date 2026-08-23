@@ -193,19 +193,28 @@ export const getBlogById = asyncHandler(async (req, res) => {
     return errorResponse(res, 404, 'Blog not found');
   }
   
-  // Check if user is authenticated and if they've liked the blog
+  // Check if user is authenticated and if they've liked/bookmarked the blog
   let isLiked = false;
-  if (req.user && Array.isArray(blog.likedBy)) {
-    isLiked = blog.likedBy.some(
-      (uid) => uid.toString() === req.user._id.toString()
-    );
+  let isBookmarked = false;
+  if (req.user) {
+    if (Array.isArray(blog.likedBy)) {
+      isLiked = blog.likedBy.some(
+        (uid) => uid.toString() === req.user._id.toString()
+      );
+    }
+    if (Array.isArray(req.user.bookmarks)) {
+      isBookmarked = req.user.bookmarks.some(
+        (bid) => bid.toString() === blog._id.toString()
+      );
+    }
   }
   
   res.status(200).json({ 
     success: true, 
     data: {
       ...blog.toObject(),
-      isLiked
+      isLiked,
+      isBookmarked
     }
   });
 });
@@ -453,6 +462,82 @@ export const toggleLike = asyncHandler(async (req, res) => {
       isLiked: !hasLiked 
     },
     message: hasLiked ? 'Blog unliked successfully' : 'Blog liked successfully'
+  });
+});
+
+// @desc    Toggle bookmark on a blog
+// @route   PUT /api/blogs/:id/bookmark
+// @access  Private
+export const toggleBookmark = asyncHandler(async (req, res) => {
+  if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+    return errorResponse(res, 400, 'Invalid blog ID');
+  }
+
+  const [blog, user] = await Promise.all([
+    Blog.findById(req.params.id),
+    User.findById(req.user._id)
+  ]);
+
+  if (!blog) {
+    return errorResponse(res, 404, 'Blog not found');
+  }
+
+  // Check if blog is published
+  if (blog.status !== 'published') {
+    return errorResponse(res, 400, 'Cannot bookmark an unpublished blog');
+  }
+
+  const hasBookmarked = (user.bookmarks || []).some(
+    (bid) => bid.toString() === blog._id.toString()
+  );
+
+  if (hasBookmarked) {
+    user.bookmarks.pull(blog._id);
+  } else {
+    user.bookmarks.push(blog._id);
+  }
+
+  await user.save();
+
+  res.status(200).json({
+    success: true,
+    data: { isBookmarked: !hasBookmarked },
+    message: hasBookmarked ? 'Bookmark removed successfully' : 'Blog bookmarked successfully'
+  });
+});
+
+// @desc    Get current user's bookmarked blogs
+// @route   GET /api/blogs/bookmarks
+// @access  Private
+export const getBookmarkedBlogs = asyncHandler(async (req, res) => {
+  const { limit = 10, page = 1 } = req.query;
+
+  const user = await User.findById(req.user._id).select('bookmarks');
+  const ids = (user?.bookmarks || []).map((bid) => bid.toString());
+
+  const pageNumber = parseInt(page);
+  const pageSize = parseInt(limit);
+  const total = ids.length;
+  const pagedIds = ids.slice((pageNumber - 1) * pageSize, pageNumber * pageSize);
+
+  const blogs = await Blog.find({ _id: { $in: pagedIds }, status: 'published' })
+    .populate('author', 'username profilePicture');
+
+  // Preserve bookmark order (most recently bookmarked first)
+  const orderMap = new Map(pagedIds.map((bid, index) => [bid, index]));
+  blogs.sort(
+    (a, b) =>
+      (orderMap.get(a._id.toString()) ?? 0) -
+      (orderMap.get(b._id.toString()) ?? 0)
+  );
+
+  res.status(200).json({
+    success: true,
+    count: blogs.length,
+    total,
+    page: pageNumber,
+    pages: Math.ceil(total / pageSize),
+    data: blogs
   });
 });
 

@@ -82,6 +82,11 @@ const userSchema = new mongoose.Schema({
     ref: 'User',
     default: []
   },
+  bookmarks: {
+    type: [mongoose.Schema.Types.ObjectId],
+    ref: 'Blog',
+    default: []
+  },
   profilePicture: {
     type: String,
     default: ''
