@@ -195,8 +195,10 @@ export const getBlogById = asyncHandler(async (req, res) => {
   
   // Check if user is authenticated and if they've liked the blog
   let isLiked = false;
-  if (req.user) {
-    isLiked = blog.likedBy.includes(req.user._id);
+  if (req.user && Array.isArray(blog.likedBy)) {
+    isLiked = blog.likedBy.some(
+      (uid) => uid.toString() === req.user._id.toString()
+    );
   }
   
   res.status(200).json({ 
@@ -428,7 +430,9 @@ export const toggleLike = asyncHandler(async (req, res) => {
   }
   
   // Check if user already liked the blog
-  const hasLiked = blog.likedBy.includes(req.user._id);
+  const hasLiked = (blog.likedBy || []).some(
+    (uid) => uid.toString() === req.user._id.toString()
+  );
   
   if (hasLiked) {
     // Unlike

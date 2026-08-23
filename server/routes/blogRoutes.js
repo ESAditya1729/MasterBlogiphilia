@@ -15,7 +15,7 @@ import {
   getBlogStats,
   getPostCounts
 } from '../controllers/blogController.js';
-import { protect } from '../middleware/auth.js';
+import { protect, optionalAuth } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -26,7 +26,7 @@ router.get('/trending', asyncHandler(getTrendingBlogs));
 router.get('/author/:userId', asyncHandler(getBlogsByAuthor));
 // Must be registered before GET /:id or it gets shadowed (matched as id="stats")
 router.get('/stats', protect, asyncHandler(getBlogStats));
-router.get('/:id', asyncHandler(getBlogById));
+router.get('/:id', optionalAuth, asyncHandler(getBlogById));
 router.get('/:id/related', asyncHandler(getRelatedBlogs));
 router.get('/post-counts/:userId', asyncHandler(getPostCounts));
 

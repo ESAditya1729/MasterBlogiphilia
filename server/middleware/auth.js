@@ -76,3 +76,34 @@ export const protect = async (req, res, next) => {
     return next(new ErrorResponse(message, statusCode));
   }
 };
+
+// @desc    Attach user if a valid token is present; never blocks the request
+export const optionalAuth = async (req, res, next) => {
+  let token;
+
+  if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith('Bearer')
+  ) {
+    token = req.headers.authorization.split(' ')[1];
+  } else if (req.cookies?.token) {
+    token = req.cookies.token;
+  }
+
+  if (!token) return next();
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded?.id || decoded?.userId || decoded?._id;
+    if (!userId) return next();
+
+    const user = await User.findById(userId).select('-password');
+    if (user && !user.isBanned) {
+      req.user = user;
+    }
+    next();
+  } catch (err) {
+    // Invalid/expired token on an otherwise public route: stay anonymous
+    next();
+  }
+};
