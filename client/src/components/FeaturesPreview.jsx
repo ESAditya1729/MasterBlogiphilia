@@ -1,6 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { CheckCircle, PenTool, Users, BarChart, Badge, Zap, MessageSquare, Share2 } from "lucide-react";
+import TiltCard from "./ThreeD/TiltCard";
 
 const features = [
   {
@@ -96,22 +97,21 @@ const FeaturesPreview = () => {
                   }
                 }
               }}
-              whileHover={{
-                y: -5,
-                transition: { 
-                  duration: 0.3,
-                  type: "spring",
-                  stiffness: 300
-                }
-              }}
-              className="flex items-start gap-4 p-6 rounded-xl bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm border border-gray-200/80 dark:border-slate-700/80 hover:border-indigo-300/50 dark:hover:border-indigo-500/30 shadow-sm hover:shadow-lg transition-all"
+              className="[perspective:900px]"
             >
-              <div className={`p-2 rounded-lg ${index % 2 === 0 ? 'bg-indigo-100/70 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-300' : 'bg-purple-100/70 dark:bg-purple-900/30 text-purple-600 dark:text-purple-300'} flex-shrink-0`}>
-                {item.icon}
-              </div>
-              <p className="text-base text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
-                {item.text}
-              </p>
+              <TiltCard
+                maxTilt={6}
+                lift={10}
+                glareMaxOpacity={0.12}
+                className="flex items-start gap-4 p-6 rounded-xl bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm border border-gray-200/80 dark:border-slate-700/80 hover:border-indigo-300/50 dark:hover:border-indigo-500/30 shadow-sm hover:shadow-lg transition-[border-color,box-shadow] h-full"
+              >
+                <div className={`p-2 rounded-lg ${index % 2 === 0 ? 'bg-indigo-100/70 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-300' : 'bg-purple-100/70 dark:bg-purple-900/30 text-purple-600 dark:text-purple-300'} flex-shrink-0`} style={{ transform: "translateZ(18px)" }}>
+                  {item.icon}
+                </div>
+                <p className="text-base text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
+                  {item.text}
+                </p>
+              </TiltCard>
             </motion.div>
           ))}
         </motion.div>

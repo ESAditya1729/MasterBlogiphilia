@@ -4,12 +4,14 @@ import Sidebar from "../components/Sidebar";
 import Overview from "./DashboardTabs/Overview";
 import EditorStudio from "./DashboardTabs/EditorStudio";
 import ContentManagement from "./DashboardTabs/ContentManagement";
+import BookmarksTab from "./DashboardTabs/BookmarksTab";
 import {
   FiHelpCircle,
   FiPieChart,
   FiFileText,
   FiUsers,
   FiSettings,
+  FiBookmark,
 } from "react-icons/fi";
 
 const Dashboard = () => {
@@ -35,6 +37,11 @@ const Dashboard = () => {
       title: "Content Management",
       icon: <FiFileText className="mr-2" />,
       description: "Organize and manage all your posts",
+    },
+    bookmarks: {
+      title: "Bookmarks",
+      icon: <FiBookmark className="mr-2" />,
+      description: "Blogs you've saved for later reading",
     },
     audience: {
       title: "Audience Insights",
@@ -121,8 +128,10 @@ const Dashboard = () => {
                 <Overview />
               ) : activeTab === "studio" ? (
                 <EditorStudio />
-              ) : activeTab === "content" ? ( // Add this condition
+              ) : activeTab === "content" ? (
                 <ContentManagement />
+              ) : activeTab === "bookmarks" ? (
+                <BookmarksTab />
               ) : (
                 <motion.div
                   initial={{ opacity: 0 }}

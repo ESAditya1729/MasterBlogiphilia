@@ -13,7 +13,9 @@ import {
   FiUserCheck, 
   FiShare2,
   FiBookmark,
-  FiMessageSquare
+  FiMessageSquare,
+  FiEdit3,
+  FiTrash2
 } from 'react-icons/fi';
 import { motion } from 'framer-motion';
 import PostNavbar from './BlogPostNavbar';
@@ -34,6 +36,18 @@ const BlogPostPage = () => {
   const { mode } = useTheme();
   const darkMode = mode === 'dark';
   const contentRef = useRef(null);
+
+  // "Edited" flag: true when the post was saved again after it was published
+  const EDIT_GRACE_MS = 60 * 1000;
+  const publishedDate = blog?.publishedAt || blog?.createdAt;
+  const isEdited =
+    blog?.status === 'published' &&
+    !!blog?.updatedAt &&
+    !!publishedDate &&
+    new Date(blog.updatedAt).getTime() - new Date(publishedDate).getTime() > EDIT_GRACE_MS;
+
+  const isOwner =
+    !!user && !!blog?.author?._id && user._id === blog.author._id;
 
   // Animation variants
   const containerVariants = {
@@ -88,18 +102,28 @@ const BlogPostPage = () => {
     };
 
     fetchBlog();
-
-    // Track view count
-    const trackView = async () => {
-      try {
-        await api.post(`/api/blogs/${id}/view`);
-      } catch (err) {
-        console.error('Failed to track view:', err);
-      }
-    };
-
-    trackView();
   }, [id]);
+
+  const handleEditPost = () => {
+    navigate(`/editor/${id}`);
+  };
+
+  const handleDeletePost = async () => {
+    const confirmed = window.confirm(
+      'Delete this blog permanently? This action cannot be undone.'
+    );
+    if (!confirmed) return;
+
+    try {
+      await api.delete(`/api/blogs/${id}`);
+      toast.success('Blog deleted successfully');
+      navigate('/dashboard', { replace: true });
+    } catch (err) {
+      toast.error(
+        err.response?.data?.message || err.message || 'Failed to delete blog'
+      );
+    }
+  };
 
   const handleLike = async () => {
     if (!user) {
@@ -109,15 +133,15 @@ const BlogPostPage = () => {
     }
 
     try {
-      const { data } = await api.post(`/api/blogs/${id}/like`);
-      setIsLiked(data.isLiked);
-      setBlog(prev => ({
+      const { data } = await api.put(`/api/blogs/${id}/like`);
+      const payload = data?.data || {};
+      setIsLiked(!!payload.isLiked);
+      setBlog((prev) => ({
         ...prev,
-        likedBy: data.likedBy,
-        likeCount: data.isLiked ? prev.likeCount + 1 : prev.likeCount - 1
+        likes: typeof payload.likes === 'number' ? payload.likes : prev.likes,
       }));
-      
-      if (data.isLiked) {
+
+      if (payload.isLiked) {
         toast.success('Post liked!');
       }
     } catch (err) {
@@ -135,8 +159,8 @@ const BlogPostPage = () => {
     try {
       if (!blog?.author?._id) return;
       
-      const { data } = await api.post(`/api/users/${blog.author._id}/follow`);
-      setIsFollowing(data.isFollowing);
+      const { data } = await api.post(`/api/users/follow/${blog.author._id}`);
+      setIsFollowing(!!data.isFollowing);
       toast.success(data.isFollowing ? 'Followed successfully' : 'Unfollowed successfully');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to update follow status');
@@ -151,9 +175,10 @@ const BlogPostPage = () => {
     }
 
     try {
-      const { data } = await api.post(`/api/blogs/${id}/bookmark`);
-      setIsBookmarked(data.isBookmarked);
-      toast.success(data.isBookmarked ? 'Post bookmarked' : 'Post removed from bookmarks');
+      const { data } = await api.put(`/api/blogs/${id}/bookmark`);
+      const payload = data?.data || {};
+      setIsBookmarked(!!payload.isBookmarked);
+      toast.success(payload.isBookmarked ? 'Post bookmarked' : 'Post removed from bookmarks');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to update bookmark');
     }
@@ -259,17 +284,61 @@ const BlogPostPage = () => {
                   {blog.author?.username || 'Anonymous Writer'}
                 </p>
                 <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                  Published {new Date(blog.createdAt).toLocaleDateString('en-US', {
+                  Published {new Date(publishedDate || blog.createdAt).toLocaleDateString('en-US', {
                     month: 'long',
                     day: 'numeric',
                     year: 'numeric'
                   })}
+                  {isEdited && (
+                    <span
+                      className="italic opacity-75"
+                      title={`Edited on ${new Date(blog.updatedAt).toLocaleDateString('en-US', {
+                        month: 'long',
+                        day: 'numeric',
+                        year: 'numeric'
+                      })}`}
+                    >
+                      {' '}(edited)
+                    </span>
+                  )}
                 </p>
               </div>
             </div>
 
             {/* Action Buttons */}
             <div className="flex space-x-4 mt-4">
+              {/* Owner: Edit / Delete */}
+              {isOwner && (
+                <>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={handleEditPost}
+                    className={`flex items-center space-x-2 px-4 py-2 rounded-full text-sm ${
+                      darkMode
+                        ? 'bg-slate-700 text-slate-200 hover:bg-slate-600'
+                        : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                    }`}
+                  >
+                    <FiEdit3 />
+                    <span>Edit</span>
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={handleDeletePost}
+                    className={`flex items-center space-x-2 px-4 py-2 rounded-full text-sm ${
+                      darkMode
+                        ? 'bg-red-900/40 text-red-300 hover:bg-red-900/60'
+                        : 'bg-red-50 text-red-600 hover:bg-red-100'
+                    }`}
+                  >
+                    <FiTrash2 />
+                    <span>Delete</span>
+                  </motion.button>
+                </>
+              )}
+
               {/* Follow Button */}
               {user && blog.author?._id && user._id !== blog.author._id && (
                 <motion.button
@@ -347,7 +416,7 @@ const BlogPostPage = () => {
             >
               <FiHeart className={`text-lg ${isLiked ? 'fill-current' : ''}`} />
             </motion.span>
-            <span>{(blog.likeCount || blog.likedBy?.length || 0).toLocaleString()}</span>
+            <span>{(blog.likes || 0).toLocaleString()}</span>
           </motion.button>
 
           <button 

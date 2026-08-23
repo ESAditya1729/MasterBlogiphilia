@@ -8,6 +8,7 @@ import {
   BadgeCheck,
   ArrowRight
 } from "lucide-react";
+import TiltCard from "./ThreeD/TiltCard";
 
 const steps = [
   {
@@ -72,8 +73,14 @@ const HowItWorks = () => {
         </motion.div>
 
         <div className="relative max-w-6xl mx-auto">
-          {/* Connecting line */}
-          <div className="hidden lg:block absolute h-1 bg-gradient-to-r from-indigo-500/20 via-purple-500/20 to-amber-500/20 dark:from-indigo-600/20 dark:via-purple-600/20 dark:to-amber-600/20 top-1/4 left-8 right-8 -z-10" />
+          {/* Connecting line with animated energy pulse */}
+          <div className="hidden lg:block absolute h-1 rounded-full overflow-hidden bg-gradient-to-r from-indigo-500/20 via-purple-500/20 to-amber-500/20 dark:from-indigo-600/20 dark:via-purple-600/20 dark:to-amber-600/20 top-1/4 left-8 right-8 -z-10" aria-hidden="true">
+            <motion.div
+              animate={{ x: ["-100%", "400%"] }}
+              transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", repeatDelay: 1.5 }}
+              className="absolute top-0 left-0 w-1/4 h-full bg-gradient-to-r from-transparent via-white/70 to-transparent dark:via-white/30"
+            />
+          </div>
 
           <motion.div 
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6"
@@ -104,25 +111,28 @@ const HowItWorks = () => {
                     }
                   }
                 }}
-                whileHover={{
-                  y: -8,
-                  transition: { duration: 0.2 }
-                }}
-                className={`group relative rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-300 border ${step.border} backdrop-blur-sm bg-white/70 dark:bg-slate-800/70`}
+                className="[perspective:900px]"
               >
-                {/* Step indicator */}
-                <div className={`absolute -top-3 -left-3 ${step.stepColor} text-white text-xs font-medium px-3 py-1 rounded-full shadow-md flex items-center justify-center`}>
-                  <span>0{index + 1}</span>
-                  <ArrowRight className="w-3 h-3 ml-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                </div>
+                <TiltCard
+                  maxTilt={8}
+                  lift={12}
+                  glareMaxOpacity={0.15}
+                  className={`group relative h-full rounded-xl p-6 shadow-sm hover:shadow-lg transition-shadow duration-300 border ${step.border} backdrop-blur-sm bg-white/70 dark:bg-slate-800/70`}
+                >
+                  {/* Step indicator */}
+                  <div className={`absolute -top-3 -left-3 ${step.stepColor} text-white text-xs font-medium px-3 py-1 rounded-full shadow-md flex items-center justify-center`} style={{ transform: "translateZ(25px)" }}>
+                    <span>0{index + 1}</span>
+                    <ArrowRight className="w-3 h-3 ml-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  </div>
 
-                {/* Icon container */}
-                <div className={`w-10 h-10 ${step.color} rounded-lg flex items-center justify-center mb-4`}>
-                  {step.icon}
-                </div>
+                  {/* Icon container */}
+                  <div className={`w-10 h-10 ${step.color} rounded-lg flex items-center justify-center mb-4`} style={{ transform: "translateZ(20px)" }}>
+                    {step.icon}
+                  </div>
 
-                <h3 className="text-lg font-semibold mb-2 tracking-tight">{step.title}</h3>
-                <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">{step.description}</p>
+                  <h3 className="text-lg font-semibold mb-2 tracking-tight">{step.title}</h3>
+                  <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">{step.description}</p>
+                </TiltCard>
               </motion.div>
             ))}
           </motion.div>

@@ -7,6 +7,7 @@ import {
   HeartHandshake,
   Lightbulb,
 } from "lucide-react";
+import TiltCard from "./ThreeD/TiltCard";
 
 // Feature data
 const featureData = [
@@ -114,35 +115,51 @@ const WhyBlogiphilia = () => {
             <motion.div
               key={index}
               variants={item}
-              className={`${feature.bgColor} border border-transparent hover:border-emerald-300/40 dark:hover:border-emerald-400/30 shadow-lg hover:shadow-emerald-300/30 rounded-2xl p-6 text-center hover:scale-[1.02] transition-all duration-300`}
+              className="w-full"
             >
-              <div className="mb-4 flex justify-center">
-                <div className="p-3 rounded-full bg-white dark:bg-slate-800 shadow-sm">
-                  {feature.icon}
+              <TiltCard
+                maxTilt={10}
+                lift={14}
+                glareMaxOpacity={0.18}
+                className={`${feature.bgColor} border border-transparent hover:border-emerald-300/40 dark:hover:border-emerald-400/30 shadow-lg hover:shadow-xl hover:shadow-emerald-300/30 dark:hover:shadow-emerald-900/40 rounded-2xl p-6 text-center`}
+              >
+                <div className="mb-4 flex justify-center">
+                  <div className="p-3 rounded-full bg-white dark:bg-slate-800 shadow-sm" style={{ transform: "translateZ(30px)" }}>
+                    {feature.icon}
+                  </div>
                 </div>
-              </div>
-              <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
-              <p className="text-slate-600 dark:text-slate-400 text-sm">
-                {feature.description}
-              </p>
+                <h3 className="text-xl font-semibold mb-2" style={{ transform: "translateZ(20px)" }}>
+                  {feature.title}
+                </h3>
+                <p className="text-slate-600 dark:text-slate-400 text-sm">
+                  {feature.description}
+                </p>
+              </TiltCard>
             </motion.div>
           ))}
         </div>
 
         {/* Center Feature Box */}
-        <motion.div
-          className={`${centerFeature.bgColor} border-2 border-violet-400 shadow-xl hover:shadow-violet-400/40 rounded-3xl p-8 text-center w-full lg:w-[32%] mt-10 lg:mt-24 hover:scale-[1.03] transition-all duration-300`}
-          variants={item}
-        >
-          <div className="mb-6 flex justify-center">
-            <div className="p-4 rounded-full bg-white dark:bg-slate-800 shadow-md">
-              {centerFeature.icon}
+        <motion.div variants={item} className="w-full lg:w-[32%] mt-10 lg:mt-24">
+          <TiltCard
+            maxTilt={7}
+            scale={1.02}
+            lift={18}
+            glareMaxOpacity={0.2}
+            className={`${centerFeature.bgColor} border-2 border-violet-400 shadow-xl hover:shadow-2xl hover:shadow-violet-400/40 dark:hover:shadow-violet-900/50 rounded-3xl p-8 text-center w-full`}
+          >
+            <div className="mb-6 flex justify-center">
+              <div className="p-4 rounded-full bg-white dark:bg-slate-800 shadow-md" style={{ transform: "translateZ(35px)" }}>
+                {centerFeature.icon}
+              </div>
             </div>
-          </div>
-          <h3 className="text-2xl font-bold mb-3">{centerFeature.title}</h3>
-          <p className="text-base text-slate-700 dark:text-slate-300 leading-relaxed">
-            {centerFeature.description}
-          </p>
+            <h3 className="text-2xl font-bold mb-3" style={{ transform: "translateZ(25px)" }}>
+              {centerFeature.title}
+            </h3>
+            <p className="text-base text-slate-700 dark:text-slate-300 leading-relaxed">
+              {centerFeature.description}
+            </p>
+          </TiltCard>
         </motion.div>
 
         {/* Right column (2 boxes) */}
@@ -151,17 +168,26 @@ const WhyBlogiphilia = () => {
             <motion.div
               key={index}
               variants={item}
-              className={`${feature.bgColor} border border-transparent hover:border-emerald-300/40 dark:hover:border-emerald-400/30 shadow-lg hover:shadow-emerald-300/30 rounded-2xl p-6 text-center hover:scale-[1.02] transition-all duration-300`}
+              className="w-full"
             >
-              <div className="mb-4 flex justify-center">
-                <div className="p-3 rounded-full bg-white dark:bg-slate-800 shadow-sm">
-                  {feature.icon}
+              <TiltCard
+                maxTilt={10}
+                lift={14}
+                glareMaxOpacity={0.18}
+                className={`${feature.bgColor} border border-transparent hover:border-emerald-300/40 dark:hover:border-emerald-400/30 shadow-lg hover:shadow-xl hover:shadow-emerald-300/30 dark:hover:shadow-emerald-900/40 rounded-2xl p-6 text-center`}
+              >
+                <div className="mb-4 flex justify-center">
+                  <div className="p-3 rounded-full bg-white dark:bg-slate-800 shadow-sm" style={{ transform: "translateZ(30px)" }}>
+                    {feature.icon}
+                  </div>
                 </div>
-              </div>
-              <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
-              <p className="text-slate-600 dark:text-slate-400 text-sm">
-                {feature.description}
-              </p>
+                <h3 className="text-xl font-semibold mb-2" style={{ transform: "translateZ(20px)" }}>
+                  {feature.title}
+                </h3>
+                <p className="text-slate-600 dark:text-slate-400 text-sm">
+                  {feature.description}
+                </p>
+              </TiltCard>
             </motion.div>
           ))}
         </div>

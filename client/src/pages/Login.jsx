@@ -10,6 +10,8 @@ import {
   CheckCircle,
   Key,
   Mail,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import loginIllustration from "../assets/Login-blogging.svg";
 import { useLocation } from "react-router-dom";
@@ -26,6 +28,7 @@ const Login = () => {
   });
   const [loading, setLoading] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { mode, toggleTheme } = useTheme();
@@ -105,10 +108,10 @@ const Login = () => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50/70 to-emerald-50/70 dark:from-slate-900/95 dark:to-slate-800/95 px-4 py-16 sm:py-10 relative overflow-hidden"
+      className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-100 via-white to-emerald-100 dark:from-slate-900/95 dark:to-slate-800/95 px-4 py-16 sm:py-10 relative overflow-hidden"
     >
       {/* Floating gradient circles */}
-      <div className="absolute inset-0 opacity-10 dark:opacity-[0.03] pointer-events-none">
+      <div className="absolute inset-0 opacity-25 dark:opacity-[0.03] pointer-events-none">
         <div className="absolute top-1/3 -left-20 w-96 h-96 rounded-full bg-indigo-300/50 dark:bg-indigo-600/20 blur-3xl"></div>
         <div className="absolute bottom-1/4 -right-20 w-96 h-96 rounded-full bg-emerald-300/50 dark:bg-emerald-600/20 blur-3xl"></div>
       </div>
@@ -156,7 +159,7 @@ const Login = () => {
           type: "spring",
           damping: 10,
         }}
-        className="max-w-6xl w-full bg-white/95 dark:bg-slate-800/95 rounded-2xl shadow-2xl flex flex-col md:flex-row overflow-hidden border border-gray-200/50 dark:border-slate-700/50 backdrop-blur-sm mt-8 sm:mt-0"
+        className="max-w-6xl w-full bg-white/90 dark:bg-slate-800/95 rounded-2xl shadow-xl shadow-indigo-950/10 dark:shadow-black/40 flex flex-col md:flex-row overflow-hidden border border-gray-200/80 dark:border-slate-700/60 backdrop-blur-sm mt-8 sm:mt-0"
       >
         {/* Mobile Illustration (Top) */}
         <motion.div
@@ -260,7 +263,7 @@ const Login = () => {
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="w-5 h-5 text-slate-400 dark:text-slate-500" />
+                  <Mail className="w-5 h-5 text-slate-500 dark:text-slate-500" />
                 </div>
                 <input
                   type="email"
@@ -268,7 +271,7 @@ const Login = () => {
                   value={formData.email}
                   onChange={handleChange}
                   required
-                  className="w-full pl-10 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-400/50 focus:border-indigo-400 dark:bg-slate-700/50 dark:border-slate-600/50 dark:text-white transition-all"
+                  className="w-full pl-10 pr-4 py-3 bg-gray-50/80 dark:bg-slate-700/50 border border-gray-200 hover:border-indigo-300 rounded-xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-400/50 focus:border-indigo-400 focus:bg-white dark:focus:bg-slate-700/70 dark:border-slate-600/60 dark:text-white transition-all"
                   placeholder="your@email.com"
                 />
               </div>
@@ -284,17 +287,25 @@ const Login = () => {
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Key className="w-5 h-5 text-slate-400 dark:text-slate-500" />
+                  <Key className="w-5 h-5 text-slate-500 dark:text-slate-500" />
                 </div>
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
                   required
-                  className="w-full pl-10 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-400/50 focus:border-indigo-400 dark:bg-slate-700/50 dark:border-slate-600/50 dark:text-white transition-all"
+                  className="w-full pl-10 pr-11 py-3 bg-gray-50/80 dark:bg-slate-700/50 border border-gray-200 hover:border-indigo-300 rounded-xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-400/50 focus:border-indigo-400 focus:bg-white dark:focus:bg-slate-700/70 dark:border-slate-600/60 dark:text-white transition-all"
                   placeholder="••••••••"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
               </div>
             </motion.div>
 

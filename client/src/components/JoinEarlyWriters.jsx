@@ -1,6 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { Sparkles, PenLine, ArrowRight, Badge, Star, Gem } from "lucide-react";
+import TiltCard from "./ThreeD/TiltCard";
 
 const JoinEarlyWriters = () => {
   const benefits = [
@@ -73,16 +74,19 @@ const JoinEarlyWriters = () => {
           className="flex flex-wrap justify-center gap-4 mb-10"
         >
           {benefits.map((benefit, index) => (
-            <motion.div
+            <TiltCard
               key={index}
-              whileHover={{ y: -3 }}
+              maxTilt={12}
+              scale={1.05}
+              lift={8}
+              glareMaxOpacity={0.15}
               className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800/80 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 backdrop-blur-sm"
             >
               {benefit.icon}
               <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
                 {benefit.text}
               </span>
-            </motion.div>
+            </TiltCard>
           ))}
         </motion.div>
 
@@ -95,13 +99,17 @@ const JoinEarlyWriters = () => {
         >
           <motion.a
             href="/signup?founder=true"
-            whileHover={{ scale: 1.05 }}
+            whileHover={{ scale: 1.05, y: -2 }}
             whileTap={{ scale: 0.95 }}
-            className="px-8 py-4 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white rounded-full font-semibold transition-all shadow-lg hover:shadow-xl flex items-center gap-2 text-lg"
+            className="group relative overflow-hidden px-8 py-4 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white rounded-full font-semibold transition-colors shadow-lg shadow-violet-600/30 hover:shadow-xl hover:shadow-violet-600/40 flex items-center gap-2 text-lg"
           >
+            <span
+              aria-hidden="true"
+              className="absolute inset-y-0 -left-full w-1/2 bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-[-20deg] transition-all duration-700 ease-out group-hover:left-[150%]"
+            />
             <PenLine className="w-5 h-5" />
             <span>Apply as Founding Writer</span>
-            <ArrowRight className="w-4 h-4 ml-1" />
+            <ArrowRight className="w-4 h-4 ml-1 transition-transform duration-300 group-hover:translate-x-1" />
           </motion.a>
         </motion.div>
 

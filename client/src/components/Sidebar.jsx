@@ -5,6 +5,7 @@ import {
   FiUsers,
   FiBarChart2,
   FiBookmark,
+  FiGrid,
   FiChevronLeft,
   FiMenu,
   FiSun,
@@ -26,7 +27,8 @@ const Sidebar = ({ isCollapsed, toggleCollapse, activeTab, setActiveTab }) => {
   const navItems = [
     { id: "overview", icon: <FiFileText />, label: "Overview" },
     { id: "analytics", icon: <FiBarChart2 />, label: "Analytics" },
-    { id: "content", icon: <FiBookmark />, label: "Content" },
+    { id: "content", icon: <FiGrid />, label: "Content" },
+    { id: "bookmarks", icon: <FiBookmark />, label: "Bookmarks" },
     { id: "audience", icon: <FiUsers />, label: "Audience" },
     { id: "settings", icon: <FiSettings />, label: "Settings" },
     { id:"studio", icon: <FiLayers/>, label: "Your Workspace" },

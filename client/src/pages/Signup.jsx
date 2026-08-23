@@ -8,6 +8,8 @@ import {
   UserPlus,
   MailWarning,
   CheckCircle,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import signupIllustration from "../assets/Signup-blogging.png";
 import { useTheme } from "../contexts/ThemeContext";
@@ -28,6 +30,8 @@ const Signup = () => {
     action: null,
   });
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const navigate = useNavigate();
   const { mode, toggleTheme } = useTheme();
   const { completeAuth } = useAuth();
@@ -36,6 +40,25 @@ const Signup = () => {
 
   const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
+
+  const getPasswordScore = (pw) => {
+    if (!pw) return -1;
+    let score = 0;
+    if (pw.length >= 8) score++;
+    if (/[A-Z]/.test(pw) && /[a-z]/.test(pw)) score++;
+    if (/\d/.test(pw)) score++;
+    if (/[^A-Za-z0-9]/.test(pw)) score++;
+    return score;
+  };
+
+  const passwordScore = getPasswordScore(password);
+  const strengthMeta = [
+    { label: "Too short", bar: "bg-slate-300", text: "text-slate-500" },
+    { label: "Weak", bar: "bg-red-500", text: "text-red-500" },
+    { label: "Fair", bar: "bg-orange-400", text: "text-orange-500" },
+    { label: "Good", bar: "bg-amber-400", text: "text-amber-500" },
+    { label: "Strong", bar: "bg-emerald-500", text: "text-emerald-600" },
+  ][Math.max(0, passwordScore)];
 
   const validateForm = () => {
     // Email validation
@@ -161,7 +184,7 @@ const Signup = () => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-violet-50 dark:from-slate-900 dark:to-slate-800 px-4 py-16 sm:py-10 relative"
+      className="min-h-screen flex items-center justify-center bg-gradient-to-br from-violet-100 via-white to-indigo-100 dark:from-slate-900 dark:to-slate-800 px-4 py-16 sm:py-10 relative"
     >
       {/* Dark/Light Mode Toggle - Using theme context */}
       <button
@@ -191,7 +214,7 @@ const Signup = () => {
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.2, duration: 0.5 }}
-        className="max-w-6xl w-full bg-white dark:bg-slate-800 rounded-xl shadow-2xl flex flex-col md:flex-row overflow-hidden border border-gray-200 dark:border-slate-700 mt-8 sm:mt-0"
+        className="max-w-6xl w-full bg-white/90 dark:bg-slate-800 rounded-2xl shadow-xl shadow-violet-950/10 dark:shadow-black/40 flex flex-col md:flex-row overflow-hidden border border-gray-200/80 dark:border-slate-700/60 backdrop-blur-sm mt-8 sm:mt-0"
       >
         {/* Left: Illustration */}
         <motion.div
@@ -286,7 +309,7 @@ const Signup = () => {
                 value={email}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-400 dark:bg-slate-700/50 dark:border-slate-600 dark:text-white transition-all duration-200"
+                className="w-full px-4 py-3 bg-gray-50/80 dark:bg-slate-700/50 border border-gray-200 hover:border-violet-300 rounded-xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-400/50 focus:border-violet-400 focus:bg-white dark:focus:bg-slate-700/70 dark:border-slate-600 dark:text-white transition-all duration-200"
               />
             </motion.div>
 
@@ -304,7 +327,7 @@ const Signup = () => {
                 value={username}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-400 dark:bg-slate-700/50 dark:border-slate-600 dark:text-white transition-all duration-200"
+                className="w-full px-4 py-3 bg-gray-50/80 dark:bg-slate-700/50 border border-gray-200 hover:border-violet-300 rounded-xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-400/50 focus:border-violet-400 focus:bg-white dark:focus:bg-slate-700/70 dark:border-slate-600 dark:text-white transition-all duration-200"
               />
             </motion.div>
 
@@ -316,14 +339,45 @@ const Signup = () => {
               <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">
                 Password
               </label>
-              <input
-                type="password"
-                name="password"
-                value={password}
-                onChange={handleChange}
-                required
-                className="w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-400 dark:bg-slate-700/50 dark:border-slate-600 dark:text-white transition-all duration-200"
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  value={password}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-4 py-3 pr-11 bg-gray-50/80 dark:bg-slate-700/50 border border-gray-200 hover:border-violet-300 rounded-xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-400/50 focus:border-violet-400 focus:bg-white dark:focus:bg-slate-700/70 dark:border-slate-600 dark:text-white transition-all duration-200"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute inset-y-0 right-0 px-3 flex items-center text-slate-500 hover:text-violet-600 dark:hover:text-violet-400 transition-colors"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+
+              {/* Password strength meter */}
+              {passwordScore >= 0 && (
+                <div className="flex items-center gap-3 mt-2">
+                  <div className="flex flex-1 gap-1.5">
+                    {[0, 1, 2, 3].map((seg) => (
+                      <div
+                        key={seg}
+                        className={`h-1.5 flex-1 rounded-full transition-colors duration-300 ${
+                          seg < Math.max(1, passwordScore)
+                            ? strengthMeta.bar
+                            : "bg-gray-200 dark:bg-slate-600/60"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <span className={`text-xs font-medium ${strengthMeta.text}`}>
+                    {strengthMeta.label}
+                  </span>
+                </div>
+              )}
             </motion.div>
 
             <motion.div
@@ -334,14 +388,39 @@ const Signup = () => {
               <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">
                 Confirm Password
               </label>
-              <input
-                type="password"
-                name="confirmPassword"
-                value={confirmPassword}
-                onChange={handleChange}
-                required
-                className="w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-400 dark:bg-slate-700/50 dark:border-slate-600 dark:text-white transition-all duration-200"
-              />
+              <div className="relative">
+                <input
+                  type={showConfirmPassword ? "text" : "password"}
+                  name="confirmPassword"
+                  value={confirmPassword}
+                  onChange={handleChange}
+                  required
+                  className={`w-full px-4 py-3 pr-11 bg-gray-50/80 dark:bg-slate-700/50 border rounded-xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-400/50 focus:bg-white dark:focus:bg-slate-700/70 dark:border-slate-600 dark:text-white transition-all duration-200 ${
+                    confirmPassword && confirmPassword !== password
+                      ? "border-red-300 hover:border-red-400 focus:border-red-400"
+                      : "hover:border-violet-300 focus:border-violet-400"
+                  }`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword((v) => !v)}
+                  className="absolute inset-y-0 right-0 px-3 flex items-center text-slate-500 hover:text-violet-600 dark:hover:text-violet-400 transition-colors"
+                  aria-label={
+                    showConfirmPassword ? "Hide password" : "Show password"
+                  }
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
+                </button>
+              </div>
+              {confirmPassword && confirmPassword !== password && (
+                <p className="text-xs text-red-500 mt-1.5">
+                  Passwords don't match yet
+                </p>
+              )}
             </motion.div>
 
             <motion.button
