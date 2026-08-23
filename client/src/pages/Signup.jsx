@@ -30,7 +30,7 @@ const Signup = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { mode, toggleTheme } = useTheme();
-  const { login } = useAuth();
+  const { completeAuth } = useAuth();
 
   const { email, username, password, confirmPassword } = formData;
 
@@ -104,7 +104,8 @@ const Signup = () => {
       const data = await res.json();
 
       if (!res.ok) {
-        if (res.status === 409) {
+        const serverMessage = data.error || data.message;
+        if (res.status === 400 && serverMessage?.toLowerCase().includes("email")) {
           throw {
             message: "Email already in use",
             details:
@@ -115,37 +116,37 @@ const Signup = () => {
             },
           };
         }
-        throw new Error(data.message || "Registration failed");
+        throw new Error(serverMessage || "Registration failed");
       }
 
-      // Use AuthContext login instead of direct localStorage
-      const loginSuccess = await login(
+      // Establish session from the signup response
+      const result = completeAuth(
         {
           token: data.token,
           user: data.user,
         },
-        true
-      ); // true for remember me
+        true // remember me
+      );
 
-      if (loginSuccess) {
-        setMessage({
-          type: "success",
-          text: "Welcome to Blogiphilia!",
-          details:
-            "Your account has been created successfully. Redirecting you to your dashboard...",
-        });
-
-        setFormData({
-          email: "",
-          username: "",
-          password: "",
-          confirmPassword: "",
-        });
-
-        setTimeout(() => navigate("/dashboard"), 2000);
-      } else {
-        throw new Error("Failed to initialize session");
+      if (!result.success) {
+        throw new Error(result.error || "Failed to initialize session");
       }
+
+      setMessage({
+        type: "success",
+        text: "Welcome to Blogiphilia!",
+        details:
+          "Your account has been created successfully. Redirecting you to your dashboard...",
+      });
+
+      setFormData({
+        email: "",
+        username: "",
+        password: "",
+        confirmPassword: "",
+      });
+
+      setTimeout(() => navigate("/dashboard"), 2000);
     } catch (err) {
       setMessage({
         type: "error",

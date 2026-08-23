@@ -29,7 +29,7 @@ const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { mode, toggleTheme } = useTheme();
-  const { login } = useAuth();
+  const { completeAuth } = useAuth();
 
   const from = location.state?.from?.pathname || "/dashboard";
 
@@ -64,7 +64,7 @@ const Login = () => {
 
         throw {
           message: "Login Failed",
-          details: data.message || errorDetails,
+          details: data.error || data.message || errorDetails,
           action:
             res.status === 404
               ? {
@@ -75,20 +75,20 @@ const Login = () => {
         };
       }
 
-      // Use AuthContext's login function
-      const loginSuccess = await login(formData.email, formData.password, true);
+      // Use AuthContext's completeAuth with the response we already have (single request)
+      const result = completeAuth(data, true);
 
-      if (loginSuccess) {
-        setMessage({
-          type: "success",
-          text: "Welcome Back!",
-          details: "Redirecting...",
-        });
-
-        setTimeout(() => navigate(from, { replace: true }), 1000);
-      } else {
-        throw new Error("Failed to initialize session");
+      if (!result.success) {
+        throw new Error(result.error || "Failed to initialize session");
       }
+
+      setMessage({
+        type: "success",
+        text: "Welcome Back!",
+        details: "Redirecting...",
+      });
+
+      setTimeout(() => navigate(from, { replace: true }), 1000);
     } catch (err) {
       setMessage({
         type: "error",

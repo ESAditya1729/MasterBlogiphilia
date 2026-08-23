@@ -58,6 +58,32 @@ export function AuthProvider({ children }) {
     });
   }, []);
 
+  // Establish session from an auth response that already contains { token, user }
+  const completeAuth = useCallback((data, remember = true) => {
+    if (!data?.token || !data?.user) {
+      return { success: false, error: 'Invalid authentication response' };
+    }
+
+    const user = {
+      ...data.user,
+      token: data.token,
+      isAuthenticated: true
+    };
+
+    if (remember) {
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(user));
+    }
+
+    setAuthState({
+      user,
+      loading: false,
+      error: null
+    });
+
+    return { success: true };
+  }, []);
+
   const initializeAuth = useCallback(async () => {
     const token = localStorage.getItem('token');
     const userData = localStorage.getItem('user');
@@ -241,6 +267,7 @@ export function AuthProvider({ children }) {
       ...authState,
       login,
       signup,
+      completeAuth,
       logout,
       isAuthenticated: authState.user?.isAuthenticated || false
     }}>
