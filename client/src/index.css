@@ -1,6 +1,47 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ---- Article reading palette (drives the @tailwindcss/typography prose theme) ---- */
+:root {
+  --article-ink: 51 65 85;          /* slate-700 */
+  --article-heading: 15 23 42;      /* slate-900 */
+  --article-muted: 100 116 139;     /* slate-500 */
+  --article-link: 37 99 235;        /* blue-600 */
+  --article-link-hover: 29 78 216;  /* blue-700 */
+  --article-accent: 79 70 229;      /* indigo-600 */
+  --article-border: 148 163 184;    /* slate-400 */
+  --article-border-soft: 203 213 225; /* slate-300 */
+  --article-code: 190 24 93;        /* pink-700 */
+  --article-code-bg: 244 244 245;   /* zinc-100 */
+  --article-pre-bg: 15 23 42;       /* slate-900 */
+  --article-pre-ink: 226 232 240;   /* slate-200 */
+  --article-quote-bg: 238 242 255;  /* indigo-50 */
+}
+
+.dark {
+  --article-ink: 203 213 225;       /* slate-300 */
+  --article-heading: 248 250 252;   /* slate-50 */
+  --article-muted: 148 163 184;     /* slate-400 */
+  --article-link: 96 165 250;       /* blue-400 */
+  --article-link-hover: 147 197 253;/* blue-300 */
+  --article-accent: 165 180 252;    /* indigo-300 */
+  --article-border: 71 85 105;      /* slate-600 */
+  --article-border-soft: 51 65 85;  /* slate-700 */
+  --article-code: 244 114 182;      /* pink-400 */
+  --article-code-bg: 30 41 59;      /* slate-800 */
+  --article-pre-bg: 2 6 23;         /* slate-950 */
+  --article-pre-ink: 203 213 225;   /* slate-300 */
+  --article-quote-bg: 30 41 59;     /* slate-800 */
+}
+
+/* Default application font */
+body {
+  font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
 html {
   scroll-behavior: smooth;
 }
@@ -38,4 +79,11 @@ html {
 
 .animate-slideIn {
   animation: slideIn 0.3s ease-out;
+}
+
+/* Keyboard accessibility: visible focus ring for interactive elements */
+:where(a, button, input, select, textarea, summary, [role="button"]):focus-visible {
+  outline: 2px solid rgb(var(--article-accent) / 0.9);
+  outline-offset: 2px;
+  border-radius: 6px;
 }

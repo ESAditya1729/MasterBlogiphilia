@@ -20,7 +20,7 @@ import Placeholder from "@tiptap/extension-placeholder";
 import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
 import { CharacterCount } from "@tiptap/extension-character-count";
 import { createLowlight, common } from "lowlight";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import Toolbar, { ToolbarButton } from "./Toolbar";
 import {
   FiBold,
@@ -30,6 +30,7 @@ import {
 } from "react-icons/fi";
 import { uploadMediaFile } from "./BlogApi";
 import { motion, AnimatePresence } from "framer-motion";
+import useArticleEnhancer from "../../utils/useArticleEnhancer";
 import {
   Feather,
   PenTool,
@@ -54,6 +55,8 @@ const EditorSpace = ({ blogData = {}, setBlogData, onSave }) => {
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [wordCount, setWordCount] = useState(0);
   const [charCount, setCharCount] = useState(0);
+  const previewContentRef = useRef(null);
+  useArticleEnhancer(previewContentRef);
 
   const uploadAndInsertImage = useCallback(async (view, file) => {
     if (!file || !file.type.startsWith("image/")) return false;
@@ -327,7 +330,8 @@ const EditorSpace = ({ blogData = {}, setBlogData, onSave }) => {
 
                   {/* Blog Content */}
                   <div
-                    className="blog-content-preview prose dark:prose-invert max-w-none"
+                    ref={previewContentRef}
+                    className="blog-content-preview prose prose-xl dark:prose-invert max-w-none"
                     dangerouslySetInnerHTML={{
                       __html:
                         blogData.content ||

@@ -15,12 +15,14 @@ import {
   FiBookmark,
   FiMessageSquare,
   FiEdit3,
-  FiTrash2
+  FiTrash2,
+  FiArrowUp
 } from 'react-icons/fi';
 import { motion } from 'framer-motion';
 import PostNavbar from './BlogPostNavbar';
 import LoadingSpinner from '../utils/LoadingSpinner';
 import ErrorMessage from '../utils/ErrorMessage';
+import useArticleEnhancer from '../utils/useArticleEnhancer';
 
 const BlogPostPage = () => {
   const { id } = useParams();
@@ -36,6 +38,10 @@ const BlogPostPage = () => {
   const { mode } = useTheme();
   const darkMode = mode === 'dark';
   const contentRef = useRef(null);
+  const articleBodyRef = useRef(null);
+  useArticleEnhancer(articleBodyRef);
+  const [scrollProgress, setScrollProgress] = useState(0);
+  const [showTopBtn, setShowTopBtn] = useState(false);
 
   // "Edited" flag: true when the post was saved again after it was published
   const EDIT_GRACE_MS = 60 * 1000;
@@ -103,6 +109,25 @@ const BlogPostPage = () => {
 
     fetchBlog();
   }, [id]);
+
+  // Scroll progress + back-to-top visibility
+  useEffect(() => {
+    const onScroll = () => {
+      const el = document.documentElement;
+      const scrollTop = el.scrollTop || document.body.scrollTop;
+      const height = el.scrollHeight - el.clientHeight;
+      const progress = height > 0 ? Math.min((scrollTop / height) * 100, 100) : 0;
+      setScrollProgress(progress);
+      setShowTopBtn(scrollTop > 480);
+    };
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+    };
+  }, []);
 
   const handleEditPost = () => {
     navigate(`/editor/${id}`);
@@ -228,67 +253,85 @@ const BlogPostPage = () => {
         blog={blog}
       />
 
+      {/* Scroll Progress Bar */}
+      <div className="fixed top-0 left-0 right-0 z-50 h-1 pointer-events-none">
+        <motion.div
+          className="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"
+          style={{ width: `${scrollProgress}%` }}
+        />
+      </div>
+
       <article className="max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8" ref={contentRef}>
-        {/* Cover Image */}
+        {/* Cover Image Hero */}
         {blog.coverImage && (
           <motion.div 
             variants={itemVariants}
-            className="mb-10 rounded-xl overflow-hidden shadow-2xl"
+            className={`relative mb-12 overflow-hidden rounded-2xl shadow-2xl ${
+              darkMode ? 'shadow-gray-800/60' : 'shadow-gray-300/50'
+            }`}
           >
             <img 
               src={blog.coverImage} 
               alt={blog.title} 
-              className="w-full h-auto max-h-[32rem] object-cover"
+              className="w-full h-[18rem] sm:h-[26rem] md:h-[32rem] object-cover"
               loading="eager"
             />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
           </motion.div>
         )}
 
-        {/* Title Section */}
+        {/* Header */}
         <motion.div 
           variants={itemVariants}
           className="text-center mb-10"
         >
-          <div className="mb-6">
-            {blog.category && (
-              <motion.span 
-                whileHover={{ scale: 1.05 }}
-                className={`inline-block px-4 py-1 rounded-full text-sm font-medium mb-4 ${
-                  darkMode ? 'bg-gray-700 text-blue-400' : 'bg-blue-100 text-blue-600'
-                }`}
-              >
-                {blog.category}
-              </motion.span>
-            )}
-          </div>
-          
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 font-serif leading-tight">
+          {blog.category && (
+            <motion.span 
+              whileHover={{ scale: 1.05 }}
+              className={`inline-block px-4 py-1.5 rounded-full text-sm font-semibold uppercase tracking-wide mb-6 ${
+                darkMode 
+                  ? 'bg-gradient-to-r from-indigo-600/30 to-purple-600/30 text-indigo-300 ring-1 ring-indigo-500/30' 
+                  : 'bg-gradient-to-r from-indigo-50 to-purple-50 text-indigo-600 ring-1 ring-indigo-200'
+              }`}
+            >
+              {blog.category}
+            </motion.span>
+          )}
+
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-8 font-serif leading-tight tracking-tight">
             {blog.title}
           </h1>
-          
-          {/* Author Section */}
-          <div className="flex flex-col items-center mb-8">
-            <div className="flex items-center space-x-3 mb-3">
-              {blog.author?.profilePicture && (
-                <motion.img 
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
-                  src={blog.author.profilePicture} 
-                  alt={blog.author.username} 
-                  className="w-14 h-14 rounded-full object-cover border-2 border-blue-500 cursor-pointer"
-                  onClick={() => navigate(`/profile/${blog.author._id}`)}
+
+          {/* Compact author strip — whole thing links to profile */}
+          <div className="flex items-center justify-center gap-4 flex-wrap">
+            <button
+              onClick={() => navigate(`/profile/${blog.author?._id}`)}
+              className="group flex items-center gap-3"
+              aria-label={`View ${blog.author?.username || 'author'} profile`}
+            >
+              {blog.author?.profilePicture ? (
+                <img
+                  src={blog.author.profilePicture}
+                  alt={blog.author.username}
+                  className="w-11 h-11 rounded-full object-cover border-2 border-indigo-500 shadow-md group-hover:shadow-indigo-500/30 transition-shadow"
                 />
+              ) : (
+                <div className="w-11 h-11 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 text-white flex items-center justify-center text-lg font-bold">
+                  {(blog.author?.username || 'A')[0]?.toUpperCase()}
+                </div>
               )}
-              <div className="text-left">
-                <p className="font-medium text-lg">
+              <span className="text-left">
+                <span className="block font-semibold leading-tight group-hover:text-indigo-500 dark:group-hover:text-indigo-300 transition-colors">
                   {blog.author?.username || 'Anonymous Writer'}
-                </p>
-                <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                  Published {new Date(publishedDate || blog.createdAt).toLocaleDateString('en-US', {
+                </span>
+                <span className={`block text-sm leading-tight ${darkMode ? 'text-gray-400 group-hover:text-gray-300' : 'text-gray-500 group-hover:text-gray-600'}`}>
+                  {new Date(publishedDate || blog.createdAt).toLocaleDateString('en-US', {
                     month: 'long',
                     day: 'numeric',
                     year: 'numeric'
                   })}
+                  {' · '}
+                  {formatReadTime(blog.readTime || 5)}
                   {isEdited && (
                     <span
                       className="italic opacity-75"
@@ -298,116 +341,89 @@ const BlogPostPage = () => {
                         year: 'numeric'
                       })}`}
                     >
-                      {' '}(edited)
+                      {' (edited)'}
                     </span>
                   )}
-                </p>
+                </span>
+              </span>
+            </button>
+
+            {user && blog.author?._id && user._id !== blog.author._id && (
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleFollow}
+                className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-semibold transition-colors ${
+                  isFollowing
+                    ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300'
+                    : 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg hover:shadow-indigo-500/30'
+                }`}
+              >
+                {isFollowing ? (
+                  <>
+                    <FiUserCheck />
+                    <span>Following</span>
+                  </>
+                ) : (
+                  <>
+                    <FiUserPlus />
+                    <span>Follow</span>
+                  </>
+                )}
+              </motion.button>
+            )}
+
+            {isOwner && (
+              <div className="flex gap-2">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={handleEditPost}
+                  className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-sm font-medium ${
+                    darkMode
+                      ? 'bg-slate-800 text-slate-200 hover:bg-slate-700'
+                      : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                  }`}
+                >
+                  <FiEdit3 />
+                  <span>Edit</span>
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={handleDeletePost}
+                  className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-sm font-medium ${
+                    darkMode
+                      ? 'bg-red-900/40 text-red-300 hover:bg-red-900/60'
+                      : 'bg-red-50 text-red-600 hover:bg-red-100'
+                  }`}
+                >
+                  <FiTrash2 />
+                  <span>Delete</span>
+                </motion.button>
               </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex space-x-4 mt-4">
-              {/* Owner: Edit / Delete */}
-              {isOwner && (
-                <>
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={handleEditPost}
-                    className={`flex items-center space-x-2 px-4 py-2 rounded-full text-sm ${
-                      darkMode
-                        ? 'bg-slate-700 text-slate-200 hover:bg-slate-600'
-                        : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-                    }`}
-                  >
-                    <FiEdit3 />
-                    <span>Edit</span>
-                  </motion.button>
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={handleDeletePost}
-                    className={`flex items-center space-x-2 px-4 py-2 rounded-full text-sm ${
-                      darkMode
-                        ? 'bg-red-900/40 text-red-300 hover:bg-red-900/60'
-                        : 'bg-red-50 text-red-600 hover:bg-red-100'
-                    }`}
-                  >
-                    <FiTrash2 />
-                    <span>Delete</span>
-                  </motion.button>
-                </>
-              )}
-
-              {/* Follow Button */}
-              {user && blog.author?._id && user._id !== blog.author._id && (
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={handleFollow}
-                  className={`flex items-center space-x-2 px-4 py-2 rounded-full text-sm ${
-                    isFollowing 
-                      ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
-                      : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
-                  }`}
-                >
-                  {isFollowing ? (
-                    <>
-                      <FiUserCheck />
-                      <span>Following</span>
-                    </>
-                  ) : (
-                    <>
-                      <FiUserPlus />
-                      <span>Follow</span>
-                    </>
-                  )}
-                </motion.button>
-              )}
-
-              {/* Bookmark Button */}
-              {user && (
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={handleBookmark}
-                  className={`flex items-center space-x-2 px-4 py-2 rounded-full text-sm ${
-                    isBookmarked
-                      ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
-                      : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
-                  }`}
-                >
-                  <FiBookmark />
-                  <span>{isBookmarked ? 'Bookmarked' : 'Bookmark'}</span>
-                </motion.button>
-              )}
-            </div>
+            )}
           </div>
         </motion.div>
 
         {/* Engagement Metrics */}
         <motion.div 
           variants={itemVariants}
-          className="flex flex-wrap justify-center items-center gap-6 mb-10"
+          className="flex flex-wrap justify-center items-center gap-x-8 gap-y-4 mb-4"
         >
-          <div className={`flex items-center space-x-2 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-            <FiClock className="text-lg" />
-            <span>{formatReadTime(blog.readTime || 5)}</span>
-          </div>
-          
-          <div className={`flex items-center space-x-2 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+          <div className={`flex items-center gap-2 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
             <FiEye className="text-lg" />
             <span>{blog.views?.toLocaleString() || 0} views</span>
           </div>
-          
+
           <motion.button 
             whileTap={{ scale: 0.95 }}
             onClick={handleLike}
-            className={`flex items-center space-x-2 transition-colors ${isLiked 
-              ? 'text-red-500' 
-              : darkMode 
-                ? 'text-gray-400 hover:text-red-400' 
-                : 'text-gray-600 hover:text-red-500'
+            className={`flex items-center gap-2 transition-colors ${isLiked
+              ? 'text-red-500'
+              : darkMode
+                ? 'text-gray-400 hover:text-red-400'
+                : 'text-gray-500 hover:text-red-500'
             }`}
           >
             <motion.span
@@ -424,18 +440,31 @@ const BlogPostPage = () => {
               const commentSection = document.getElementById('comments');
               commentSection?.scrollIntoView({ behavior: 'smooth' });
             }}
-            className={`flex items-center space-x-2 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}
+            className={`flex items-center gap-2 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}
           >
             <FiMessageSquare className="text-lg" />
             <span>{(blog.commentCount || 0).toLocaleString()} comments</span>
           </button>
+
+          <motion.button 
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={copyBlogUrl}
+            className={`flex items-center gap-2 ${darkMode ? 'text-gray-400 hover:text-indigo-300' : 'text-gray-500 hover:text-indigo-600'}`}
+            aria-label="Share post"
+          >
+            <FiShare2 className="text-lg" />
+            <span>{isCopied ? 'Copied!' : 'Share'}</span>
+          </motion.button>
         </motion.div>
+
+        <motion.div className="h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent dark:via-gray-700 my-8" variants={itemVariants} />
 
         {/* Excerpt */}
         {blog.excerpt && (
           <motion.p 
             variants={itemVariants}
-            className={`text-xl md:text-2xl text-center mb-12 leading-relaxed max-w-3xl mx-auto ${
+            className={`text-xl md:text-2xl text-center mb-12 leading-relaxed max-w-3xl mx-auto font-serif italic ${
               darkMode ? 'text-gray-300' : 'text-gray-600'
             }`}
           >
@@ -453,8 +482,8 @@ const BlogPostPage = () => {
               <motion.span 
                 whileHover={{ y: -2 }}
                 key={tag} 
-                className={`px-4 py-2 rounded-full text-sm font-medium cursor-pointer ${
-                  darkMode ? 'bg-gray-700 hover:bg-gray-600 text-blue-400' : 'bg-gray-100 hover:bg-gray-200 text-blue-600'
+                className={`px-4 py-2 rounded-full text-sm font-medium cursor-pointer transition-colors ${
+                  darkMode ? 'bg-gray-800 hover:bg-gray-700 text-indigo-300' : 'bg-gray-100 hover:bg-gray-200 text-indigo-600'
                 }`}
                 onClick={() => navigate(`/blogs?tag=${tag}`)}
               >
@@ -467,57 +496,61 @@ const BlogPostPage = () => {
         {/* Content */}
         <motion.div 
           variants={itemVariants}
-          className={`
-            prose 
-            prose-lg 
-            md:prose-xl
-            max-w-none
-            ${darkMode ? 'prose-invert' : ''}
-            ${darkMode ? 'text-gray-300' : 'text-gray-800'}
-            prose-headings:font-serif
-            prose-headings:${darkMode ? 'text-white' : 'text-gray-900'}
-            prose-p:${darkMode ? 'text-gray-300' : 'text-gray-700'}
-            prose-p:leading-relaxed
-            prose-strong:${darkMode ? 'text-white' : 'text-gray-900'}
-            prose-a:text-blue-600
-            dark:prose-a:text-blue-400
-            prose-a:underline-offset-4
-            prose-img:rounded-xl
-            prose-img:shadow-lg
-            prose-img:mx-auto
-            prose-blockquote:border-l-4
-            prose-blockquote:border-blue-500
-            prose-blockquote:italic
-            prose-blockquote:pl-6
-            prose-blockquote:bg-opacity-20
-            ${darkMode ? 'prose-blockquote:bg-gray-800' : 'prose-blockquote:bg-blue-50'}
-            prose-pre:bg-gray-800
-            prose-pre:rounded-xl
-            prose-pre:p-4
-            prose-code:${darkMode ? 'text-gray-300' : 'text-gray-800'}
-            prose-ul:list-disc
-            prose-ol:list-decimal
-            prose-li:my-1
-          `}
+          ref={articleBodyRef}
+          className="blog-article prose prose-xl dark:prose-invert max-w-none"
           dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(blog.content) }}
         />
+
+        {/* Closing / Author CTA */}
+        <motion.div variants={itemVariants} className="mt-16">
+          <div className="h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent dark:via-gray-700 my-10" />
+          <div className={`flex flex-col sm:flex-row items-center justify-between gap-6 p-6 sm:p-8 rounded-2xl ${
+            darkMode ? 'bg-gray-800/60 ring-1 ring-gray-700' : 'bg-gray-50 ring-1 ring-gray-200'
+          }`}>
+            <div className="flex items-center gap-4">
+              {blog.author?.profilePicture ? (
+                <img
+                  src={blog.author.profilePicture}
+                  alt={blog.author.username}
+                  className="w-16 h-16 rounded-full object-cover border-2 border-indigo-500"
+                />
+              ) : (
+                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 text-white flex items-center justify-center text-2xl font-bold">
+                  {(blog.author?.username || 'A')[0]?.toUpperCase()}
+                </div>
+              )}
+              <div>
+                <p className="text-sm uppercase tracking-wide text-gray-500 dark:text-gray-400">Written by</p>
+                <p className="font-bold text-xl">{blog.author?.username || 'Anonymous Writer'}</p>
+              </div>
+            </div>
+            <motion.button
+              whileHover={{ scale: 1.04 }}
+              whileTap={{ scale: 0.96 }}
+              onClick={() => navigate(`/profile/${blog.author?._id}`)}
+              className="w-full sm:w-auto px-6 py-3 rounded-full text-white bg-gradient-to-r from-indigo-600 to-purple-600 font-semibold shadow-lg hover:shadow-indigo-500/30 transition-shadow"
+            >
+              View Profile
+            </motion.button>
+          </div>
+        </motion.div>
 
         {/* Comments Section */}
         <motion.section 
           id="comments"
           variants={fadeIn}
-          className="mt-20 pt-10 border-t border-gray-200 dark:border-gray-700"
+          className="mt-16 pt-10 border-t border-gray-200 dark:border-gray-700"
         >
-          <h2 className="text-2xl font-bold mb-6">Comments ({blog.commentCount || 0})</h2>
+          <h2 className="text-2xl font-bold mb-6 font-serif">Comments ({blog.commentCount || 0})</h2>
           {/* Comment functionality would go here */}
-          <div className={`p-6 rounded-lg ${darkMode ? 'bg-gray-800' : 'bg-gray-50'}`}>
+          <div className={`p-6 rounded-2xl ${darkMode ? 'bg-gray-800/60' : 'bg-gray-50'}`}>
             <p className="text-center">
               {user ? (
                 'Comment functionality coming soon!'
               ) : (
                 <button 
                   onClick={() => navigate('/login')}
-                  className="text-blue-500 hover:underline"
+                  className="text-indigo-500 hover:underline"
                 >
                   Login to leave a comment
                 </button>
@@ -527,16 +560,17 @@ const BlogPostPage = () => {
         </motion.section>
       </article>
 
-      {/* Floating Action Buttons */}
-      <div className="fixed right-6 bottom-6 flex flex-col space-y-3">
+      {/* Floating Action Buttons (right side) */}
+      <div className="fixed right-5 bottom-24 flex flex-col space-y-3 z-30">
         <motion.button
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.95 }}
           onClick={copyBlogUrl}
           className={`p-3 rounded-full shadow-lg ${
-            darkMode ? 'bg-gray-700 text-white' : 'bg-white text-gray-800'
+            darkMode ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-white text-gray-800 hover:bg-gray-100'
           }`}
           aria-label="Share post"
+          title="Share post"
         >
           <FiShare2 />
         </motion.button>
@@ -549,13 +583,66 @@ const BlogPostPage = () => {
             isLiked 
               ? 'bg-red-100 text-red-500 dark:bg-red-900' 
               : darkMode 
-                ? 'bg-gray-700 text-white' 
-                : 'bg-white text-gray-800'
+                ? 'bg-gray-700 text-white hover:bg-gray-600' 
+                : 'bg-white text-gray-800 hover:bg-gray-100'
           }`}
           aria-label="Like post"
+          title="Like post"
         >
           <FiHeart className={isLiked ? 'fill-current' : ''} />
         </motion.button>
+
+        {user && (
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={handleBookmark}
+            className={`p-3 rounded-full shadow-lg ${
+              isBookmarked
+                ? 'bg-amber-100 text-amber-600 dark:bg-amber-900 dark:text-amber-300'
+                : darkMode
+                  ? 'bg-gray-700 text-white hover:bg-gray-600'
+                  : 'bg-white text-gray-800 hover:bg-gray-100'
+            }`}
+            aria-label={isBookmarked ? 'Remove bookmark' : 'Bookmark post'}
+            title={isBookmarked ? 'Remove bookmark' : 'Bookmark post'}
+          >
+            <FiBookmark className={isBookmarked ? 'fill-current' : ''} />
+          </motion.button>
+        )}
+      </div>
+
+      {/* Back to top */}
+      <div className="fixed right-5 bottom-5 z-30">
+        {showTopBtn && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            className="p-3 rounded-full shadow-lg bg-gradient-to-r from-indigo-600 to-purple-600 text-white"
+            aria-label="Back to top"
+            title="Back to top"
+          >
+            <FiArrowUp />
+          </motion.button>
+        )}
+      </div>
+
+      {/* Sticky reading progress labels (desktop left rail) */}
+      <div className={`fixed left-6 top-1/2 -translate-y-1/2 hidden lg:flex flex-col gap-4 text-sm z-20 ${
+        darkMode ? 'text-gray-500' : 'text-gray-400'
+      }`}>
+        <div className="flex items-center gap-2">
+          <FiClock />
+          <span>{formatReadTime(blog.readTime || 5)}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <FiEye />
+          <span>{blog.views?.toLocaleString() || 0} views</span>
+        </div>
       </div>
     </motion.div>
   );

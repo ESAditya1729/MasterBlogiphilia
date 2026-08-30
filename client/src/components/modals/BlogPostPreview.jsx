@@ -1,12 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiX, FiHeart, FiEye, FiClock, FiUserPlus, FiUserCheck, FiShare2, FiBookmark } from 'react-icons/fi';
 import DOMPurify from 'dompurify';
+import useArticleEnhancer from '../../utils/useArticleEnhancer';
 import "./Styles.css"
 
 const BlogPreviewModal = ({ blog, isOpen, onClose, darkMode, onLike, onFollow, isLiked, isFollowing }) => {
   const [isCopied, setIsCopied] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
+  const previewContentRef = useRef(null);
+  useArticleEnhancer(previewContentRef);
 
   useEffect(() => {
     if (isOpen) {
@@ -159,11 +162,14 @@ const BlogPreviewModal = ({ blog, isOpen, onClose, darkMode, onLike, onFollow, i
 
                 {/* Content Preview */}
                 <div
+                  ref={previewContentRef}
                   className={`
-                    blog-content-preview
+                    blog-content-preview 
+                    prose 
+                    prose-lg
+                    dark:prose-invert
                     max-h-64 
                     overflow-y-auto 
-                    ${darkMode ? 'dark-mode' : ''}
                     ${darkMode ? 'text-gray-300' : 'text-gray-800'}
                   `}
                   dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(blog.content.substring(0, 1000) + '...') }}

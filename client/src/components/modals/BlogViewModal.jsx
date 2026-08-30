@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import { FiX, FiBookmark, FiShare2, FiHeart } from 'react-icons/fi';
+import useArticleEnhancer from '../../utils/useArticleEnhancer';
 
 const BlogViewModal = ({ blogId, onClose }) => {
   const [blog, setBlog] = useState(null);
@@ -9,6 +10,8 @@ const BlogViewModal = ({ blogId, onClose }) => {
   const [error, setError] = useState(null);
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
+  const contentRef = useRef(null);
+  useArticleEnhancer(contentRef);
 
   useEffect(() => {
     const fetchBlog = async () => {
@@ -144,7 +147,8 @@ const BlogViewModal = ({ blogId, onClose }) => {
                   )}
 
                   <div 
-                    className="prose dark:prose-invert max-w-none"
+                    ref={contentRef}
+                    className="blog-article prose prose-xl dark:prose-invert max-w-none"
                     dangerouslySetInnerHTML={{ __html: blog.content }}
                   />
 

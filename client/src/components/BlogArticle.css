@@ -1,0 +1,177 @@
+/* ============================================================
+   Blogiphilia — Shared Article Reading Styles
+
+   `.blog-article` (and its `.blog-content-preview` alias) is the
+   semantic reading container used on:
+     • BlogPostPage            (published article)
+     • EditorSpace preview      (WYSIWYG preview modal)
+     • modals/BlogPostPreview   (card preview modal)
+
+   Typography itself comes from the @tailwindcss/typography `prose`
+   utilities applied in JSX (`prose prose-xl dark:prose-invert`),
+   driven by the CSS variables defined in index.css / tailwind.config.js.
+
+   This file layers the custom reading flourishes — quote background,
+   code-block chrome, task-list layout, drop cap, table polish — that
+   are shared across all three readers so the writer's preview matches
+   what the reader sees.
+
+   NOTE: Plain CSS only — no @tailwind / @layer / @apply directives.
+   Typography utilities are added in JSX. Imported via index.js.
+   ============================================================ */
+
+/* Body copy keeps a comfortable measure even inside wider layouts */
+.blog-article > *,
+.blog-content-preview > * {
+  max-width: 42rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Width-constrained, centered full-bleed media */
+.blog-article img,
+.blog-content-preview img,
+.blog-article iframe,
+.blog-content-preview iframe,
+.blog-article table,
+.blog-content-preview table,
+.blog-article pre,
+.blog-content-preview pre {
+  display: block;
+  max-width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Headings: roomy top margin for anchor/scrolling */
+.blog-article h1,
+.blog-article h2,
+.blog-article h3,
+.blog-article h4,
+.blog-article h5,
+.blog-article h6,
+.blog-content-preview h1,
+.blog-content-preview h2,
+.blog-content-preview h3,
+.blog-content-preview h4,
+.blog-content-preview h5,
+.blog-content-preview h6 {
+  scroll-margin-top: 5rem;
+}
+
+/* Blockquote: tinted chip with brand accent bar */
+.blog-article blockquote,
+.blog-content-preview blockquote {
+  font-weight: 500;
+  font-style: normal;
+  border-inline-start-width: 0.25rem;
+  padding: 0.75rem 1.25rem 0.75rem 1.5rem;
+  background: rgb(var(--article-quote-bg) / 0.55);
+  border-radius: 0.5rem;
+}
+
+/* Task lists: reset bullets and align checkboxes */
+.blog-article ul[data-type="taskList"],
+.blog-content-preview ul[data-type="taskList"] {
+  list-style: none;
+  padding: 0;
+}
+.blog-article ul[data-type="taskList"] li,
+.blog-content-preview ul[data-type="taskList"] li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+}
+
+/* Code blocks: define the chrome (typography vars handle colors) */
+.blog-article pre,
+.blog-content-preview pre {
+  position: relative;
+  border: 1px solid rgb(var(--article-border-soft) / 1);
+  border-radius: 0.75rem;
+  box-shadow: 0 6px 20px -12px rgba(0, 0, 0, 0.35);
+}
+
+/* "Copy" button injected by useArticleEnhancer */
+.article-copy-btn {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  z-index: 5;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1;
+  font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  padding: 0.375rem 0.625rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgb(var(--article-border-soft) / 1);
+  cursor: pointer;
+  color: rgb(var(--article-pre-ink) / 1);
+  background: rgba(0, 0, 0, 0.18);
+  backdrop-filter: blur(4px);
+  transition: background-color 0.15s ease, transform 0.1s ease;
+}
+.article-copy-btn:hover {
+  background: rgba(0, 0, 0, 0.32);
+}
+.article-copy-btn:active {
+  transform: scale(0.95);
+}
+
+/* Inline code keeps neutral chrome (not nested inside pre) */
+.blog-article :not(pre) > code,
+.blog-content-preview :not(pre) > code {
+  padding: 0.15em 0.4em;
+  border-radius: 0.375rem;
+  font-family: 'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace;
+  background: rgb(var(--article-code-bg) / 1);
+  color: rgb(var(--article-code) / 1);
+}
+
+/* Horizontal rule: narrow dashed divider */
+.blog-article hr,
+.blog-content-preview hr {
+  width: 5rem;
+  border-style: dashed;
+  opacity: 0.7;
+}
+
+/* Tables: readable scannable layout inside scroll container */
+.blog-article table,
+.blog-content-preview table {
+  width: 100%;
+  font-size: 0.9375rem;
+  border-collapse: collapse;
+  overflow-x: auto;
+}
+.blog-article th,
+.blog-content-preview th {
+  text-align: left;
+  font-weight: 600;
+}
+.blog-article td,
+.blog-content-preview td,
+.blog-article th,
+.blog-content-preview th {
+  vertical-align: top;
+}
+
+/* Links: underline offset + smooth color transition */
+.blog-article a,
+.blog-content-preview a {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  transition: color 0.15s ease;
+}
+
+/* Drop cap on the very first paragraph (narrative feel) */
+.blog-article > p:first-of-type::first-letter {
+  font-family: 'Fraunces', Georgia, serif;
+  float: left;
+  font-size: 3.4em;
+  line-height: 0.8;
+  padding-right: 0.12em;
+  margin-top: 0.06em;
+  color: rgb(var(--article-accent) / 1);
+  font-weight: 600;
+}
